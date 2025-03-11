@@ -1,0 +1,26 @@
+services:
+  postgres:
+    image: postgres:17.2
+    ports:
+      - 5432:5432
+    env_file: ../evaluation/.env
+    # healthcheck:
+    #   test: ["CMD-SHELL", "pg_isready"]
+    #   interval: 1s
+    #   timeout: 30s
+    #   retries: 5
+    #   start_period: 1s
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./postgres_initial.sql:/docker-entrypoint-initdb.d/initial.sql
+  mysql:
+    image: mysql:8.0.41
+    ports:
+      - 3306:3306
+    env_file: ../evaluation/.env
+    volumes:
+      - mysql_data:/var/lib/postgresql/data
+      - ./mysql_initial.sql:/docker-entrypoint-initdb.d/initial.sql
+volumes:
+  postgres_data:
+  mysql_data:
