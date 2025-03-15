@@ -1,11 +1,11 @@
 package cz.cuni.mff.java.kurinna.microservice.model;
 
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
+import jakarta.validation.constraints.Email;
 
 import java.sql.Timestamp;
 
+@Entity
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -13,15 +13,20 @@ public class User {
 
     private String username;
 
+    @Email
     private String email;
 
     private String password;
 
+    @Temporal(value = TemporalType.TIMESTAMP)
     private Timestamp crated_at;
 
     public User() {}
 
-    public User(String username, String email, String password) {}
+    public User(String username, String email, String password) {
+        this.username = username;
+        this.email = email;
+    }
 
     public Long getId() {
         return id;

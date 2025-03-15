@@ -7,5 +7,13 @@ import java.util.List;
 public interface ServiceController<T> {
     ResponseEntity<String> health();
 
-    ResponseEntity<List<T>> getResults();
+    ResponseEntity<String> deleteAll();
+
+    ResponseEntity<String> deleteById(Long id);
+
+    ResponseEntity<Long> save(T t);
+
+    ResponseEntity<T> findById(Long id);
+
+    ResponseEntity<List<T>> findAll();
 }
