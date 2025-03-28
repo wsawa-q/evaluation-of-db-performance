@@ -1,7 +1,7 @@
 package cz.cuni.mff.java.kurinna.microservice.controller;
 
 import cz.cuni.mff.java.kurinna.common.controller.ServiceController;
-import cz.cuni.mff.java.kurinna.microservice.model.User;
+import cz.cuni.mff.java.kurinna.microservice.model.Customer;
 import cz.cuni.mff.java.kurinna.microservice.service.QueryService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-public class QueryController implements ServiceController<User> {
+public class QueryController implements ServiceController<Customer> {
     private final QueryService queryService;
 
     public QueryController(QueryService queryService) {
@@ -37,18 +37,13 @@ public class QueryController implements ServiceController<User> {
     }
 
     @PostMapping(value = "/users")
-    public ResponseEntity<Long> save(@RequestBody User user) {
-        User savedUser = queryService.save(user);
-        return ResponseEntity.ok(savedUser.getId());
+    public ResponseEntity<Long> save(@RequestBody Customer user) {
+        Customer savedUser = queryService.save(user);
+        return ResponseEntity.ok(savedUser.getC_custkey());
     }
 
     @GetMapping("/users/{id}")
-    public ResponseEntity<User> findById(Long id) {
+    public ResponseEntity<Customer> findById(@PathVariable Long id) {
         return ResponseEntity.ok(queryService.findById(id));
-    }
-
-    @GetMapping("/users")
-    public ResponseEntity<List<User>> findAll() {
-        return ResponseEntity.ok(queryService.getResults());
     }
 }

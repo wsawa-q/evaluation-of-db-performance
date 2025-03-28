@@ -1,36 +1,30 @@
 package cz.cuni.mff.java.kurinna.microservice.service;
 
-import cz.cuni.mff.java.kurinna.microservice.model.User;
-import cz.cuni.mff.java.kurinna.microservice.repository.UserRepository;
+import cz.cuni.mff.java.kurinna.microservice.model.Customer;
+import cz.cuni.mff.java.kurinna.microservice.repository.CustomerRepository;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
 
 @Service
 public class QueryService {
-    private final UserRepository userRepository;
+    private final CustomerRepository customerRepository;
 
-    public QueryService(UserRepository userRepository) {
-        this.userRepository = userRepository;
-    }
-
-    public List<User> getResults() {
-        return userRepository.findAll();
+    public QueryService(CustomerRepository customerRepository) {
+        this.customerRepository = customerRepository;
     }
 
     public void deleteAll() {
-        userRepository.deleteAll();
+        customerRepository.deleteAll();
     }
 
     public void deleteById(Long id) {
-        userRepository.deleteById(id);
+        customerRepository.deleteById(id);
     }
 
-    public User save(User user) {
-        return userRepository.save(user);
+    public Customer save(Customer user) {
+        return customerRepository.save(user);
     }
 
-    public User findById(Long id) {
-        return userRepository.findById(id).orElse(null);
+    public Customer findById(Long id) {
+        return customerRepository.findById(id).orElse(null);
     }
 }
