@@ -14,4 +14,6 @@ public interface ServiceController<T> {
     ResponseEntity<Long> save(T t);
 
     ResponseEntity<T> findById(Long id);
+
+    ResponseEntity<List<T>> findAll();
 }

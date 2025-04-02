@@ -46,4 +46,9 @@ public class QueryController implements ServiceController<Customer> {
     public ResponseEntity<Customer> findById(@PathVariable Long id) {
         return ResponseEntity.ok(queryService.findById(id));
     }
+
+    @GetMapping("/users")
+    public ResponseEntity<List<Customer>> findAll() {
+        return ResponseEntity.ok(queryService.findAll());
+    }
 }

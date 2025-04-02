@@ -1,4 +1,4 @@
-FROM openjdk:17-jdk-slim
+FROM openjdk:21-jdk-slim
 
 COPY target/microservice-mysql-springdatajpa-1.0.0.jar app.jar
 

@@ -1,11 +1,7 @@
 package cz.cuni.mff.java.kurinna.microservice.model;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.Email;
 import lombok.*;
-
-import java.sql.Timestamp;
-import java.util.List;
 
 @Entity
 @NoArgsConstructor

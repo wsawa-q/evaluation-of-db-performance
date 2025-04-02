@@ -3,8 +3,6 @@ package cz.cuni.mff.java.kurinna.microservice.model;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.util.List;
-
 @Entity
 @NoArgsConstructor
 @AllArgsConstructor
