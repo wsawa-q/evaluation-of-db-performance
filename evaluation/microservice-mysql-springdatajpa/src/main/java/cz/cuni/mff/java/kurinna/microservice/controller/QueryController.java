@@ -1,12 +1,15 @@
 package cz.cuni.mff.java.kurinna.microservice.controller;
 
 import cz.cuni.mff.java.kurinna.common.controller.ServiceController;
+import cz.cuni.mff.java.kurinna.microservice.dto.PricingSummary;
 import cz.cuni.mff.java.kurinna.microservice.model.Customer;
 import cz.cuni.mff.java.kurinna.microservice.service.QueryService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 public class QueryController implements ServiceController<Customer> {
@@ -50,5 +53,19 @@ public class QueryController implements ServiceController<Customer> {
     @GetMapping("/users")
     public ResponseEntity<List<Customer>> findAll() {
         return ResponseEntity.ok(queryService.findAll());
+    }
+
+    @GetMapping("/q1")
+    public ResponseEntity<Map<String, Object>> getPricingSummary() {
+        int randomNumber = (int) (Math.random() * 60) + 60;
+        // time the query
+        long startTime = System.currentTimeMillis();
+        List<PricingSummary> pricingSummary = queryService.getPricingSummary(randomNumber);
+        long endTime = System.currentTimeMillis();
+        Map<String, Object> response = new HashMap<>();
+        response.put("executionTime", (endTime - startTime) + " ms");
+        response.put("randomNumber", randomNumber);
+        response.put("pricingSummary", pricingSummary);
+        return ResponseEntity.ok(response);
     }
 }

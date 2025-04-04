@@ -6,7 +6,7 @@ import org.hibernate.proxy.HibernateProxy;
 
 import java.util.Objects;
 
-@Entity
+@Entity(name = "partsupp")
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter

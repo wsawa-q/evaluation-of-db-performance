@@ -7,7 +7,7 @@ import lombok.*;
 
 import java.sql.Timestamp;
 
-@Entity
+@Entity(name = "lineitem")
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter
