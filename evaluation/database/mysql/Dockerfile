@@ -1,4 +1,4 @@
-FROM mysql:8.0.41-debian
+FROM mysql:8.0.42-debian
 
 COPY database/mysql/my.cnf /etc/mysql/conf.d/my.cnf
 
