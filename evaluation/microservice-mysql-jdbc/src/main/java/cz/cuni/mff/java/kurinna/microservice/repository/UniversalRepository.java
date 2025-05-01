@@ -39,7 +39,7 @@ public class UniversalRepository {
             ORDER BY l_returnflag, l_linestatus
             """;
 
-        var params = new MapSqlParameterSource()
+        MapSqlParameterSource params = new MapSqlParameterSource()
                 .addValue("days", days);
 
         return jdbc.query(sql, params, pricingSummaryMapper);

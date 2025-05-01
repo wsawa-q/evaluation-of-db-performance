@@ -1,6 +1,5 @@
 package cz.cuni.mff.java.kurinna.microservice.controller;
 
-import cz.cuni.mff.java.kurinna.common.controller.ServiceController;
 import cz.cuni.mff.java.kurinna.microservice.dto.PricingSummary;
 import cz.cuni.mff.java.kurinna.microservice.model.Customer;
 import cz.cuni.mff.java.kurinna.microservice.service.QueryService;
@@ -12,27 +11,24 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-public class QueryController implements ServiceController<Customer> {
+public class QueryController {
     private final QueryService queryService;
 
     public QueryController(QueryService queryService) {
         this.queryService = queryService;
     }
 
-    @Override
     @GetMapping("/health")
     public ResponseEntity<String> health() {
         return ResponseEntity.ok("OK");
     }
 
-    @Override
     @DeleteMapping("/users")
     public ResponseEntity<String> deleteAll() {
         queryService.deleteAll();
         return ResponseEntity.ok("All users deleted");
     }
 
-    @Override
     @DeleteMapping("/users/{id}")
     public ResponseEntity<String> deleteById(Long id) {
         queryService.deleteById(id);
