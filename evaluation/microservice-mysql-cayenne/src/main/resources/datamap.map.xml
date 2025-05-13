@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="utf-8"?>
+<data-map xmlns="http://cayenne.apache.org/schema/10/modelMap"
+	 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	 xsi:schemaLocation="http://cayenne.apache.org/schema/10/modelMap https://cayenne.apache.org/schema/10/modelMap.xsd"
+	 project-version="10">
+	<property name="defaultPackage" value="cz.cuni.mff.java.kurinna.microservice.model"/>
+	<property name="defaultSchema" value="public"/>
+	<db-entity name="customer" catalog="db">
+		<db-attribute name="c_acctbal" type="DOUBLE" isMandatory="true" length="22"/>
+		<db-attribute name="c_address" type="VARCHAR" isMandatory="true" length="40"/>
+		<db-attribute name="c_comment" type="VARCHAR" isMandatory="true" length="117"/>
+		<db-attribute name="c_custkey" type="BIGINT" isMandatory="true" length="19"/>
+		<db-attribute name="c_mktsegment" type="CHAR" isMandatory="true" length="10"/>
+		<db-attribute name="c_name" type="VARCHAR" isMandatory="true" length="25"/>
+		<db-attribute name="c_nationkey" type="INTEGER" isMandatory="true" length="10"/>
+		<db-attribute name="c_phone" type="CHAR" isMandatory="true" length="15"/>
+	</db-entity>
+	<db-entity name="lineitem" catalog="db">
+		<db-attribute name="l_comment" type="VARCHAR" isMandatory="true" length="44"/>
+		<db-attribute name="l_commitdate" type="DATE" isMandatory="true" length="10"/>
+		<db-attribute name="l_discount" type="DOUBLE" isMandatory="true" length="22"/>
+		<db-attribute name="l_extendedprice" type="DOUBLE" isMandatory="true" length="22"/>
+		<db-attribute name="l_linenumber" type="BIGINT" isMandatory="true" length="19"/>
+		<db-attribute name="l_linestatus" type="CHAR" isMandatory="true" length="1"/>
+		<db-attribute name="l_orderkey" type="BIGINT" isMandatory="true" length="19"/>
+		<db-attribute name="l_partkey" type="BIGINT" isMandatory="true" length="19"/>
+		<db-attribute name="l_quantity" type="DOUBLE" isMandatory="true" length="22"/>
+		<db-attribute name="l_receiptdate" type="DATE" isMandatory="true" length="10"/>
+		<db-attribute name="l_returnflag" type="CHAR" isMandatory="true" length="1"/>
+		<db-attribute name="l_shipdate" type="DATE" isMandatory="true" length="10"/>
+		<db-attribute name="l_shipinstruct" type="CHAR" isMandatory="true" length="25"/>
+		<db-attribute name="l_shipmode" type="CHAR" isMandatory="true" length="10"/>
+		<db-attribute name="l_suppkey" type="BIGINT" isMandatory="true" length="19"/>
+		<db-attribute name="l_tax" type="DOUBLE" isMandatory="true" length="22"/>
+	</db-entity>
+	<db-entity name="nation" catalog="db">
+		<db-attribute name="n_comment" type="VARCHAR" length="152"/>
+		<db-attribute name="n_name" type="CHAR" isMandatory="true" length="25"/>
+		<db-attribute name="n_nationkey" type="INTEGER" isMandatory="true" length="10"/>
+		<db-attribute name="n_regionkey" type="INTEGER" isMandatory="true" length="10"/>
+	</db-entity>
+	<db-entity name="orders" catalog="db">
+		<db-attribute name="o_clerk" type="CHAR" isMandatory="true" length="15"/>
+		<db-attribute name="o_comment" type="VARCHAR" isMandatory="true" length="79"/>
+		<db-attribute name="o_custkey" type="BIGINT" isMandatory="true" length="19"/>
+		<db-attribute name="o_orderdate" type="DATE" isMandatory="true" length="10"/>
+		<db-attribute name="o_orderkey" type="BIGINT" isMandatory="true" length="19"/>
+		<db-attribute name="o_orderpriority" type="CHAR" isMandatory="true" length="15"/>
+		<db-attribute name="o_orderstatus" type="CHAR" isMandatory="true" length="1"/>
+		<db-attribute name="o_shippriority" type="INTEGER" isMandatory="true" length="10"/>
+		<db-attribute name="o_totalprice" type="DOUBLE" isMandatory="true" length="22"/>
+	</db-entity>
+	<db-entity name="part" catalog="db">
+		<db-attribute name="p_brand" type="CHAR" isMandatory="true" length="10"/>
+		<db-attribute name="p_comment" type="VARCHAR" isMandatory="true" length="23"/>
+		<db-attribute name="p_container" type="CHAR" isMandatory="true" length="10"/>
+		<db-attribute name="p_mfgr" type="CHAR" isMandatory="true" length="25"/>
+		<db-attribute name="p_name" type="VARCHAR" isMandatory="true" length="55"/>
+		<db-attribute name="p_partkey" type="BIGINT" isMandatory="true" length="19"/>
+		<db-attribute name="p_retailprice" type="DOUBLE" isMandatory="true" length="22"/>
+		<db-attribute name="p_size" type="INTEGER" isMandatory="true" length="10"/>
+		<db-attribute name="p_type" type="VARCHAR" isMandatory="true" length="25"/>
+	</db-entity>
+	<db-entity name="partsupp" catalog="db">
+		<db-attribute name="ps_availqty" type="BIGINT" isMandatory="true" length="19"/>
+		<db-attribute name="ps_comment" type="VARCHAR" isMandatory="true" length="199"/>
+		<db-attribute name="ps_partkey" type="BIGINT" isMandatory="true" length="19"/>
+		<db-attribute name="ps_suppkey" type="BIGINT" isMandatory="true" length="19"/>
+		<db-attribute name="ps_supplycost" type="DOUBLE" isMandatory="true" length="22"/>
+	</db-entity>
+	<db-entity name="region" catalog="db">
+		<db-attribute name="r_comment" type="VARCHAR" length="152"/>
+		<db-attribute name="r_name" type="CHAR" isMandatory="true" length="25"/>
+		<db-attribute name="r_regionkey" type="INTEGER" isMandatory="true" length="10"/>
+	</db-entity>
+	<db-entity name="supplier" catalog="db">
+		<db-attribute name="s_acctbal" type="DOUBLE" isMandatory="true" length="22"/>
+		<db-attribute name="s_address" type="VARCHAR" isMandatory="true" length="40"/>
+		<db-attribute name="s_comment" type="VARCHAR" isMandatory="true" length="101"/>
+		<db-attribute name="s_name" type="CHAR" isMandatory="true" length="25"/>
+		<db-attribute name="s_nationkey" type="INTEGER" isMandatory="true" length="10"/>
+		<db-attribute name="s_phone" type="CHAR" isMandatory="true" length="15"/>
+		<db-attribute name="s_suppkey" type="BIGINT" isMandatory="true" length="19"/>
+	</db-entity>
+	<obj-entity name="Customer" className="cz.cuni.mff.java.kurinna.microservice.model.Customer" dbEntityName="customer">
+		<obj-attribute name="cAcctbal" type="double" db-attribute-path="c_acctbal"/>
+		<obj-attribute name="cAddress" type="java.lang.String" db-attribute-path="c_address"/>
+		<obj-attribute name="cComment" type="java.lang.String" db-attribute-path="c_comment"/>
+		<obj-attribute name="cCustkey" type="long" db-attribute-path="c_custkey"/>
+		<obj-attribute name="cMktsegment" type="java.lang.String" db-attribute-path="c_mktsegment"/>
+		<obj-attribute name="cName" type="java.lang.String" db-attribute-path="c_name"/>
+		<obj-attribute name="cNationkey" type="int" db-attribute-path="c_nationkey"/>
+		<obj-attribute name="cPhone" type="java.lang.String" db-attribute-path="c_phone"/>
+	</obj-entity>
+	<obj-entity name="Lineitem" className="cz.cuni.mff.java.kurinna.microservice.model.Lineitem" dbEntityName="lineitem">
+		<obj-attribute name="lComment" type="java.lang.String" db-attribute-path="l_comment"/>
+		<obj-attribute name="lCommitdate" type="java.time.LocalDate" db-attribute-path="l_commitdate"/>
+		<obj-attribute name="lDiscount" type="double" db-attribute-path="l_discount"/>
+		<obj-attribute name="lExtendedprice" type="double" db-attribute-path="l_extendedprice"/>
+		<obj-attribute name="lLinenumber" type="long" db-attribute-path="l_linenumber"/>
+		<obj-attribute name="lLinestatus" type="java.lang.String" db-attribute-path="l_linestatus"/>
+		<obj-attribute name="lOrderkey" type="long" db-attribute-path="l_orderkey"/>
+		<obj-attribute name="lPartkey" type="long" db-attribute-path="l_partkey"/>
+		<obj-attribute name="lQuantity" type="double" db-attribute-path="l_quantity"/>
+		<obj-attribute name="lReceiptdate" type="java.time.LocalDate" db-attribute-path="l_receiptdate"/>
+		<obj-attribute name="lReturnflag" type="java.lang.String" db-attribute-path="l_returnflag"/>
+		<obj-attribute name="lShipdate" type="java.time.LocalDate" db-attribute-path="l_shipdate"/>
+		<obj-attribute name="lShipinstruct" type="java.lang.String" db-attribute-path="l_shipinstruct"/>
+		<obj-attribute name="lShipmode" type="java.lang.String" db-attribute-path="l_shipmode"/>
+		<obj-attribute name="lSuppkey" type="long" db-attribute-path="l_suppkey"/>
+		<obj-attribute name="lTax" type="double" db-attribute-path="l_tax"/>
+	</obj-entity>
+	<obj-entity name="Nation" className="cz.cuni.mff.java.kurinna.microservice.model.Nation" dbEntityName="nation">
+		<obj-attribute name="nComment" type="java.lang.String" db-attribute-path="n_comment"/>
+		<obj-attribute name="nName" type="java.lang.String" db-attribute-path="n_name"/>
+		<obj-attribute name="nNationkey" type="int" db-attribute-path="n_nationkey"/>
+		<obj-attribute name="nRegionkey" type="int" db-attribute-path="n_regionkey"/>
+	</obj-entity>
+	<obj-entity name="Orders" className="cz.cuni.mff.java.kurinna.microservice.model.Orders" dbEntityName="orders">
+		<obj-attribute name="oClerk" type="java.lang.String" db-attribute-path="o_clerk"/>
+		<obj-attribute name="oComment" type="java.lang.String" db-attribute-path="o_comment"/>
+		<obj-attribute name="oCustkey" type="long" db-attribute-path="o_custkey"/>
+		<obj-attribute name="oOrderdate" type="java.time.LocalDate" db-attribute-path="o_orderdate"/>
+		<obj-attribute name="oOrderkey" type="long" db-attribute-path="o_orderkey"/>
+		<obj-attribute name="oOrderpriority" type="java.lang.String" db-attribute-path="o_orderpriority"/>
+		<obj-attribute name="oOrderstatus" type="java.lang.String" db-attribute-path="o_orderstatus"/>
+		<obj-attribute name="oShippriority" type="int" db-attribute-path="o_shippriority"/>
+		<obj-attribute name="oTotalprice" type="double" db-attribute-path="o_totalprice"/>
+	</obj-entity>
+	<obj-entity name="Part" className="cz.cuni.mff.java.kurinna.microservice.model.Part" dbEntityName="part">
+		<obj-attribute name="pBrand" type="java.lang.String" db-attribute-path="p_brand"/>
+		<obj-attribute name="pComment" type="java.lang.String" db-attribute-path="p_comment"/>
+		<obj-attribute name="pContainer" type="java.lang.String" db-attribute-path="p_container"/>
+		<obj-attribute name="pMfgr" type="java.lang.String" db-attribute-path="p_mfgr"/>
+		<obj-attribute name="pName" type="java.lang.String" db-attribute-path="p_name"/>
+		<obj-attribute name="pPartkey" type="long" db-attribute-path="p_partkey"/>
+		<obj-attribute name="pRetailprice" type="double" db-attribute-path="p_retailprice"/>
+		<obj-attribute name="pSize" type="int" db-attribute-path="p_size"/>
+		<obj-attribute name="pType" type="java.lang.String" db-attribute-path="p_type"/>
+	</obj-entity>
+	<obj-entity name="Partsupp" className="cz.cuni.mff.java.kurinna.microservice.model.Partsupp" dbEntityName="partsupp">
+		<obj-attribute name="psAvailqty" type="long" db-attribute-path="ps_availqty"/>
+		<obj-attribute name="psComment" type="java.lang.String" db-attribute-path="ps_comment"/>
+		<obj-attribute name="psPartkey" type="long" db-attribute-path="ps_partkey"/>
+		<obj-attribute name="psSuppkey" type="long" db-attribute-path="ps_suppkey"/>
+		<obj-attribute name="psSupplycost" type="double" db-attribute-path="ps_supplycost"/>
+	</obj-entity>
+	<obj-entity name="Region" className="cz.cuni.mff.java.kurinna.microservice.model.Region" dbEntityName="region">
+		<obj-attribute name="rComment" type="java.lang.String" db-attribute-path="r_comment"/>
+		<obj-attribute name="rName" type="java.lang.String" db-attribute-path="r_name"/>
+		<obj-attribute name="rRegionkey" type="int" db-attribute-path="r_regionkey"/>
+	</obj-entity>
+	<obj-entity name="Supplier" className="cz.cuni.mff.java.kurinna.microservice.model.Supplier" dbEntityName="supplier">
+		<obj-attribute name="sAcctbal" type="double" db-attribute-path="s_acctbal"/>
+		<obj-attribute name="sAddress" type="java.lang.String" db-attribute-path="s_address"/>
+		<obj-attribute name="sComment" type="java.lang.String" db-attribute-path="s_comment"/>
+		<obj-attribute name="sName" type="java.lang.String" db-attribute-path="s_name"/>
+		<obj-attribute name="sNationkey" type="int" db-attribute-path="s_nationkey"/>
+		<obj-attribute name="sPhone" type="java.lang.String" db-attribute-path="s_phone"/>
+		<obj-attribute name="sSuppkey" type="long" db-attribute-path="s_suppkey"/>
+	</obj-entity>
+</data-map>

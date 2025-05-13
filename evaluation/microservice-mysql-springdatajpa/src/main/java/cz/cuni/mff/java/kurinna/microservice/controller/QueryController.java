@@ -23,38 +23,8 @@ public class QueryController {
         return ResponseEntity.ok("OK");
     }
 
-    @DeleteMapping("/users")
-    public ResponseEntity<String> deleteAll() {
-        queryService.deleteAll();
-        return ResponseEntity.ok("All users deleted");
-    }
-
-    @DeleteMapping("/users/{id}")
-    public ResponseEntity<String> deleteById(Long id) {
-        queryService.deleteById(id);
-        return ResponseEntity.ok("User with id " + id + " deleted");
-    }
-
-    @PostMapping(value = "/users")
-    public ResponseEntity<Long> save(@RequestBody Customer user) {
-        Customer savedUser = queryService.save(user);
-        return ResponseEntity.ok(savedUser.getC_custkey());
-    }
-
-    @GetMapping("/users/{id}")
-    public ResponseEntity<Customer> findById(@PathVariable Long id) {
-        return ResponseEntity.ok(queryService.findById(id));
-    }
-
-    @GetMapping("/users")
-    public ResponseEntity<List<Customer>> findAll() {
-        return ResponseEntity.ok(queryService.findAll());
-    }
-
-    @GetMapping("/q1")
-    public ResponseEntity<Map<String, Object>> getPricingSummary() {
-        int randomNumber = (int) (Math.random() * 60) + 60;
-        // time the query
+    @GetMapping("/q1/{randomNumber}")
+    public ResponseEntity<Map<String, Object>> getPricingSummary(@PathVariable("randomNumber") int randomNumber) {
         long startTime = System.currentTimeMillis();
         List<PricingSummary> pricingSummary = queryService.getPricingSummary(randomNumber);
         long endTime = System.currentTimeMillis();

@@ -4,6 +4,7 @@ import cz.cuni.mff.java.kurinna.microservice.dto.PricingSummary;
 import cz.cuni.mff.java.kurinna.microservice.service.QueryService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.HashMap;
@@ -23,9 +24,8 @@ public class QueryController {
         return ResponseEntity.ok("OK");
     }
 
-    @GetMapping("/q1")
-    public ResponseEntity<Map<String, Object>> getPricingSummary() {
-        int randomNumber = (int) (Math.random() * 60) + 60;
+    @GetMapping("/q1/{randomNumber}")
+    public ResponseEntity<Map<String, Object>> getPricingSummary(@PathVariable("randomNumber") int randomNumber) {
         long startTime = System.currentTimeMillis();
         List<PricingSummary> pricingSummary = queryService.getPricingSummary(randomNumber);
         long endTime = System.currentTimeMillis();
