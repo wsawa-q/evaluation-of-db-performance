@@ -22,7 +22,26 @@ public class SpringDataJpaController {
 
     @GetMapping(value = "/q1", produces = MediaType.APPLICATION_JSON_VALUE)
     public String getPricingSummary() {
-        int randomNumber = (int) (Math.random() * 60) + 60;
-        return springDataJpaService.getPricingSummary(randomNumber);
+        return springDataJpaService.getPricingSummary();
+    }
+
+    @GetMapping(value = "/q2", produces = MediaType.APPLICATION_JSON_VALUE)
+    public String getMinimumCostSupplier() {
+        return springDataJpaService.getMinimumCostSupplier();
+    }
+
+    @GetMapping(value = "/q3", produces = MediaType.APPLICATION_JSON_VALUE)
+    public String getShippingPriority() {
+        return springDataJpaService.getShippingPriority();
+    }
+
+    @GetMapping(value = "/q4", produces = MediaType.APPLICATION_JSON_VALUE)
+    public String getOrderPriorityChecking() {
+        return springDataJpaService.getOrderPriorityChecking();
+    }
+
+    @GetMapping(value = "/q5", produces = MediaType.APPLICATION_JSON_VALUE)
+    public String getLocalSupplierVolume() {
+        return springDataJpaService.getLocalSupplierVolume();
     }
 }

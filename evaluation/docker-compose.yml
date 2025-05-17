@@ -11,26 +11,31 @@ services:
       MYSQL_PASSWORD: ${MYSQL_PASSWORD}
     ports:
       - "3306:3306"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
     volumes:
       - mysql_data:/var/lib/mysql
       - ./database/mysql/mysql_initial.sql:/docker-entrypoint-initdb.d/initial.sql
 
-  pgdb:
-    build:
-      context: .
-      dockerfile: ./database/postgres/Dockerfile
-    container_name: postgres-db
-    shm_size: 128mb
-    environment:
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_DB: ${POSTGRES_DB}
-    ports:
-      - "5432:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-      - ./database/postgres/postgres_initial.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
-#      - ./database/tpch-data-small.zip:/tmp/tpch-data-small.zip:ro
+#  pgdb:
+#    build:
+#      context: .
+#      dockerfile: ./database/postgres/Dockerfile
+#    container_name: postgres-db
+#    shm_size: 128mb
+#    environment:
+#      POSTGRES_USER: ${POSTGRES_USER}
+#      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+#      POSTGRES_DB: ${POSTGRES_DB}
+#    ports:
+#      - "5432:5432"
+#    volumes:
+#      - postgres_data:/var/lib/postgresql/data
+#      - ./database/postgres/postgres_initial.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
+##      - ./database/tpch-data-small.zip:/tmp/tpch-data-small.zip:ro
 
   adminer:
     image: adminer
@@ -38,11 +43,11 @@ services:
     ports:
       - "8090:8080"
     depends_on:
-      - db
+      db:
+        condition: service_healthy
 
   microservice-mysql-springdatajpa:
     build: ./microservice-mysql-springdatajpa
-#    image: microservice-mysql-springdatajpa:latest
     container_name: ms-mysql-springdatajpa
     environment:
       MYSQL_HOST: db
@@ -52,11 +57,11 @@ services:
     ports:
       - "8080:8080"
     depends_on:
-      - db
+      db:
+        condition: service_healthy
 
   microservice-mysql-jdbc:
     build: ./microservice-mysql-jdbc
-    #    image: microservice-mysql-jdbc:latest
     container_name: ms-mysql-jdbc
     environment:
       MYSQL_HOST: db
@@ -66,7 +71,8 @@ services:
     ports:
       - "8081:8080"
     depends_on:
-      - db
+      db:
+        condition: service_healthy
 
   microservice-mysql-mybatis:
     build: ./microservice-mysql-mybatis
@@ -79,8 +85,68 @@ services:
     ports:
       - "8082:8080"
     depends_on:
-      - db
+      db:
+        condition: service_healthy
+
+  microservice-mysql-cayenne:
+    build: ./microservice-mysql-cayenne
+    container_name: ms-mysql-cayenne
+    environment:
+      MYSQL_HOST: db
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/${MYSQL_DATABASE}
+    ports:
+      - "8083:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  microservice-mysql-jooq:
+    build: microservice-mysql-jooq
+    container_name: ms-mysql-jooq
+    environment:
+      MYSQL_HOST: db
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/${MYSQL_DATABASE}
+    ports:
+      - "8084:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  microservice-mysql-ebean:
+    build: ./microservice-mysql-ebean
+    container_name: ms-mysql-ebean
+    environment:
+      MYSQL_HOST: db
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/${MYSQL_DATABASE}
+    ports:
+      - "8085:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  orchestrator:
+    build: ./orchestrator
+    container_name: orchestrator
+    environment:
+      SPRINGDATA_JPA_API: http://microservice-mysql-springdatajpa:8080
+      JDBC_API: http://microservice-mysql-jdbc:8080
+      MYBATIS_API: http://microservice-mysql-mybatis:8080
+      CAYENNE_API: http://microservice-mysql-cayenne:8080
+      JOOQ_API: http://microservice-mysql-jooq:8080
+      EBEAN_API: http://microservice-mysql-ebean:8080
+    ports:
+      - "8100:8080"
+    depends_on:
+      db:
+        condition: service_healthy
 
 volumes:
   mysql_data:
-  postgres_data:
+  # postgres_data:

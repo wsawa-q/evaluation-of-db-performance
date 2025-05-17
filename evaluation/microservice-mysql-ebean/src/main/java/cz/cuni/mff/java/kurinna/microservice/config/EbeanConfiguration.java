@@ -17,8 +17,6 @@ public class EbeanConfiguration {
 
         config.loadFromProperties();
 
-        System.out.println("Configuring Ebean with properties: " + config.getProperties());
-
         return DatabaseFactory.create(config);
     }
 }

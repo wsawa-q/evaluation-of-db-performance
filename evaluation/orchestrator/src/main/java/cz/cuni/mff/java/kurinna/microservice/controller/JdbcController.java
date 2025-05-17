@@ -1,47 +1,47 @@
 package cz.cuni.mff.java.kurinna.microservice.controller;
 
-import cz.cuni.mff.java.kurinna.microservice.service.MyBatisService;
+import cz.cuni.mff.java.kurinna.microservice.service.JdbcService;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/mybatis")
-public class MyBatisController {
-    private final MyBatisService myBatisService;
+@RequestMapping("/jdbc")
+public class JdbcController {
+    private final JdbcService jdbcService;
 
-    public MyBatisController(MyBatisService myBatisService) {
-        this.myBatisService = myBatisService;
+    public JdbcController(JdbcService jdbcService) {
+        this.jdbcService = jdbcService;
     }
 
     @GetMapping("/health")
     public String healthCheck() {
-        return myBatisService.healthCheck();
+        return jdbcService.healthCheck();
     }
 
     @GetMapping(value = "/q1", produces = MediaType.APPLICATION_JSON_VALUE)
     public String getPricingSummary() {
-        return myBatisService.getPricingSummary();
+        return jdbcService.getPricingSummary();
     }
 
     @GetMapping(value = "/q2", produces = MediaType.APPLICATION_JSON_VALUE)
     public String getMinimumCostSupplier() {
-        return myBatisService.getMinimumCostSupplier();
+        return jdbcService.getMinimumCostSupplier();
     }
 
     @GetMapping(value = "/q3", produces = MediaType.APPLICATION_JSON_VALUE)
     public String getShippingPriority() {
-        return myBatisService.getShippingPriority();
+        return jdbcService.getShippingPriority();
     }
 
     @GetMapping(value = "/q4", produces = MediaType.APPLICATION_JSON_VALUE)
     public String getOrderPriorityChecking() {
-        return myBatisService.getOrderPriorityChecking();
+        return jdbcService.getOrderPriorityChecking();
     }
 
     @GetMapping(value = "/q5", produces = MediaType.APPLICATION_JSON_VALUE)
     public String getLocalSupplierVolume() {
-        return myBatisService.getLocalSupplierVolume();
+        return jdbcService.getLocalSupplierVolume();
     }
 }

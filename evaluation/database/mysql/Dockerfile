@@ -9,4 +9,3 @@ RUN apt-get update && \
 
 RUN unzip /var/lib/mysql-files/tpch-data-small.zip -d /var/lib/mysql-files/ && \
     rm /var/lib/mysql-files/tpch-data-small.zip
-

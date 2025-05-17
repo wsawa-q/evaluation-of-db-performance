@@ -1,44 +1,41 @@
 package cz.cuni.mff.java.kurinna.microservice.service;
 
 import cz.cuni.mff.java.kurinna.microservice.dto.PricingSummary;
-import cz.cuni.mff.java.kurinna.microservice.model.Customer;
-import cz.cuni.mff.java.kurinna.microservice.repository.CustomerRepository;
-import cz.cuni.mff.java.kurinna.microservice.repository.LineItemRepository;
+import cz.cuni.mff.java.kurinna.microservice.dto.MinimumCostSupplier;
+import cz.cuni.mff.java.kurinna.microservice.dto.ShippingPriority;
+import cz.cuni.mff.java.kurinna.microservice.dto.OrderPriorityChecking;
+import cz.cuni.mff.java.kurinna.microservice.dto.LocalSupplierVolume;
+import cz.cuni.mff.java.kurinna.microservice.repository.UniversalRepository;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @Service
 public class QueryService {
-    private final CustomerRepository customerRepository;
-    private final LineItemRepository lineItemRepository;
+    private final UniversalRepository universalRepository;
 
-    public QueryService(CustomerRepository customerRepository, LineItemRepository lineItemRepository) {
-        this.customerRepository = customerRepository;
-        this.lineItemRepository = lineItemRepository;
+    public QueryService(UniversalRepository universalRepository) {
+        this.universalRepository = universalRepository;
     }
 
-    public void deleteAll() {
-        customerRepository.deleteAll();
+    public List<PricingSummary> getPricingSummary(int days) {
+        return universalRepository.findPricingSummaryReport(days);
     }
 
-    public void deleteById(Long id) {
-        customerRepository.deleteById(id);
+    public List<MinimumCostSupplier> getMinimumCostSupplier(int size, String type, String region) {
+        return universalRepository.findMinimumCostSupplier(size, type, region);
     }
 
-    public Customer save(Customer user) {
-        return customerRepository.save(user);
+    public List<ShippingPriority> getShippingPriority(String segment, LocalDate orderDate, LocalDate shipDate) {
+        return universalRepository.findShippingPriority(segment, orderDate, shipDate);
     }
 
-    public Customer findById(Long id) {
-        return customerRepository.findById(id).orElse(null);
+    public List<OrderPriorityChecking> getOrderPriorityChecking(LocalDate orderDate) {
+        return universalRepository.findOrderPriorityChecking(orderDate);
     }
 
-    public List<Customer> findAll() {
-        return customerRepository.findAll();
-    }
-
-    public List<PricingSummary> getPricingSummary(int randomNumber) {
-        return lineItemRepository.findPricingSummaryReport(randomNumber);
+    public List<LocalSupplierVolume> getLocalSupplierVolume(String region, LocalDate orderDate) {
+        return universalRepository.findLocalSupplierVolume(region, orderDate);
     }
 }
