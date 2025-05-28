@@ -1,155 +1,206 @@
 package cz.cuni.mff.java.kurinna.microservice.service;
 
+import cz.cuni.mff.java.kurinna.microservice.client.MicroserviceMysqlCayenneClient;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
+
+import java.util.Map;
 
 @Service
 public class CayenneService {
-    private final RestTemplate restTemplate;
-    private final String cayenneEndpoint = System.getenv("CAYENNE_API");
+    private final MicroserviceMysqlCayenneClient cayenneClient;
 
-    public CayenneService(RestTemplate restTemplate) {
-        this.restTemplate = restTemplate;
+    public CayenneService(MicroserviceMysqlCayenneClient cayenneClient) {
+        this.cayenneClient = cayenneClient;
     }
 
+    // health check
     public String healthCheck() {
-        String url = cayenneEndpoint + "/health";
-        return restTemplate.getForObject(url, String.class);
+        return cayenneClient.health().getBody();
     }
 
-    public String getPricingSummary() {
-        String url = cayenneEndpoint + "/q1";
-        return restTemplate.getForObject(url, String.class);
+    // get pricing summary
+    public Map<String, Object> getPricingSummary() {
+        Map<String, Object> response = cayenneClient.getPricingSummary().getBody();
+        if (response == null || response.isEmpty()) {
+            throw new RuntimeException("No data found");
+        }
+        return response;
     }
 
-    public String getMinimumCostSupplier() {
-        String url = cayenneEndpoint + "/q2";
-        return restTemplate.getForObject(url, String.class);
+    // get minimum cost supplier
+    public Map<String, Object> getMinimumCostSupplier() {
+        Map<String, Object> response = cayenneClient.getMinimumCostSupplier().getBody();
+        if (response == null || response.isEmpty()) {
+            throw new RuntimeException("No data found");
+        }
+        return response;
     }
 
-    public String getShippingPriority() {
-        String url = cayenneEndpoint + "/q3";
-        return restTemplate.getForObject(url, String.class);
+    // get shipping priority
+    public Map<String, Object> getShippingPriority() {
+        Map<String, Object> response = cayenneClient.getShippingPriority().getBody();
+        if (response == null || response.isEmpty()) {
+            throw new RuntimeException("No data found");
+        }
+        return response;
     }
 
-    public String getOrderPriorityChecking() {
-        String url = cayenneEndpoint + "/q4";
-        return restTemplate.getForObject(url, String.class);
+    // get order priority checking
+    public Map<String, Object> getOrderPriorityChecking() {
+        Map<String, Object> response = cayenneClient.getOrderPriorityChecking().getBody();
+        if (response == null || response.isEmpty()) {
+            throw new RuntimeException("No data found");
+        }
+        return response;
     }
 
-    public String getLocalSupplierVolume() {
-        String url = cayenneEndpoint + "/q5";
-        return restTemplate.getForObject(url, String.class);
+    // get local supplier volume
+    public Map<String, Object> getLocalSupplierVolume() {
+        Map<String, Object> response = cayenneClient.getLocalSupplierVolume().getBody();
+        if (response == null || response.isEmpty()) {
+            throw new RuntimeException("No data found");
+        }
+        return response;
     }
 
     // A) Selection, Projection, Source (of data)
-    public String executeQueryA1() {
-        String url = cayenneEndpoint + "/a1";
-        return restTemplate.getForObject(url, String.class);
+    public Map<String, Object> executeQueryA1() {
+        Map<String, Object> response = cayenneClient.getNonIndexedColumns().getBody();
+        if (response == null || response.isEmpty()) {
+            throw new RuntimeException("No data found");
+        }
+        return response;
     }
 
-    public String executeQueryA2() {
-        String url = cayenneEndpoint + "/a2";
-        return restTemplate.getForObject(url, String.class);
+    public Map<String, Object> executeQueryA2() {
+        Map<String, Object> response = cayenneClient.getNonIndexedColumnsRangeQuery("1996-01-01", "1996-12-31").getBody();
+        if (response == null || response.isEmpty()) {
+            throw new RuntimeException("No data found");
+        }
+        return response;
     }
 
-    public String executeQueryA3() {
-        String url = cayenneEndpoint + "/a3";
-        return restTemplate.getForObject(url, String.class);
+    public Map<String, Object> executeQueryA3() {
+        Map<String, Object> response = cayenneClient.getIndexedColumns().getBody();
+        if (response == null || response.isEmpty()) {
+            throw new RuntimeException("No data found");
+        }
+        return response;
     }
 
-    public String executeQueryA4() {
-        String url = cayenneEndpoint + "/a4";
-        return restTemplate.getForObject(url, String.class);
+    public Map<String, Object> executeQueryA4() {
+        Map<String, Object> response = cayenneClient.getIndexedColumnsRangeQuery(1000, 50000).getBody();
+        if (response == null || response.isEmpty()) {
+            throw new RuntimeException("No data found");
+        }
+        return response;
     }
 
     // B) Aggregation
-    public String executeQueryB1() {
-        String url = cayenneEndpoint + "/b1";
-        return restTemplate.getForObject(url, String.class);
+    public Map<String, Object> executeQueryB1() {
+        Map<String, Object> response = cayenneClient.getCount().getBody();
+        if (response == null || response.isEmpty()) {
+            throw new RuntimeException("No data found");
+        }
+        return response;
     }
 
-    public String executeQueryB2() {
-        String url = cayenneEndpoint + "/b2";
-        return restTemplate.getForObject(url, String.class);
+    public Map<String, Object> executeQueryB2() {
+        Map<String, Object> response = cayenneClient.getMax().getBody();
+        if (response == null || response.isEmpty()) {
+            throw new RuntimeException("No data found");
+        }
+        return response;
     }
 
     // C) Joins
-    public String executeQueryC1() {
-        String url = cayenneEndpoint + "/c1";
-        return restTemplate.getForObject(url, String.class);
+    public Map<String, Object> executeQueryC1() {
+        Map<String, Object> response = cayenneClient.getJoinNonIndexedColumns().getBody();
+        if (response == null || response.isEmpty()) {
+            throw new RuntimeException("No data found");
+        }
+        return response;
     }
 
-    public String executeQueryC2() {
-        String url = cayenneEndpoint + "/c2";
-        return restTemplate.getForObject(url, String.class);
+    public Map<String, Object> executeQueryC2() {
+        Map<String, Object> response = cayenneClient.getJoinIndexedColumns().getBody();
+        if (response == null || response.isEmpty()) {
+            throw new RuntimeException("No data found");
+        }
+        return response;
     }
 
-    public String executeQueryC3() {
-        String url = cayenneEndpoint + "/c3";
-        return restTemplate.getForObject(url, String.class);
+    public Map<String, Object> executeQueryC3() {
+        Map<String, Object> response = cayenneClient.getComplexJoin1().getBody();
+        if (response == null || response.isEmpty()) {
+            throw new RuntimeException("No data found");
+        }
+        return response;
     }
 
-    public String executeQueryC4() {
-        String url = cayenneEndpoint + "/c4";
-        return restTemplate.getForObject(url, String.class);
+    public Map<String, Object> executeQueryC4() {
+        Map<String, Object> response = cayenneClient.getComplexJoin2().getBody();
+        if (response == null || response.isEmpty()) {
+            throw new RuntimeException("No data found");
+        }
+        return response;
     }
 
-    public String executeQueryC5() {
-        String url = cayenneEndpoint + "/c5";
-        return restTemplate.getForObject(url, String.class);
+    public Map<String, Object> executeQueryC5() {
+        Map<String, Object> response = cayenneClient.getLeftOuterJoin().getBody();
+        if (response == null || response.isEmpty()) {
+            throw new RuntimeException("No data found");
+        }
+        return response;
     }
 
     // D) Set operations
-    public String executeQueryD1() {
-        String url = cayenneEndpoint + "/d1";
-        return restTemplate.getForObject(url, String.class);
+    public Map<String, Object> executeQueryD1() {
+        Map<String, Object> response = cayenneClient.getUnion().getBody();
+        if (response == null || response.isEmpty()) {
+            throw new RuntimeException("No data found");
+        }
+        return response;
     }
 
-    public String executeQueryD2() {
-        String url = cayenneEndpoint + "/d2";
-        return restTemplate.getForObject(url, String.class);
+    public Map<String, Object> executeQueryD2() {
+        Map<String, Object> response = cayenneClient.getIntersect().getBody();
+        if (response == null || response.isEmpty()) {
+            throw new RuntimeException("No data found");
+        }
+        return response;
     }
 
-    public String executeQueryD3() {
-        String url = cayenneEndpoint + "/d3";
-        return restTemplate.getForObject(url, String.class);
+    public Map<String, Object> executeQueryD3() {
+        Map<String, Object> response = cayenneClient.getDifference().getBody();
+        if (response == null || response.isEmpty()) {
+            throw new RuntimeException("No data found");
+        }
+        return response;
     }
 
     // E) Result Modification
-    public String executeQueryE1() {
-        String url = cayenneEndpoint + "/e1";
-        return restTemplate.getForObject(url, String.class);
+    public Map<String, Object> executeQueryE1() {
+        Map<String, Object> response = cayenneClient.getNonIndexedColumnsSorting().getBody();
+        if (response == null || response.isEmpty()) {
+            throw new RuntimeException("No data found");
+        }
+        return response;
     }
 
-    public String executeQueryE2() {
-        String url = cayenneEndpoint + "/e2";
-        return restTemplate.getForObject(url, String.class);
+    public Map<String, Object> executeQueryE2() {
+        Map<String, Object> response = cayenneClient.getIndexedColumnsSorting().getBody();
+        if (response == null || response.isEmpty()) {
+            throw new RuntimeException("No data found");
+        }
+        return response;
     }
 
-    public String executeQueryE3() {
-        String url = cayenneEndpoint + "/e3";
-        return restTemplate.getForObject(url, String.class);
-    }
-
-    // F) Advanced Queries
-    public String executeQueryF1() {
-        String url = cayenneEndpoint + "/f1";
-        return restTemplate.getForObject(url, String.class);
-    }
-
-    public String executeQueryF2() {
-        String url = cayenneEndpoint + "/f2";
-        return restTemplate.getForObject(url, String.class);
-    }
-
-    public String executeQueryF3() {
-        String url = cayenneEndpoint + "/f3";
-        return restTemplate.getForObject(url, String.class);
-    }
-
-    public String executeQueryF4() {
-        String url = cayenneEndpoint + "/f4";
-        return restTemplate.getForObject(url, String.class);
+    public Map<String, Object> executeQueryE3() {
+        Map<String, Object> response = cayenneClient.getDistinct().getBody();
+        if (response == null || response.isEmpty()) {
+            throw new RuntimeException("No data found");
+        }
+        return response;
     }
 }

@@ -1,155 +1,207 @@
 package cz.cuni.mff.java.kurinna.microservice.service;
 
+import cz.cuni.mff.java.kurinna.microservice.client.MicroserviceMysqlMyBatisClient;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import java.util.Map;
+
 @Service
 public class MyBatisService {
-    private final RestTemplate restTemplate;
-    private final String myBatisEndpoint = System.getenv("MYBATIS_API");
+    private final MicroserviceMysqlMyBatisClient myBatisClient;
 
-    public MyBatisService(RestTemplate restTemplate) {
-        this.restTemplate = restTemplate;
+    public MyBatisService(MicroserviceMysqlMyBatisClient myBatisClient) {
+        this.myBatisClient = myBatisClient;
     }
 
+    // health check
     public String healthCheck() {
-        String url = myBatisEndpoint + "/health";
-        return restTemplate.getForObject(url, String.class);
+        return myBatisClient.health().getBody();
     }
 
-    public String getPricingSummary() {
-        String url = myBatisEndpoint + "/q1";
-        return restTemplate.getForObject(url, String.class);
+    // get pricing summary
+    public Map<String, Object> getPricingSummary() {
+        Map<String, Object> response = myBatisClient.getPricingSummary().getBody();
+        if (response == null || response.isEmpty()) {
+            throw new RuntimeException("No data found");
+        }
+        return response;
     }
 
-    public String getMinimumCostSupplier() {
-        String url = myBatisEndpoint + "/q2";
-        return restTemplate.getForObject(url, String.class);
+    // get minimum cost supplier
+    public Map<String, Object> getMinimumCostSupplier() {
+        Map<String, Object> response = myBatisClient.getMinimumCostSupplier().getBody();
+        if (response == null || response.isEmpty()) {
+            throw new RuntimeException("No data found");
+        }
+        return response;
     }
 
-    public String getShippingPriority() {
-        String url = myBatisEndpoint + "/q3";
-        return restTemplate.getForObject(url, String.class);
+    // get shipping priority
+    public Map<String, Object> getShippingPriority() {
+        Map<String, Object> response = myBatisClient.getShippingPriority().getBody();
+        if (response == null || response.isEmpty()) {
+            throw new RuntimeException("No data found");
+        }
+        return response;
     }
 
-    public String getOrderPriorityChecking() {
-        String url = myBatisEndpoint + "/q4";
-        return restTemplate.getForObject(url, String.class);
+    // get order priority checking
+    public Map<String, Object> getOrderPriorityChecking() {
+        Map<String, Object> response = myBatisClient.getOrderPriorityChecking().getBody();
+        if (response == null || response.isEmpty()) {
+            throw new RuntimeException("No data found");
+        }
+        return response;
     }
 
-    public String getLocalSupplierVolume() {
-        String url = myBatisEndpoint + "/q5";
-        return restTemplate.getForObject(url, String.class);
+    // get local supplier volume
+    public Map<String, Object> getLocalSupplierVolume() {
+        Map<String, Object> response = myBatisClient.getLocalSupplierVolume().getBody();
+        if (response == null || response.isEmpty()) {
+            throw new RuntimeException("No data found");
+        }
+        return response;
     }
 
     // A) Selection, Projection, Source (of data)
-    public String executeQueryA1() {
-        String url = myBatisEndpoint + "/a1";
-        return restTemplate.getForObject(url, String.class);
+    public Map<String, Object> executeQueryA1() {
+        Map<String, Object> response = myBatisClient.getNonIndexedColumns().getBody();
+        if (response == null || response.isEmpty()) {
+            throw new RuntimeException("No data found");
+        }
+        return response;
     }
 
-    public String executeQueryA2() {
-        String url = myBatisEndpoint + "/a2";
-        return restTemplate.getForObject(url, String.class);
+    public Map<String, Object> executeQueryA2() {
+        Map<String, Object> response = myBatisClient.getNonIndexedColumnsRangeQuery("1996-01-01", "1996-12-31").getBody();
+        if (response == null || response.isEmpty()) {
+            throw new RuntimeException("No data found");
+        }
+        return response;
     }
 
-    public String executeQueryA3() {
-        String url = myBatisEndpoint + "/a3";
-        return restTemplate.getForObject(url, String.class);
+    public Map<String, Object> executeQueryA3() {
+        Map<String, Object> response = myBatisClient.getIndexedColumns().getBody();
+        if (response == null || response.isEmpty()) {
+            throw new RuntimeException("No data found");
+        }
+        return response;
     }
 
-    public String executeQueryA4() {
-        String url = myBatisEndpoint + "/a4";
-        return restTemplate.getForObject(url, String.class);
+    public Map<String, Object> executeQueryA4() {
+        Map<String, Object> response = myBatisClient.getIndexedColumnsRangeQuery(1000, 50000).getBody();
+        if (response == null || response.isEmpty()) {
+            throw new RuntimeException("No data found");
+        }
+        return response;
     }
 
     // B) Aggregation
-    public String executeQueryB1() {
-        String url = myBatisEndpoint + "/b1";
-        return restTemplate.getForObject(url, String.class);
+    public Map<String, Object> executeQueryB1() {
+        Map<String, Object> response = myBatisClient.getCount().getBody();
+        if (response == null || response.isEmpty()) {
+            throw new RuntimeException("No data found");
+        }
+        return response;
     }
 
-    public String executeQueryB2() {
-        String url = myBatisEndpoint + "/b2";
-        return restTemplate.getForObject(url, String.class);
+    public Map<String, Object> executeQueryB2() {
+        Map<String, Object> response = myBatisClient.getMax().getBody();
+        if (response == null || response.isEmpty()) {
+            throw new RuntimeException("No data found");
+        }
+        return response;
     }
 
     // C) Joins
-    public String executeQueryC1() {
-        String url = myBatisEndpoint + "/c1";
-        return restTemplate.getForObject(url, String.class);
+    public Map<String, Object> executeQueryC1() {
+        Map<String, Object> response = myBatisClient.getJoinNonIndexedColumns().getBody();
+        if (response == null || response.isEmpty()) {
+            throw new RuntimeException("No data found");
+        }
+        return response;
     }
 
-    public String executeQueryC2() {
-        String url = myBatisEndpoint + "/c2";
-        return restTemplate.getForObject(url, String.class);
+    public Map<String, Object> executeQueryC2() {
+        Map<String, Object> response = myBatisClient.getJoinIndexedColumns().getBody();
+        if (response == null || response.isEmpty()) {
+            throw new RuntimeException("No data found");
+        }
+        return response;
     }
 
-    public String executeQueryC3() {
-        String url = myBatisEndpoint + "/c3";
-        return restTemplate.getForObject(url, String.class);
+    public Map<String, Object> executeQueryC3() {
+        Map<String, Object> response = myBatisClient.getComplexJoin1().getBody();
+        if (response == null || response.isEmpty()) {
+            throw new RuntimeException("No data found");
+        }
+        return response;
     }
 
-    public String executeQueryC4() {
-        String url = myBatisEndpoint + "/c4";
-        return restTemplate.getForObject(url, String.class);
+    public Map<String, Object> executeQueryC4() {
+        Map<String, Object> response = myBatisClient.getComplexJoin2().getBody();
+        if (response == null || response.isEmpty()) {
+            throw new RuntimeException("No data found");
+        }
+        return response;
     }
 
-    public String executeQueryC5() {
-        String url = myBatisEndpoint + "/c5";
-        return restTemplate.getForObject(url, String.class);
+    public Map<String, Object> executeQueryC5() {
+        Map<String, Object> response = myBatisClient.getLeftOuterJoin().getBody();
+        if (response == null || response.isEmpty()) {
+            throw new RuntimeException("No data found");
+        }
+        return response;
     }
 
     // D) Set operations
-    public String executeQueryD1() {
-        String url = myBatisEndpoint + "/d1";
-        return restTemplate.getForObject(url, String.class);
+    public Map<String, Object> executeQueryD1() {
+        Map<String, Object> response = myBatisClient.getUnion().getBody();
+        if (response == null || response.isEmpty()) {
+            throw new RuntimeException("No data found");
+        }
+        return response;
     }
 
-    public String executeQueryD2() {
-        String url = myBatisEndpoint + "/d2";
-        return restTemplate.getForObject(url, String.class);
+    public Map<String, Object> executeQueryD2() {
+        Map<String, Object> response = myBatisClient.getIntersect().getBody();
+        if (response == null || response.isEmpty()) {
+            throw new RuntimeException("No data found");
+        }
+        return response;
     }
 
-    public String executeQueryD3() {
-        String url = myBatisEndpoint + "/d3";
-        return restTemplate.getForObject(url, String.class);
+    public Map<String, Object> executeQueryD3() {
+        Map<String, Object> response = myBatisClient.getDifference().getBody();
+        if (response == null || response.isEmpty()) {
+            throw new RuntimeException("No data found");
+        }
+        return response;
     }
 
     // E) Result Modification
-    public String executeQueryE1() {
-        String url = myBatisEndpoint + "/e1";
-        return restTemplate.getForObject(url, String.class);
+    public Map<String, Object> executeQueryE1() {
+        Map<String, Object> response = myBatisClient.getNonIndexedColumnsSorting().getBody();
+        if (response == null || response.isEmpty()) {
+            throw new RuntimeException("No data found");
+        }
+        return response;
     }
 
-    public String executeQueryE2() {
-        String url = myBatisEndpoint + "/e2";
-        return restTemplate.getForObject(url, String.class);
+    public Map<String, Object> executeQueryE2() {
+        Map<String, Object> response = myBatisClient.getIndexedColumnsSorting().getBody();
+        if (response == null || response.isEmpty()) {
+            throw new RuntimeException("No data found");
+        }
+        return response;
     }
 
-    public String executeQueryE3() {
-        String url = myBatisEndpoint + "/e3";
-        return restTemplate.getForObject(url, String.class);
-    }
-
-    // F) Advanced Queries
-    public String executeQueryF1() {
-        String url = myBatisEndpoint + "/f1";
-        return restTemplate.getForObject(url, String.class);
-    }
-
-    public String executeQueryF2() {
-        String url = myBatisEndpoint + "/f2";
-        return restTemplate.getForObject(url, String.class);
-    }
-
-    public String executeQueryF3() {
-        String url = myBatisEndpoint + "/f3";
-        return restTemplate.getForObject(url, String.class);
-    }
-
-    public String executeQueryF4() {
-        String url = myBatisEndpoint + "/f4";
-        return restTemplate.getForObject(url, String.class);
+    public Map<String, Object> executeQueryE3() {
+        Map<String, Object> response = myBatisClient.getDistinct().getBody();
+        if (response == null || response.isEmpty()) {
+            throw new RuntimeException("No data found");
+        }
+        return response;
     }
 }

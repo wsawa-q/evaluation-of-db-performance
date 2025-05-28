@@ -4,6 +4,7 @@ services:
       context: .
       dockerfile: ./database/mysql/Dockerfile
     container_name: mysql-db
+    restart: unless-stopped
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
       MYSQL_DATABASE: ${MYSQL_DATABASE}
@@ -20,23 +21,6 @@ services:
       - mysql_data:/var/lib/mysql
       - ./database/mysql/mysql_initial.sql:/docker-entrypoint-initdb.d/initial.sql
 
-#  pgdb:
-#    build:
-#      context: .
-#      dockerfile: ./database/postgres/Dockerfile
-#    container_name: postgres-db
-#    shm_size: 128mb
-#    environment:
-#      POSTGRES_USER: ${POSTGRES_USER}
-#      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-#      POSTGRES_DB: ${POSTGRES_DB}
-#    ports:
-#      - "5432:5432"
-#    volumes:
-#      - postgres_data:/var/lib/postgresql/data
-#      - ./database/postgres/postgres_initial.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
-##      - ./database/tpch-data-small.zip:/tmp/tpch-data-small.zip:ro
-
   adminer:
     image: adminer
     restart: always
@@ -46,14 +30,25 @@ services:
       db:
         condition: service_healthy
 
+  eureka-server:
+    build: ./eureka-server
+    container_name: eureka-server
+    restart: unless-stopped
+    ports:
+      - "8761:8761"
+
   microservice-mysql-springdatajpa:
-    build: ./microservice-mysql-springdatajpa
+    build:
+      context: .
+      dockerfile: microservice-mysql-springdatajpa/Dockerfile
     container_name: ms-mysql-springdatajpa
+    restart: unless-stopped
     environment:
       MYSQL_HOST: db
       MYSQL_USER: ${MYSQL_USER}
       MYSQL_PASSWORD: ${MYSQL_PASSWORD}
       SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/${MYSQL_DATABASE}
+      EUREKA_URL: http://eureka-server:8761/eureka
     ports:
       - "8080:8080"
     depends_on:
@@ -61,13 +56,17 @@ services:
         condition: service_healthy
 
   microservice-mysql-jdbc:
-    build: ./microservice-mysql-jdbc
+    build:
+      context: .
+      dockerfile: microservice-mysql-jdbc/Dockerfile
     container_name: ms-mysql-jdbc
+    restart: unless-stopped
     environment:
       MYSQL_HOST: db
       MYSQL_USER: ${MYSQL_USER}
       MYSQL_PASSWORD: ${MYSQL_PASSWORD}
       SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/${MYSQL_DATABASE}
+      EUREKA_URL: http://eureka-server:8761/eureka
     ports:
       - "8081:8080"
     depends_on:
@@ -75,13 +74,17 @@ services:
         condition: service_healthy
 
   microservice-mysql-mybatis:
-    build: ./microservice-mysql-mybatis
+    build:
+      context: .
+      dockerfile: microservice-mysql-mybatis/Dockerfile
     container_name: ms-mysql-mybatis
+    restart: unless-stopped
     environment:
       MYSQL_HOST: db
       MYSQL_USER: ${MYSQL_USER}
       MYSQL_PASSWORD: ${MYSQL_PASSWORD}
       SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/${MYSQL_DATABASE}
+      EUREKA_URL: http://eureka-server:8761/eureka
     ports:
       - "8082:8080"
     depends_on:
@@ -89,13 +92,17 @@ services:
         condition: service_healthy
 
   microservice-mysql-cayenne:
-    build: ./microservice-mysql-cayenne
+    build:
+      context: .
+      dockerfile: microservice-mysql-cayenne/Dockerfile
     container_name: ms-mysql-cayenne
+    restart: unless-stopped
     environment:
       MYSQL_HOST: db
       MYSQL_USER: ${MYSQL_USER}
       MYSQL_PASSWORD: ${MYSQL_PASSWORD}
       SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/${MYSQL_DATABASE}
+      EUREKA_URL: http://eureka-server:8761/eureka
     ports:
       - "8083:8080"
     depends_on:
@@ -103,13 +110,17 @@ services:
         condition: service_healthy
 
   microservice-mysql-jooq:
-    build: microservice-mysql-jooq
+    build:
+      context: .
+      dockerfile: microservice-mysql-jooq/Dockerfile
     container_name: ms-mysql-jooq
+    restart: unless-stopped
     environment:
       MYSQL_HOST: db
       MYSQL_USER: ${MYSQL_USER}
       MYSQL_PASSWORD: ${MYSQL_PASSWORD}
       SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/${MYSQL_DATABASE}
+      EUREKA_URL: http://eureka-server:8761/eureka
     ports:
       - "8084:8080"
     depends_on:
@@ -117,14 +128,18 @@ services:
         condition: service_healthy
 
   microservice-mysql-ebean:
-    build: ./microservice-mysql-ebean
+    build:
+      context: .
+      dockerfile: microservice-mysql-ebean/Dockerfile
     container_name: ms-mysql-ebean
+    restart: unless-stopped
     environment:
       MYSQL_HOST: db
       MYSQL_USER: ${MYSQL_USER}
       MYSQL_PASSWORD: ${MYSQL_PASSWORD}
       MYSQL_DATABASE: ${MYSQL_DATABASE}
       SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/${MYSQL_DATABASE}
+      EUREKA_URL: http://eureka-server:8761/eureka
     ports:
       - "8085:8080"
     depends_on:
@@ -134,13 +149,9 @@ services:
   orchestrator:
     build: ./orchestrator
     container_name: orchestrator
+    restart: unless-stopped
     environment:
-      SPRINGDATA_JPA_API: http://microservice-mysql-springdatajpa:8080
-      JDBC_API: http://microservice-mysql-jdbc:8080
-      MYBATIS_API: http://microservice-mysql-mybatis:8080
-      CAYENNE_API: http://microservice-mysql-cayenne:8080
-      JOOQ_API: http://microservice-mysql-jooq:8080
-      EBEAN_API: http://microservice-mysql-ebean:8080
+      EUREKA_URL: http://eureka-server:8761/eureka
     ports:
       - "8100:8080"
     depends_on:
@@ -149,4 +160,3 @@ services:
 
 volumes:
   mysql_data:
-  # postgres_data:

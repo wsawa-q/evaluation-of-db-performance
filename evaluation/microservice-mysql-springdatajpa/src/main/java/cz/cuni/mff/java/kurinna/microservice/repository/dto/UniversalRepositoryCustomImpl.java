@@ -5,6 +5,7 @@ import cz.cuni.mff.java.kurinna.microservice.dto.MinimumCostSupplier;
 import cz.cuni.mff.java.kurinna.microservice.dto.ShippingPriority;
 import cz.cuni.mff.java.kurinna.microservice.dto.OrderPriorityChecking;
 import cz.cuni.mff.java.kurinna.microservice.dto.LocalSupplierVolume;
+import cz.cuni.mff.java.kurinna.microservice.dto.QueryResult;
 import cz.cuni.mff.java.kurinna.microservice.model.LineItem;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
@@ -19,7 +20,9 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Repository
 public class UniversalRepositoryCustomImpl implements UniversalRepositoryCustom {
@@ -27,8 +30,275 @@ public class UniversalRepositoryCustomImpl implements UniversalRepositoryCustom 
     @PersistenceContext
     private EntityManager entityManager;
 
+    // Helper method to convert query results to QueryResult objects
+    private List<QueryResult> convertToQueryResults(List<Object[]> results, String[] columnNames) {
+        List<QueryResult> queryResults = new ArrayList<>();
+        for (Object[] result : results) {
+            Map<String, Object> data = new HashMap<>();
+            for (int i = 0; i < result.length; i++) {
+                data.put(columnNames[i], result[i]);
+            }
+            queryResults.add(new QueryResult(data));
+        }
+        return queryResults;
+    }
+
+    // A1) Non-Indexed Columns
     @Override
-    public List<PricingSummary> findPricingSummaryReport(int days) {
+    public List<QueryResult> a1() {
+        String sql = "SELECT * FROM lineitem";
+        Query query = entityManager.createNativeQuery(sql);
+        List<Object[]> results = query.getResultList();
+
+        // Define column names for lineitem table
+        String[] columnNames = {
+            "l_orderkey", "l_partkey", "l_suppkey", "l_linenumber", "l_quantity", 
+            "l_extendedprice", "l_discount", "l_tax", "l_returnflag", "l_linestatus", 
+            "l_shipdate", "l_commitdate", "l_receiptdate", "l_shipinstruct", "l_shipmode", "l_comment"
+        };
+
+        return convertToQueryResults(results, columnNames);
+    }
+
+    // A2) Non-Indexed Columns — Range Query
+    @Override
+    public List<QueryResult> a2(LocalDate startDate, LocalDate endDate) {
+        String sql = "SELECT * FROM orders WHERE o_orderdate BETWEEN ?1 AND ?2";
+        Query query = entityManager.createNativeQuery(sql);
+        query.setParameter(1, java.sql.Date.valueOf(startDate));
+        query.setParameter(2, java.sql.Date.valueOf(endDate));
+        List<Object[]> results = query.getResultList();
+
+        // Define column names for orders table
+        String[] columnNames = {
+            "o_orderkey", "o_custkey", "o_orderstatus", "o_totalprice", "o_orderdate", 
+            "o_orderpriority", "o_clerk", "o_shippriority", "o_comment"
+        };
+
+        return convertToQueryResults(results, columnNames);
+    }
+
+    // A3) Indexed Columns
+    @Override
+    public List<QueryResult> a3() {
+        String sql = "SELECT * FROM customer";
+        Query query = entityManager.createNativeQuery(sql);
+        List<Object[]> results = query.getResultList();
+
+        // Define column names for customer table
+        String[] columnNames = {
+            "c_custkey", "c_name", "c_address", "c_nationkey", "c_phone", 
+            "c_acctbal", "c_mktsegment", "c_comment"
+        };
+
+        return convertToQueryResults(results, columnNames);
+    }
+
+    // A4) Indexed Columns — Range Query
+    @Override
+    public List<QueryResult> a4(int minOrderKey, int maxOrderKey) {
+        String sql = "SELECT * FROM orders WHERE o_orderkey BETWEEN ?1 AND ?2";
+        Query query = entityManager.createNativeQuery(sql);
+        query.setParameter(1, minOrderKey);
+        query.setParameter(2, maxOrderKey);
+        List<Object[]> results = query.getResultList();
+
+        // Define column names for orders table
+        String[] columnNames = {
+            "o_orderkey", "o_custkey", "o_orderstatus", "o_totalprice", "o_orderdate", 
+            "o_orderpriority", "o_clerk", "o_shippriority", "o_comment"
+        };
+
+        return convertToQueryResults(results, columnNames);
+    }
+
+    // B1) COUNT
+    @Override
+    public List<QueryResult> b1() {
+        String sql = "SELECT COUNT(o.o_orderkey) AS order_count, " +
+                "DATE_FORMAT(o.o_orderdate, '%Y-%m') AS order_month " +
+                "FROM orders o " +
+                "GROUP BY order_month";
+        Query query = entityManager.createNativeQuery(sql);
+        List<Object[]> results = query.getResultList();
+
+        String[] columnNames = {"order_count", "order_month"};
+
+        return convertToQueryResults(results, columnNames);
+    }
+
+    // B2) MAX
+    @Override
+    public List<QueryResult> b2() {
+        String sql = "SELECT DATE_FORMAT(l.l_shipdate, '%Y-%m') AS ship_month, " +
+                "MAX(l.l_extendedprice) AS max_price " +
+                "FROM lineitem l " +
+                "GROUP BY ship_month";
+        Query query = entityManager.createNativeQuery(sql);
+        List<Object[]> results = query.getResultList();
+
+        String[] columnNames = {"ship_month", "max_price"};
+
+        return convertToQueryResults(results, columnNames);
+    }
+
+    // C1) Non-Indexed Columns
+    @Override
+    public List<QueryResult> c1() {
+        String sql = "SELECT c.c_name, o.o_orderdate, o.o_totalprice " +
+                "FROM customer c, orders o";
+        Query query = entityManager.createNativeQuery(sql);
+        List<Object[]> results = query.getResultList();
+
+        String[] columnNames = {"c_name", "o_orderdate", "o_totalprice"};
+
+        return convertToQueryResults(results, columnNames);
+    }
+
+    // C2) Indexed Columns
+    @Override
+    public List<QueryResult> c2() {
+        String sql = "SELECT c.c_name, o.o_orderdate, o.o_totalprice " +
+                "FROM customer c " +
+                "JOIN orders o ON c.c_custkey = o.o_custkey";
+        Query query = entityManager.createNativeQuery(sql);
+        List<Object[]> results = query.getResultList();
+
+        String[] columnNames = {"c_name", "o_orderdate", "o_totalprice"};
+
+        return convertToQueryResults(results, columnNames);
+    }
+
+    // C3) Complex Join 1
+    @Override
+    public List<QueryResult> c3() {
+        String sql = "SELECT c.c_name, n.n_name, o.o_orderdate, o.o_totalprice " +
+                "FROM customer c " +
+                "JOIN nation n ON c.c_nationkey = n.n_nationkey " +
+                "JOIN orders o ON c.c_custkey = o.o_custkey";
+        Query query = entityManager.createNativeQuery(sql);
+        List<Object[]> results = query.getResultList();
+
+        String[] columnNames = {"c_name", "n_name", "o_orderdate", "o_totalprice"};
+
+        return convertToQueryResults(results, columnNames);
+    }
+
+    // C4) Complex Join 2
+    @Override
+    public List<QueryResult> c4() {
+        String sql = "SELECT c.c_name, n.n_name, r.r_name, o.o_orderdate, o.o_totalprice " +
+                "FROM customer c " +
+                "JOIN nation n ON c.c_nationkey = n.n_nationkey " +
+                "JOIN region r ON n.n_regionkey = r.r_regionkey " +
+                "JOIN orders o ON c.c_custkey = o.o_custkey";
+        Query query = entityManager.createNativeQuery(sql);
+        List<Object[]> results = query.getResultList();
+
+        String[] columnNames = {"c_name", "n_name", "r_name", "o_orderdate", "o_totalprice"};
+
+        return convertToQueryResults(results, columnNames);
+    }
+
+    // C5) Left Outer Join
+    @Override
+    public List<QueryResult> c5() {
+        String sql = "SELECT c.c_custkey, c.c_name, o.o_orderkey, o.o_orderdate " +
+                "FROM customer c " +
+                "LEFT OUTER JOIN orders o ON c.c_custkey = o.o_custkey";
+        Query query = entityManager.createNativeQuery(sql);
+        List<Object[]> results = query.getResultList();
+
+        String[] columnNames = {"c_custkey", "c_name", "o_orderkey", "o_orderdate"};
+
+        return convertToQueryResults(results, columnNames);
+    }
+
+    // D1) UNION
+    @Override
+    public List<QueryResult> d1() {
+        String sql = "(SELECT c_nationkey AS nationkey FROM customer) " +
+                "UNION " +
+                "(SELECT s_nationkey AS nationkey FROM supplier)";
+        Query query = entityManager.createNativeQuery(sql);
+        List<Object[]> results = query.getResultList();
+
+        String[] columnNames = {"nationkey"};
+
+        return convertToQueryResults(results, columnNames);
+    }
+
+    // D2) INTERSECT
+    @Override
+    public List<QueryResult> d2() {
+        String sql = "SELECT DISTINCT c.c_custkey AS custkey " +
+                "FROM customer c " +
+                "WHERE c.c_custkey IN (SELECT s.s_suppkey FROM supplier s)";
+        Query query = entityManager.createNativeQuery(sql);
+        List<Object[]> results = query.getResultList();
+
+        String[] columnNames = {"custkey"};
+
+        return convertToQueryResults(results, columnNames);
+    }
+
+    // D3) DIFFERENCE
+    @Override
+    public List<QueryResult> d3() {
+        String sql = "SELECT DISTINCT c.c_custkey AS custkey " +
+                "FROM customer c " +
+                "WHERE c.c_custkey NOT IN (SELECT DISTINCT s.s_suppkey FROM supplier s)";
+        Query query = entityManager.createNativeQuery(sql);
+        List<Object[]> results = query.getResultList();
+
+        String[] columnNames = {"custkey"};
+
+        return convertToQueryResults(results, columnNames);
+    }
+
+    // E1) Non-Indexed Columns Sorting
+    @Override
+    public List<QueryResult> e1() {
+        String sql = "SELECT c_name, c_address, c_acctbal " +
+                "FROM customer " +
+                "ORDER BY c_acctbal DESC";
+        Query query = entityManager.createNativeQuery(sql);
+        List<Object[]> results = query.getResultList();
+
+        String[] columnNames = {"c_name", "c_address", "c_acctbal"};
+
+        return convertToQueryResults(results, columnNames);
+    }
+
+    // E2) Indexed Columns Sorting
+    @Override
+    public List<QueryResult> e2() {
+        String sql = "SELECT o_orderkey, o_custkey, o_orderdate, o_totalprice " +
+                "FROM orders " +
+                "ORDER BY o_orderkey";
+        Query query = entityManager.createNativeQuery(sql);
+        List<Object[]> results = query.getResultList();
+
+        String[] columnNames = {"o_orderkey", "o_custkey", "o_orderdate", "o_totalprice"};
+
+        return convertToQueryResults(results, columnNames);
+    }
+
+    // E3) Distinct
+    @Override
+    public List<QueryResult> e3() {
+        String sql = "SELECT DISTINCT c_nationkey, c_mktsegment " +
+                "FROM customer";
+        Query query = entityManager.createNativeQuery(sql);
+        List<Object[]> results = query.getResultList();
+
+        String[] columnNames = {"c_nationkey", "c_mktsegment"};
+
+        return convertToQueryResults(results, columnNames);
+    }
+
+    @Override
+    public List<PricingSummary> q1(int days) {
         CriteriaBuilder cb = entityManager.getCriteriaBuilder();
         CriteriaQuery<PricingSummary> cq = cb.createQuery(PricingSummary.class);
         Root<LineItem> root = cq.from(LineItem.class);
@@ -65,7 +335,7 @@ public class UniversalRepositoryCustomImpl implements UniversalRepositoryCustom 
     }
 
     @Override
-    public List<MinimumCostSupplier> findMinimumCostSupplier(int size, String type, String region) {
+    public List<MinimumCostSupplier> q2(int size, String type, String region) {
         String sql = "SELECT " +
                 "s.s_acctbal, " +
                 "s.s_name, " +
@@ -107,8 +377,7 @@ public class UniversalRepositoryCustomImpl implements UniversalRepositoryCustom 
                 "s.s_acctbal DESC, " +
                 "n.n_name, " +
                 "s.s_name, " +
-                "p.p_partkey " +
-                "LIMIT 100";
+                "p.p_partkey ";
 
         Query query = entityManager.createNativeQuery(sql);
         query.setParameter(1, size);
@@ -135,7 +404,7 @@ public class UniversalRepositoryCustomImpl implements UniversalRepositoryCustom 
     }
 
     @Override
-    public List<ShippingPriority> findShippingPriority(String segment, LocalDate orderDate, LocalDate shipDate) {
+    public List<ShippingPriority> q3(String segment, LocalDate orderDate, LocalDate shipDate) {
         String sql = "SELECT " +
                 "l.l_orderkey, " +
                 "SUM(l.l_extendedprice * (1 - l.l_discount)) AS revenue, " +
@@ -157,8 +426,7 @@ public class UniversalRepositoryCustomImpl implements UniversalRepositoryCustom 
                 "o.o_shippriority " +
                 "ORDER BY " +
                 "revenue DESC, " +
-                "o.o_orderdate " +
-                "LIMIT 10";
+                "o.o_orderdate ";
 
         Query query = entityManager.createNativeQuery(sql);
         query.setParameter(1, segment);
@@ -181,7 +449,7 @@ public class UniversalRepositoryCustomImpl implements UniversalRepositoryCustom 
     }
 
     @Override
-    public List<OrderPriorityChecking> findOrderPriorityChecking(LocalDate orderDate) {
+    public List<OrderPriorityChecking> q4(LocalDate orderDate) {
         String sql = "SELECT " +
                 "o.o_orderpriority, " +
                 "COUNT(*) AS order_count " +
@@ -220,7 +488,7 @@ public class UniversalRepositoryCustomImpl implements UniversalRepositoryCustom 
     }
 
     @Override
-    public List<LocalSupplierVolume> findLocalSupplierVolume(String region, LocalDate orderDate) {
+    public List<LocalSupplierVolume> q5(String region, LocalDate orderDate) {
         String sql = "SELECT " +
                 "n.n_name, " +
                 "SUM(l.l_extendedprice * (1 - l.l_discount)) AS revenue " +

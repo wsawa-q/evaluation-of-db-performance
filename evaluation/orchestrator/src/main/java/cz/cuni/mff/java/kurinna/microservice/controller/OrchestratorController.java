@@ -10,13 +10,11 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.SortedMap;
-import java.util.TreeMap;
+import java.util.*;
 
 @RestController
 @RequestMapping("/orchestrator")
+@CrossOrigin(origins = "*")
 public class OrchestratorController {
     private final MyBatisService myBatisService;
     private final SpringDataJpaService springDataJpaService;
@@ -42,7 +40,7 @@ public class OrchestratorController {
 
     @GetMapping("/")
     public ResponseEntity<Map<String, Object>> index() {
-        Map<String, Object> response = new HashMap<>();
+        Map<String, Object> response = new LinkedHashMap<>();
         SortedMap<String, String> queries = new TreeMap<>();
 
         // TPC-H Queries
@@ -79,12 +77,6 @@ public class OrchestratorController {
         queries.put("/e2", "E2) Indexed Columns Sorting");
         queries.put("/e3", "E3) Distinct");
 
-        // F) Advanced Queries
-        queries.put("/f1", "F1) Subquery with Aggregation");
-        queries.put("/f2", "F2) GROUP BY with HAVING");
-        queries.put("/f3", "F3) Window Functions");
-        queries.put("/f4", "F4) Complex Business Query");
-
         response.put("available_queries", queries);
         response.put("description", "This API allows you to execute, time, and measure memory usage of various SQL queries across different database access technologies.");
         response.put("instructions", "Append any of the query endpoints to the base URL to execute that query and see timing and memory usage results.");
@@ -93,84 +85,111 @@ public class OrchestratorController {
     }
 
     @GetMapping(value = "/q1", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Map<String, Object>> getPricingSummary() {
-        int days = 90;
+    public ResponseEntity<Map<String, Object>> getPricingSummary(@RequestParam Optional<String> repetitions) {
+        int rep = parseRepetitions(repetitions);
+        Map<String, Object> results = createResultsMap(
+            "Q1) Pricing Summary Report Query",
+            "TPC-H Q1 query that reports pricing summary for all items shipped before a given date."
+        );
 
-        Map<String, Object> results = new HashMap<>();
-        results.put("days", days);
-        results.put("query", "Q1) Pricing Summary Report Query");
-        results.put("description", "TPC-H Q1 query that reports pricing summary for all items shipped before a given date.");
-
-        executeQueryWithTiming("myBatis", myBatisService::getPricingSummary, results);
-        executeQueryWithTiming("springDataJpa", springDataJpaService::getPricingSummary, results);
-        executeQueryWithTiming("cayenne", cayenneService::getPricingSummary, results);
-        executeQueryWithTiming("ebean", ebeanService::getPricingSummary, results);
-        executeQueryWithTiming("jdbc", jdbcService::getPricingSummary, results);
-        executeQueryWithTiming("jooq", jooqService::getPricingSummary, results);
+        executeQueriesAcrossAllServices(
+            results, 
+            rep,
+            myBatisService::getPricingSummary,
+            springDataJpaService::getPricingSummary,
+            cayenneService::getPricingSummary,
+            ebeanService::getPricingSummary,
+            jdbcService::getPricingSummary,
+            jooqService::getPricingSummary
+        );
 
         return ResponseEntity.ok(results);
     }
 
     @GetMapping(value = "/q2", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Map<String, Object>> getMinimumCostSupplier() {
-        Map<String, Object> results = new HashMap<>();
-        results.put("query", "Q2) Minimum Cost Supplier Query");
-        results.put("description", "TPC-H Q2 query that finds suppliers who can supply parts of a given type and size at minimum cost.");
+    public ResponseEntity<Map<String, Object>> getMinimumCostSupplier(@RequestParam Optional<String> repetitions) {
+        int rep = parseRepetitions(repetitions);
+        Map<String, Object> results = createResultsMap(
+            "Q2) Minimum Cost Supplier Query",
+            "TPC-H Q2 query that finds suppliers who can supply parts of a given type and size at minimum cost."
+        );
 
-        executeQueryWithTiming("myBatis", myBatisService::getMinimumCostSupplier, results);
-        executeQueryWithTiming("springDataJpa", springDataJpaService::getMinimumCostSupplier, results);
-        executeQueryWithTiming("cayenne", cayenneService::getMinimumCostSupplier, results);
-        executeQueryWithTiming("ebean", ebeanService::getMinimumCostSupplier, results);
-        executeQueryWithTiming("jdbc", jdbcService::getMinimumCostSupplier, results);
-        executeQueryWithTiming("jooq", jooqService::getMinimumCostSupplier, results);
+        executeQueriesAcrossAllServices(
+            results,
+            rep,
+            myBatisService::getMinimumCostSupplier,
+            springDataJpaService::getMinimumCostSupplier,
+            cayenneService::getMinimumCostSupplier,
+            ebeanService::getMinimumCostSupplier,
+            jdbcService::getMinimumCostSupplier,
+            jooqService::getMinimumCostSupplier
+        );
 
         return ResponseEntity.ok(results);
     }
 
     @GetMapping(value = "/q3", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Map<String, Object>> getShippingPriority() {
-        Map<String, Object> results = new HashMap<>();
-        results.put("query", "Q3) Shipping Priority Query");
-        results.put("description", "TPC-H Q3 query that retrieves the shipping priority and potential revenue of orders.");
+    public ResponseEntity<Map<String, Object>> getShippingPriority(@RequestParam Optional<String> repetitions) {
+        int rep = parseRepetitions(repetitions);
+        Map<String, Object> results = createResultsMap(
+            "Q3) Shipping Priority Query",
+            "TPC-H Q3 query that retrieves the shipping priority and potential revenue of orders."
+        );
 
-        executeQueryWithTiming("myBatis", myBatisService::getShippingPriority, results);
-        executeQueryWithTiming("springDataJpa", springDataJpaService::getShippingPriority, results);
-        executeQueryWithTiming("cayenne", cayenneService::getShippingPriority, results);
-        executeQueryWithTiming("ebean", ebeanService::getShippingPriority, results);
-        executeQueryWithTiming("jdbc", jdbcService::getShippingPriority, results);
-        executeQueryWithTiming("jooq", jooqService::getShippingPriority, results);
+        executeQueriesAcrossAllServices(
+            results,
+            rep,
+            myBatisService::getShippingPriority,
+            springDataJpaService::getShippingPriority,
+            cayenneService::getShippingPriority,
+            ebeanService::getShippingPriority,
+            jdbcService::getShippingPriority,
+            jooqService::getShippingPriority
+        );
 
         return ResponseEntity.ok(results);
     }
 
     @GetMapping(value = "/q4", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Map<String, Object>> getOrderPriorityChecking() {
-        Map<String, Object> results = new HashMap<>();
-        results.put("query", "Q4) Order Priority Checking Query");
-        results.put("description", "TPC-H Q4 query that counts orders with at least one lineitem that was received later than committed.");
+    public ResponseEntity<Map<String, Object>> getOrderPriorityChecking(@RequestParam Optional<String> repetitions) {
+        int rep = parseRepetitions(repetitions);
+        Map<String, Object> results = createResultsMap(
+            "Q4) Order Priority Checking Query",
+            "TPC-H Q4 query that counts orders with at least one lineitem that was received later than committed."
+        );
 
-        executeQueryWithTiming("myBatis", myBatisService::getOrderPriorityChecking, results);
-        executeQueryWithTiming("springDataJpa", springDataJpaService::getOrderPriorityChecking, results);
-        executeQueryWithTiming("cayenne", cayenneService::getOrderPriorityChecking, results);
-        executeQueryWithTiming("ebean", ebeanService::getOrderPriorityChecking, results);
-        executeQueryWithTiming("jdbc", jdbcService::getOrderPriorityChecking, results);
-        executeQueryWithTiming("jooq", jooqService::getOrderPriorityChecking, results);
+        executeQueriesAcrossAllServices(
+            results,
+            rep,
+            myBatisService::getOrderPriorityChecking,
+            springDataJpaService::getOrderPriorityChecking,
+            cayenneService::getOrderPriorityChecking,
+            ebeanService::getOrderPriorityChecking,
+            jdbcService::getOrderPriorityChecking,
+            jooqService::getOrderPriorityChecking
+        );
 
         return ResponseEntity.ok(results);
     }
 
     @GetMapping(value = "/q5", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Map<String, Object>> getLocalSupplierVolume() {
-        Map<String, Object> results = new HashMap<>();
-        results.put("query", "Q5) Local Supplier Volume Query");
-        results.put("description", "TPC-H Q5 query that lists the revenue volume for each nation in a region where suppliers and customers are from the same nation.");
+    public ResponseEntity<Map<String, Object>> getLocalSupplierVolume(@RequestParam Optional<String> repetitions) {
+        int rep = parseRepetitions(repetitions);
+        Map<String, Object> results = createResultsMap(
+            "Q5) Local Supplier Volume Query",
+            "TPC-H Q5 query that lists the revenue volume for each nation in a region where suppliers and customers are from the same nation."
+        );
 
-        executeQueryWithTiming("myBatis", myBatisService::getLocalSupplierVolume, results);
-        executeQueryWithTiming("springDataJpa", springDataJpaService::getLocalSupplierVolume, results);
-        executeQueryWithTiming("cayenne", cayenneService::getLocalSupplierVolume, results);
-        executeQueryWithTiming("ebean", ebeanService::getLocalSupplierVolume, results);
-        executeQueryWithTiming("jdbc", jdbcService::getLocalSupplierVolume, results);
-        executeQueryWithTiming("jooq", jooqService::getLocalSupplierVolume, results);
+        executeQueriesAcrossAllServices(
+            results,
+            rep,
+            myBatisService::getLocalSupplierVolume,
+            springDataJpaService::getLocalSupplierVolume,
+            cayenneService::getLocalSupplierVolume,
+            ebeanService::getLocalSupplierVolume,
+            jdbcService::getLocalSupplierVolume,
+            jooqService::getLocalSupplierVolume
+        );
 
         return ResponseEntity.ok(results);
     }
@@ -178,65 +197,89 @@ public class OrchestratorController {
     // A) Selection, Projection, Source (of data)
 
     @GetMapping(value = "/a1", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Map<String, Object>> executeQueryA1() {
-        Map<String, Object> results = new HashMap<>();
-        results.put("query", "A1) Non-Indexed Columns");
-        results.put("description", "SELECT * FROM lineitem WHERE l_extendedprice < 1000.0;");
+    public ResponseEntity<Map<String, Object>> executeQueryA1(@RequestParam Optional<String> repetitions) {
+        int rep = parseRepetitions(repetitions);
+        Map<String, Object> results = createResultsMap(
+            "A1) Non-Indexed Columns",
+            "SELECT * FROM lineitem WHERE l_extendedprice < 1000.0;"
+        );
 
-        executeQueryWithTiming("myBatis", () -> myBatisService.executeQueryA1(), results);
-        executeQueryWithTiming("springDataJpa", () -> springDataJpaService.executeQueryA1(), results);
-        executeQueryWithTiming("cayenne", () -> cayenneService.executeQueryA1(), results);
-        executeQueryWithTiming("ebean", () -> ebeanService.executeQueryA1(), results);
-        executeQueryWithTiming("jdbc", () -> jdbcService.executeQueryA1(), results);
-        executeQueryWithTiming("jooq", () -> jooqService.executeQueryA1(), results);
+        executeQueriesAcrossAllServices(
+            results,
+            rep,
+            myBatisService::executeQueryA1,
+            springDataJpaService::executeQueryA1,
+            cayenneService::executeQueryA1,
+            ebeanService::executeQueryA1,
+            jdbcService::executeQueryA1,
+            jooqService::executeQueryA1
+        );
 
         return ResponseEntity.ok(results);
     }
 
     @GetMapping(value = "/a2", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Map<String, Object>> executeQueryA2() {
-        Map<String, Object> results = new HashMap<>();
-        results.put("query", "A2) Non-Indexed Columns — Range Query");
-        results.put("description", "SELECT * FROM orders WHERE o_orderdate BETWEEN '1996-01-01' AND '1996-12-31';");
+    public ResponseEntity<Map<String, Object>> executeQueryA2(@RequestParam Optional<String> repetitions) {
+        int rep = parseRepetitions(repetitions);
+        Map<String, Object> results = createResultsMap(
+            "A2) Non-Indexed Columns — Range Query",
+            "SELECT * FROM orders WHERE o_orderdate BETWEEN '1996-01-01' AND '1996-12-31';"
+        );
 
-        executeQueryWithTiming("myBatis", () -> myBatisService.executeQueryA2(), results);
-        executeQueryWithTiming("springDataJpa", () -> springDataJpaService.executeQueryA2(), results);
-        executeQueryWithTiming("cayenne", () -> cayenneService.executeQueryA2(), results);
-        executeQueryWithTiming("ebean", () -> ebeanService.executeQueryA2(), results);
-        executeQueryWithTiming("jdbc", () -> jdbcService.executeQueryA2(), results);
-        executeQueryWithTiming("jooq", () -> jooqService.executeQueryA2(), results);
+        executeQueriesAcrossAllServices(
+            results,
+            rep,
+            myBatisService::executeQueryA2,
+            springDataJpaService::executeQueryA2,
+            cayenneService::executeQueryA2,
+            ebeanService::executeQueryA2,
+            jdbcService::executeQueryA2,
+            jooqService::executeQueryA2
+        );
 
         return ResponseEntity.ok(results);
     }
 
     @GetMapping(value = "/a3", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Map<String, Object>> executeQueryA3() {
-        Map<String, Object> results = new HashMap<>();
-        results.put("query", "A3) Indexed Columns");
-        results.put("description", "SELECT * FROM customer WHERE c_custkey = 1000;");
+    public ResponseEntity<Map<String, Object>> executeQueryA3(@RequestParam Optional<String> repetitions) {
+        int rep = parseRepetitions(repetitions);
+        Map<String, Object> results = createResultsMap(
+            "A3) Indexed Columns",
+            "SELECT * FROM customer WHERE c_custkey = 1000;"
+        );
 
-        executeQueryWithTiming("myBatis", () -> myBatisService.executeQueryA3(), results);
-        executeQueryWithTiming("springDataJpa", () -> springDataJpaService.executeQueryA3(), results);
-        executeQueryWithTiming("cayenne", () -> cayenneService.executeQueryA3(), results);
-        executeQueryWithTiming("ebean", () -> ebeanService.executeQueryA3(), results);
-        executeQueryWithTiming("jdbc", () -> jdbcService.executeQueryA3(), results);
-        executeQueryWithTiming("jooq", () -> jooqService.executeQueryA3(), results);
+        executeQueriesAcrossAllServices(
+            results,
+            rep,
+            myBatisService::executeQueryA3,
+            springDataJpaService::executeQueryA3,
+            cayenneService::executeQueryA3,
+            ebeanService::executeQueryA3,
+            jdbcService::executeQueryA3,
+            jooqService::executeQueryA3
+        );
 
         return ResponseEntity.ok(results);
     }
 
     @GetMapping(value = "/a4", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Map<String, Object>> executeQueryA4() {
-        Map<String, Object> results = new HashMap<>();
-        results.put("query", "A4) Indexed Columns — Range Query");
-        results.put("description", "SELECT * FROM orders WHERE o_orderkey BETWEEN 1000 AND 2000;");
+    public ResponseEntity<Map<String, Object>> executeQueryA4(@RequestParam Optional<String> repetitions) {
+        int rep = parseRepetitions(repetitions);
+        Map<String, Object> results = createResultsMap(
+            "A4) Indexed Columns — Range Query",
+            "SELECT * FROM orders WHERE o_orderkey BETWEEN 1000 AND 2000;"
+        );
 
-        executeQueryWithTiming("myBatis", () -> myBatisService.executeQueryA4(), results);
-        executeQueryWithTiming("springDataJpa", () -> springDataJpaService.executeQueryA4(), results);
-        executeQueryWithTiming("cayenne", () -> cayenneService.executeQueryA4(), results);
-        executeQueryWithTiming("ebean", () -> ebeanService.executeQueryA4(), results);
-        executeQueryWithTiming("jdbc", () -> jdbcService.executeQueryA4(), results);
-        executeQueryWithTiming("jooq", () -> jooqService.executeQueryA4(), results);
+        executeQueriesAcrossAllServices(
+            results,
+            rep,
+            myBatisService::executeQueryA4,
+            springDataJpaService::executeQueryA4,
+            cayenneService::executeQueryA4,
+            ebeanService::executeQueryA4,
+            jdbcService::executeQueryA4,
+            jooqService::executeQueryA4
+        );
 
         return ResponseEntity.ok(results);
     }
@@ -244,33 +287,45 @@ public class OrchestratorController {
     // B) Aggregation
 
     @GetMapping(value = "/b1", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Map<String, Object>> executeQueryB1() {
-        Map<String, Object> results = new HashMap<>();
-        results.put("query", "B1) COUNT");
-        results.put("description", "SELECT COUNT(*) AS order_count FROM orders WHERE o_orderdate BETWEEN '1996-01-01' AND '1996-12-31';");
+    public ResponseEntity<Map<String, Object>> executeQueryB1(@RequestParam Optional<String> repetitions) {
+        int rep = parseRepetitions(repetitions);
+        Map<String, Object> results = createResultsMap(
+            "B1) COUNT",
+            "SELECT COUNT(*) AS order_count FROM orders WHERE o_orderdate BETWEEN '1996-01-01' AND '1996-12-31';"
+        );
 
-        executeQueryWithTiming("myBatis", () -> myBatisService.executeQueryB1(), results);
-        executeQueryWithTiming("springDataJpa", () -> springDataJpaService.executeQueryB1(), results);
-        executeQueryWithTiming("cayenne", () -> cayenneService.executeQueryB1(), results);
-        executeQueryWithTiming("ebean", () -> ebeanService.executeQueryB1(), results);
-        executeQueryWithTiming("jdbc", () -> jdbcService.executeQueryB1(), results);
-        executeQueryWithTiming("jooq", () -> jooqService.executeQueryB1(), results);
+        executeQueriesAcrossAllServices(
+            results,
+            rep,
+            myBatisService::executeQueryB1,
+            springDataJpaService::executeQueryB1,
+            cayenneService::executeQueryB1,
+            ebeanService::executeQueryB1,
+            jdbcService::executeQueryB1,
+            jooqService::executeQueryB1
+        );
 
         return ResponseEntity.ok(results);
     }
 
     @GetMapping(value = "/b2", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Map<String, Object>> executeQueryB2() {
-        Map<String, Object> results = new HashMap<>();
-        results.put("query", "B2) MAX");
-        results.put("description", "SELECT MAX(l_extendedprice) AS max_price FROM lineitem;");
+    public ResponseEntity<Map<String, Object>> executeQueryB2(@RequestParam Optional<String> repetitions) {
+        int rep = parseRepetitions(repetitions);
+        Map<String, Object> results = createResultsMap(
+            "B2) MAX",
+            "SELECT MAX(l_extendedprice) AS max_price FROM lineitem;"
+        );
 
-        executeQueryWithTiming("myBatis", () -> myBatisService.executeQueryB2(), results);
-        executeQueryWithTiming("springDataJpa", () -> springDataJpaService.executeQueryB2(), results);
-        executeQueryWithTiming("cayenne", () -> cayenneService.executeQueryB2(), results);
-        executeQueryWithTiming("ebean", () -> ebeanService.executeQueryB2(), results);
-        executeQueryWithTiming("jdbc", () -> jdbcService.executeQueryB2(), results);
-        executeQueryWithTiming("jooq", () -> jooqService.executeQueryB2(), results);
+        executeQueriesAcrossAllServices(
+            results,
+            rep,
+            myBatisService::executeQueryB2,
+            springDataJpaService::executeQueryB2,
+            cayenneService::executeQueryB2,
+            ebeanService::executeQueryB2,
+            jdbcService::executeQueryB2,
+            jooqService::executeQueryB2
+        );
 
         return ResponseEntity.ok(results);
     }
@@ -278,81 +333,111 @@ public class OrchestratorController {
     // C) Joins
 
     @GetMapping(value = "/c1", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Map<String, Object>> executeQueryC1() {
-        Map<String, Object> results = new HashMap<>();
-        results.put("query", "C1) Non-Indexed Columns");
-        results.put("description", "SELECT c.c_name, o.o_orderdate, o.o_totalprice FROM customer c, orders o WHERE c.c_mktsegment = 'BUILDING' AND c.c_custkey = o.o_custkey;");
+    public ResponseEntity<Map<String, Object>> executeQueryC1(@RequestParam Optional<String> repetitions) {
+        int rep = parseRepetitions(repetitions);
+        Map<String, Object> results = createResultsMap(
+            "C1) Non-Indexed Columns",
+            "SELECT c.c_name, o.o_orderdate, o.o_totalprice FROM customer c, orders o WHERE c.c_mktsegment = 'BUILDING' AND c.c_custkey = o.o_custkey;"
+        );
 
-        executeQueryWithTiming("myBatis", () -> myBatisService.executeQueryC1(), results);
-        executeQueryWithTiming("springDataJpa", () -> springDataJpaService.executeQueryC1(), results);
-        executeQueryWithTiming("cayenne", () -> cayenneService.executeQueryC1(), results);
-        executeQueryWithTiming("ebean", () -> ebeanService.executeQueryC1(), results);
-        executeQueryWithTiming("jdbc", () -> jdbcService.executeQueryC1(), results);
-        executeQueryWithTiming("jooq", () -> jooqService.executeQueryC1(), results);
+        executeQueriesAcrossAllServices(
+            results,
+            rep,
+            myBatisService::executeQueryC1,
+            springDataJpaService::executeQueryC1,
+            cayenneService::executeQueryC1,
+            ebeanService::executeQueryC1,
+            jdbcService::executeQueryC1,
+            jooqService::executeQueryC1
+        );
 
         return ResponseEntity.ok(results);
     }
 
     @GetMapping(value = "/c2", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Map<String, Object>> executeQueryC2() {
-        Map<String, Object> results = new HashMap<>();
-        results.put("query", "C2) Indexed Columns");
-        results.put("description", "SELECT c.c_name, o.o_orderdate, o.o_totalprice FROM customer c JOIN orders o ON c.c_custkey = o.o_custkey WHERE o.o_orderkey BETWEEN 1000 AND 2000;");
+    public ResponseEntity<Map<String, Object>> executeQueryC2(@RequestParam Optional<String> repetitions) {
+        int rep = parseRepetitions(repetitions);
+        Map<String, Object> results = createResultsMap(
+            "C2) Indexed Columns",
+            "SELECT c.c_name, o.o_orderdate, o.o_totalprice FROM customer c JOIN orders o ON c.c_custkey = o.o_custkey WHERE o.o_orderkey BETWEEN 1000 AND 2000;"
+        );
 
-        executeQueryWithTiming("myBatis", () -> myBatisService.executeQueryC2(), results);
-        executeQueryWithTiming("springDataJpa", () -> springDataJpaService.executeQueryC2(), results);
-        executeQueryWithTiming("cayenne", () -> cayenneService.executeQueryC2(), results);
-        executeQueryWithTiming("ebean", () -> ebeanService.executeQueryC2(), results);
-        executeQueryWithTiming("jdbc", () -> jdbcService.executeQueryC2(), results);
-        executeQueryWithTiming("jooq", () -> jooqService.executeQueryC2(), results);
+        executeQueriesAcrossAllServices(
+            results,
+            rep,
+            myBatisService::executeQueryC2,
+            springDataJpaService::executeQueryC2,
+            cayenneService::executeQueryC2,
+            ebeanService::executeQueryC2,
+            jdbcService::executeQueryC2,
+            jooqService::executeQueryC2
+        );
 
         return ResponseEntity.ok(results);
     }
 
     @GetMapping(value = "/c3", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Map<String, Object>> executeQueryC3() {
-        Map<String, Object> results = new HashMap<>();
-        results.put("query", "C3) Complex Join 1");
-        results.put("description", "SELECT c.c_name, n.n_name, o.o_orderdate, o.o_totalprice FROM customer c JOIN nation n ON c.c_nationkey = n.n_nationkey JOIN orders o ON c.c_custkey = o.o_custkey WHERE n.n_name = 'GERMANY' AND o.o_orderdate BETWEEN '1996-01-01' AND '1996-12-31';");
+    public ResponseEntity<Map<String, Object>> executeQueryC3(@RequestParam Optional<String> repetitions) {
+        int rep = parseRepetitions(repetitions);
+        Map<String, Object> results = createResultsMap(
+            "C3) Complex Join 1",
+            "SELECT c.c_name, n.n_name, o.o_orderdate, o.o_totalprice FROM customer c JOIN nation n ON c.c_nationkey = n.n_nationkey JOIN orders o ON c.c_custkey = o.o_custkey WHERE n.n_name = 'GERMANY' AND o.o_orderdate BETWEEN '1996-01-01' AND '1996-12-31';"
+        );
 
-        executeQueryWithTiming("myBatis", () -> myBatisService.executeQueryC3(), results);
-        executeQueryWithTiming("springDataJpa", () -> springDataJpaService.executeQueryC3(), results);
-        executeQueryWithTiming("cayenne", () -> cayenneService.executeQueryC3(), results);
-        executeQueryWithTiming("ebean", () -> ebeanService.executeQueryC3(), results);
-        executeQueryWithTiming("jdbc", () -> jdbcService.executeQueryC3(), results);
-        executeQueryWithTiming("jooq", () -> jooqService.executeQueryC3(), results);
+        executeQueriesAcrossAllServices(
+            results,
+            rep,
+            myBatisService::executeQueryC3,
+            springDataJpaService::executeQueryC3,
+            cayenneService::executeQueryC3,
+            ebeanService::executeQueryC3,
+            jdbcService::executeQueryC3,
+            jooqService::executeQueryC3
+        );
 
         return ResponseEntity.ok(results);
     }
 
     @GetMapping(value = "/c4", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Map<String, Object>> executeQueryC4() {
-        Map<String, Object> results = new HashMap<>();
-        results.put("query", "C4) Complex Join 2");
-        results.put("description", "SELECT c.c_name, n.n_name, r.r_name, o.o_orderdate, o.o_totalprice FROM customer c JOIN nation n ON c.c_nationkey = n.n_nationkey JOIN region r ON n.n_regionkey = r.r_regionkey JOIN orders o ON c.c_custkey = o.o_custkey WHERE r.r_name = 'EUROPE' AND o.o_orderdate BETWEEN '1996-01-01' AND '1996-12-31';");
+    public ResponseEntity<Map<String, Object>> executeQueryC4(@RequestParam Optional<String> repetitions) {
+        int rep = parseRepetitions(repetitions);
+        Map<String, Object> results = createResultsMap(
+            "C4) Complex Join 2",
+            "SELECT c.c_name, n.n_name, r.r_name, o.o_orderdate, o.o_totalprice FROM customer c JOIN nation n ON c.c_nationkey = n.n_nationkey JOIN region r ON n.n_regionkey = r.r_regionkey JOIN orders o ON c.c_custkey = o.o_custkey WHERE r.r_name = 'EUROPE' AND o.o_orderdate BETWEEN '1996-01-01' AND '1996-12-31';"
+        );
 
-        executeQueryWithTiming("myBatis", () -> myBatisService.executeQueryC4(), results);
-        executeQueryWithTiming("springDataJpa", () -> springDataJpaService.executeQueryC4(), results);
-        executeQueryWithTiming("cayenne", () -> cayenneService.executeQueryC4(), results);
-        executeQueryWithTiming("ebean", () -> ebeanService.executeQueryC4(), results);
-        executeQueryWithTiming("jdbc", () -> jdbcService.executeQueryC4(), results);
-        executeQueryWithTiming("jooq", () -> jooqService.executeQueryC4(), results);
+        executeQueriesAcrossAllServices(
+            results,
+            rep,
+            myBatisService::executeQueryC4,
+            springDataJpaService::executeQueryC4,
+            cayenneService::executeQueryC4,
+            ebeanService::executeQueryC4,
+            jdbcService::executeQueryC4,
+            jooqService::executeQueryC4
+        );
 
         return ResponseEntity.ok(results);
     }
 
     @GetMapping(value = "/c5", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Map<String, Object>> executeQueryC5() {
-        Map<String, Object> results = new HashMap<>();
-        results.put("query", "C5) Left Outer Join");
-        results.put("description", "SELECT c.c_custkey, c.c_name, o.o_orderkey, o.o_orderdate FROM customer c LEFT OUTER JOIN orders o ON c.c_custkey = o.o_custkey WHERE c.c_nationkey = 3;");
+    public ResponseEntity<Map<String, Object>> executeQueryC5(@RequestParam Optional<String> repetitions) {
+        int rep = parseRepetitions(repetitions);
+        Map<String, Object> results = createResultsMap(
+            "C5) Left Outer Join",
+            "SELECT c.c_custkey, c.c_name, o.o_orderkey, o.o_orderdate FROM customer c LEFT OUTER JOIN orders o ON c.c_custkey = o.o_custkey WHERE c.c_nationkey = 3;"
+        );
 
-        executeQueryWithTiming("myBatis", () -> myBatisService.executeQueryC5(), results);
-        executeQueryWithTiming("springDataJpa", () -> springDataJpaService.executeQueryC5(), results);
-        executeQueryWithTiming("cayenne", () -> cayenneService.executeQueryC5(), results);
-        executeQueryWithTiming("ebean", () -> ebeanService.executeQueryC5(), results);
-        executeQueryWithTiming("jdbc", () -> jdbcService.executeQueryC5(), results);
-        executeQueryWithTiming("jooq", () -> jooqService.executeQueryC5(), results);
+        executeQueriesAcrossAllServices(
+            results,
+            rep,
+            myBatisService::executeQueryC5,
+            springDataJpaService::executeQueryC5,
+            cayenneService::executeQueryC5,
+            ebeanService::executeQueryC5,
+            jdbcService::executeQueryC5,
+            jooqService::executeQueryC5
+        );
 
         return ResponseEntity.ok(results);
     }
@@ -360,49 +445,67 @@ public class OrchestratorController {
     // D) Set operations
 
     @GetMapping(value = "/d1", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Map<String, Object>> executeQueryD1() {
-        Map<String, Object> results = new HashMap<>();
-        results.put("query", "D1) UNION");
-        results.put("description", "(SELECT c_nationkey FROM customer WHERE c_acctbal > 9000) UNION (SELECT s_nationkey FROM supplier WHERE s_acctbal > 9000);");
+    public ResponseEntity<Map<String, Object>> executeQueryD1(@RequestParam Optional<String> repetitions) {
+        int rep = parseRepetitions(repetitions);
+        Map<String, Object> results = createResultsMap(
+            "D1) UNION",
+            "(SELECT c_nationkey FROM customer WHERE c_acctbal > 9000) UNION (SELECT s_nationkey FROM supplier WHERE s_acctbal > 9000);"
+        );
 
-        executeQueryWithTiming("myBatis", () -> myBatisService.executeQueryD1(), results);
-        executeQueryWithTiming("springDataJpa", () -> springDataJpaService.executeQueryD1(), results);
-        executeQueryWithTiming("cayenne", () -> cayenneService.executeQueryD1(), results);
-        executeQueryWithTiming("ebean", () -> ebeanService.executeQueryD1(), results);
-        executeQueryWithTiming("jdbc", () -> jdbcService.executeQueryD1(), results);
-        executeQueryWithTiming("jooq", () -> jooqService.executeQueryD1(), results);
+        executeQueriesAcrossAllServices(
+            results,
+            rep,
+            myBatisService::executeQueryD1,
+            springDataJpaService::executeQueryD1,
+            cayenneService::executeQueryD1,
+            ebeanService::executeQueryD1,
+            jdbcService::executeQueryD1,
+            jooqService::executeQueryD1
+        );
 
         return ResponseEntity.ok(results);
     }
 
     @GetMapping(value = "/d2", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Map<String, Object>> executeQueryD2() {
-        Map<String, Object> results = new HashMap<>();
-        results.put("query", "D2) INTERSECT");
-        results.put("description", "SELECT DISTINCT c_nationkey FROM customer WHERE c_acctbal > 9000 AND c_nationkey IN (SELECT s_nationkey FROM supplier WHERE s_acctbal > 9000);");
+    public ResponseEntity<Map<String, Object>> executeQueryD2(@RequestParam Optional<String> repetitions) {
+        int rep = parseRepetitions(repetitions);
+        Map<String, Object> results = createResultsMap(
+            "D2) INTERSECT",
+            "SELECT DISTINCT c_nationkey FROM customer WHERE c_acctbal > 9000 AND c_nationkey IN (SELECT s_nationkey FROM supplier WHERE s_acctbal > 9000);"
+        );
 
-        executeQueryWithTiming("myBatis", () -> myBatisService.executeQueryD2(), results);
-        executeQueryWithTiming("springDataJpa", () -> springDataJpaService.executeQueryD2(), results);
-        executeQueryWithTiming("cayenne", () -> cayenneService.executeQueryD2(), results);
-        executeQueryWithTiming("ebean", () -> ebeanService.executeQueryD2(), results);
-        executeQueryWithTiming("jdbc", () -> jdbcService.executeQueryD2(), results);
-        executeQueryWithTiming("jooq", () -> jooqService.executeQueryD2(), results);
+        executeQueriesAcrossAllServices(
+            results,
+            rep,
+            myBatisService::executeQueryD2,
+            springDataJpaService::executeQueryD2,
+            cayenneService::executeQueryD2,
+            ebeanService::executeQueryD2,
+            jdbcService::executeQueryD2,
+            jooqService::executeQueryD2
+        );
 
         return ResponseEntity.ok(results);
     }
 
     @GetMapping(value = "/d3", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Map<String, Object>> executeQueryD3() {
-        Map<String, Object> results = new HashMap<>();
-        results.put("query", "D3) DIFFERENCE");
-        results.put("description", "SELECT DISTINCT c_nationkey FROM customer WHERE c_acctbal > 9000 AND c_nationkey NOT IN (SELECT s_nationkey FROM supplier WHERE s_acctbal > 9000);");
+    public ResponseEntity<Map<String, Object>> executeQueryD3(@RequestParam Optional<String> repetitions) {
+        int rep = parseRepetitions(repetitions);
+        Map<String, Object> results = createResultsMap(
+            "D3) DIFFERENCE",
+            "SELECT DISTINCT c_nationkey FROM customer WHERE c_acctbal > 9000 AND c_nationkey NOT IN (SELECT s_nationkey FROM supplier WHERE s_acctbal > 9000);"
+        );
 
-        executeQueryWithTiming("myBatis", () -> myBatisService.executeQueryD3(), results);
-        executeQueryWithTiming("springDataJpa", () -> springDataJpaService.executeQueryD3(), results);
-        executeQueryWithTiming("cayenne", () -> cayenneService.executeQueryD3(), results);
-        executeQueryWithTiming("ebean", () -> ebeanService.executeQueryD3(), results);
-        executeQueryWithTiming("jdbc", () -> jdbcService.executeQueryD3(), results);
-        executeQueryWithTiming("jooq", () -> jooqService.executeQueryD3(), results);
+        executeQueriesAcrossAllServices(
+            results,
+            rep,
+            myBatisService::executeQueryD3,
+            springDataJpaService::executeQueryD3,
+            cayenneService::executeQueryD3,
+            ebeanService::executeQueryD3,
+            jdbcService::executeQueryD3,
+            jooqService::executeQueryD3
+        );
 
         return ResponseEntity.ok(results);
     }
@@ -410,117 +513,129 @@ public class OrchestratorController {
     // E) Result Modification
 
     @GetMapping(value = "/e1", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Map<String, Object>> executeQueryE1() {
-        Map<String, Object> results = new HashMap<>();
-        results.put("query", "E1) Non-Indexed Columns Sorting");
-        results.put("description", "SELECT c_name, c_address, c_acctbal FROM customer ORDER BY c_acctbal DESC LIMIT 10;");
+    public ResponseEntity<Map<String, Object>> executeQueryE1(@RequestParam Optional<String> repetitions) {
+        int rep = parseRepetitions(repetitions);
+        Map<String, Object> results = createResultsMap(
+            "E1) Non-Indexed Columns Sorting",
+            "SELECT c_name, c_address, c_acctbal FROM customer ORDER BY c_acctbal DESC LIMIT 10;"
+        );
 
-        executeQueryWithTiming("myBatis", () -> myBatisService.executeQueryE1(), results);
-        executeQueryWithTiming("springDataJpa", () -> springDataJpaService.executeQueryE1(), results);
-        executeQueryWithTiming("cayenne", () -> cayenneService.executeQueryE1(), results);
-        executeQueryWithTiming("ebean", () -> ebeanService.executeQueryE1(), results);
-        executeQueryWithTiming("jdbc", () -> jdbcService.executeQueryE1(), results);
-        executeQueryWithTiming("jooq", () -> jooqService.executeQueryE1(), results);
+        executeQueriesAcrossAllServices(
+            results,
+            rep,
+            myBatisService::executeQueryE1,
+            springDataJpaService::executeQueryE1,
+            cayenneService::executeQueryE1,
+            ebeanService::executeQueryE1,
+            jdbcService::executeQueryE1,
+            jooqService::executeQueryE1
+        );
 
         return ResponseEntity.ok(results);
     }
 
     @GetMapping(value = "/e2", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Map<String, Object>> executeQueryE2() {
-        Map<String, Object> results = new HashMap<>();
-        results.put("query", "E2) Indexed Columns Sorting");
-        results.put("description", "SELECT o_orderkey, o_custkey, o_orderdate, o_totalprice FROM orders ORDER BY o_orderkey LIMIT 20;");
+    public ResponseEntity<Map<String, Object>> executeQueryE2(@RequestParam Optional<String> repetitions) {
+        int rep = parseRepetitions(repetitions);
+        Map<String, Object> results = createResultsMap(
+            "E2) Indexed Columns Sorting",
+            "SELECT o_orderkey, o_custkey, o_orderdate, o_totalprice FROM orders ORDER BY o_orderkey LIMIT 20;"
+        );
 
-        executeQueryWithTiming("myBatis", () -> myBatisService.executeQueryE2(), results);
-        executeQueryWithTiming("springDataJpa", () -> springDataJpaService.executeQueryE2(), results);
-        executeQueryWithTiming("cayenne", () -> cayenneService.executeQueryE2(), results);
-        executeQueryWithTiming("ebean", () -> ebeanService.executeQueryE2(), results);
-        executeQueryWithTiming("jdbc", () -> jdbcService.executeQueryE2(), results);
-        executeQueryWithTiming("jooq", () -> jooqService.executeQueryE2(), results);
+        executeQueriesAcrossAllServices(
+            results,
+            rep,
+            myBatisService::executeQueryE2,
+            springDataJpaService::executeQueryE2,
+            cayenneService::executeQueryE2,
+            ebeanService::executeQueryE2,
+            jdbcService::executeQueryE2,
+            jooqService::executeQueryE2
+        );
 
         return ResponseEntity.ok(results);
     }
 
     @GetMapping(value = "/e3", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Map<String, Object>> executeQueryE3() {
-        Map<String, Object> results = new HashMap<>();
-        results.put("query", "E3) Distinct");
-        results.put("description", "SELECT DISTINCT c_nationkey, c_mktsegment FROM customer;");
+    public ResponseEntity<Map<String, Object>> executeQueryE3(@RequestParam Optional<String> repetitions) {
+        int rep = parseRepetitions(repetitions);
+        Map<String, Object> results = createResultsMap(
+            "E3) Distinct",
+            "SELECT DISTINCT c_nationkey, c_mktsegment FROM customer;"
+        );
 
-        executeQueryWithTiming("myBatis", () -> myBatisService.executeQueryE3(), results);
-        executeQueryWithTiming("springDataJpa", () -> springDataJpaService.executeQueryE3(), results);
-        executeQueryWithTiming("cayenne", () -> cayenneService.executeQueryE3(), results);
-        executeQueryWithTiming("ebean", () -> ebeanService.executeQueryE3(), results);
-        executeQueryWithTiming("jdbc", () -> jdbcService.executeQueryE3(), results);
-        executeQueryWithTiming("jooq", () -> jooqService.executeQueryE3(), results);
-
-        return ResponseEntity.ok(results);
-    }
-
-    // F) Advanced Queries
-
-    @GetMapping(value = "/f1", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Map<String, Object>> executeQueryF1() {
-        Map<String, Object> results = new HashMap<>();
-        results.put("query", "F1) Subquery with Aggregation");
-        results.put("description", "SELECT c.c_custkey, c.c_name, c.c_acctbal, COUNT(o.o_orderkey) as order_count FROM customer c JOIN orders o ON c.c_custkey = o.o_custkey WHERE c.c_acctbal > (SELECT AVG(c_acctbal) FROM customer) GROUP BY c.c_custkey, c.c_name, c.c_acctbal ORDER BY order_count DESC LIMIT 10;");
-
-        executeQueryWithTiming("myBatis", () -> myBatisService.executeQueryF1(), results);
-        executeQueryWithTiming("springDataJpa", () -> springDataJpaService.executeQueryF1(), results);
-        executeQueryWithTiming("cayenne", () -> cayenneService.executeQueryF1(), results);
-        executeQueryWithTiming("ebean", () -> ebeanService.executeQueryF1(), results);
-        executeQueryWithTiming("jdbc", () -> jdbcService.executeQueryF1(), results);
-        executeQueryWithTiming("jooq", () -> jooqService.executeQueryF1(), results);
+        executeQueriesAcrossAllServices(
+            results,
+            rep,
+            myBatisService::executeQueryE3,
+            springDataJpaService::executeQueryE3,
+            cayenneService::executeQueryE3,
+            ebeanService::executeQueryE3,
+            jdbcService::executeQueryE3,
+            jooqService::executeQueryE3
+        );
 
         return ResponseEntity.ok(results);
     }
 
-    @GetMapping(value = "/f2", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Map<String, Object>> executeQueryF2() {
-        Map<String, Object> results = new HashMap<>();
-        results.put("query", "F2) GROUP BY with HAVING");
-        results.put("description", "SELECT n.n_name as nation, COUNT(c.c_custkey) as customer_count, AVG(c.c_acctbal) as avg_balance FROM customer c JOIN nation n ON c.c_nationkey = n.n_nationkey GROUP BY n.n_name HAVING COUNT(c.c_custkey) > 5 ORDER BY customer_count DESC;");
-
-        executeQueryWithTiming("myBatis", () -> myBatisService.executeQueryF2(), results);
-        executeQueryWithTiming("springDataJpa", () -> springDataJpaService.executeQueryF2(), results);
-        executeQueryWithTiming("cayenne", () -> cayenneService.executeQueryF2(), results);
-        executeQueryWithTiming("ebean", () -> ebeanService.executeQueryF2(), results);
-        executeQueryWithTiming("jdbc", () -> jdbcService.executeQueryF2(), results);
-        executeQueryWithTiming("jooq", () -> jooqService.executeQueryF2(), results);
-
-        return ResponseEntity.ok(results);
+    /**
+     * Helper method to parse the repetitions parameter
+     * 
+     * @param repetitions Optional parameter for number of repetitions
+     * @return The parsed number of repetitions, defaulting to 1 if not provided or invalid
+     */
+    private int parseRepetitions(Optional<String> repetitions) {
+        int rep = 1;
+        try {
+            rep = Integer.parseInt(repetitions.orElse("1"));
+        } catch (NumberFormatException e) {
+            System.out.println("Invalid number format: " + e.getMessage());
+        }
+        return rep;
     }
 
-    @GetMapping(value = "/f3", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Map<String, Object>> executeQueryF3() {
-        Map<String, Object> results = new HashMap<>();
-        results.put("query", "F3) Window Functions");
-        results.put("description", "SELECT o.o_orderkey, o.o_custkey, o.o_totalprice, RANK() OVER (PARTITION BY o.o_custkey ORDER BY o.o_totalprice DESC) as price_rank FROM orders o WHERE o.o_orderdate BETWEEN '1996-01-01' AND '1996-12-31' LIMIT 20;");
-
-        executeQueryWithTiming("myBatis", () -> myBatisService.executeQueryF3(), results);
-        executeQueryWithTiming("springDataJpa", () -> springDataJpaService.executeQueryF3(), results);
-        executeQueryWithTiming("cayenne", () -> cayenneService.executeQueryF3(), results);
-        executeQueryWithTiming("ebean", () -> ebeanService.executeQueryF3(), results);
-        executeQueryWithTiming("jdbc", () -> jdbcService.executeQueryF3(), results);
-        executeQueryWithTiming("jooq", () -> jooqService.executeQueryF3(), results);
-
-        return ResponseEntity.ok(results);
+    /**
+     * Helper method to create a results map with query info
+     * 
+     * @param queryName The name of the query
+     * @param description The description of the query
+     * @return A map containing the query info
+     */
+    private Map<String, Object> createResultsMap(String queryName, String description) {
+        Map<String, Object> results = new LinkedHashMap<>();
+        results.put("query", queryName);
+        results.put("description", description);
+        return results;
     }
 
-    @GetMapping(value = "/f4", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Map<String, Object>> executeQueryF4() {
-        Map<String, Object> results = new HashMap<>();
-        results.put("query", "F4) Complex Business Query");
-        results.put("description", "SELECT n.n_name as nation, YEAR(o.o_orderdate) as order_year, SUM(l.l_extendedprice * (1 - l.l_discount)) as revenue FROM customer c JOIN orders o ON c.c_custkey = o.o_custkey JOIN lineitem l ON o.o_orderkey = l.l_orderkey JOIN nation n ON c.c_nationkey = n.n_nationkey JOIN region r ON n.n_regionkey = r.r_regionkey WHERE r.r_name = 'EUROPE' AND o.o_orderdate BETWEEN '1995-01-01' AND '1996-12-31' GROUP BY nation, order_year ORDER BY nation, order_year;");
+    /**
+     * Helper method to execute queries across all services
+     * 
+     * @param results The map to store the results
+     * @param repetitions The number of times to repeat the query execution
+     * @param myBatisQuery The MyBatis query executor
+     * @param springDataJpaQuery The SpringDataJpa query executor
+     * @param cayenneQuery The Cayenne query executor
+     * @param ebeanQuery The Ebean query executor
+     * @param jdbcQuery The JDBC query executor
+     * @param jooqQuery The JOOQ query executor
+     */
+    private void executeQueriesAcrossAllServices(
+            Map<String, Object> results, 
+            int repetitions,
+            QueryExecutor myBatisQuery,
+            QueryExecutor springDataJpaQuery,
+            QueryExecutor cayenneQuery,
+            QueryExecutor ebeanQuery,
+            QueryExecutor jdbcQuery,
+            QueryExecutor jooqQuery) {
 
-        executeQueryWithTiming("myBatis", () -> myBatisService.executeQueryF4(), results);
-        executeQueryWithTiming("springDataJpa", () -> springDataJpaService.executeQueryF4(), results);
-        executeQueryWithTiming("cayenne", () -> cayenneService.executeQueryF4(), results);
-        executeQueryWithTiming("ebean", () -> ebeanService.executeQueryF4(), results);
-        executeQueryWithTiming("jdbc", () -> jdbcService.executeQueryF4(), results);
-        executeQueryWithTiming("jooq", () -> jooqService.executeQueryF4(), results);
-
-        return ResponseEntity.ok(results);
+        executeQueryWithTiming("myBatis", myBatisQuery, results, repetitions);
+        executeQueryWithTiming("springDataJpa", springDataJpaQuery, results, repetitions);
+        executeQueryWithTiming("cayenne", cayenneQuery, results, repetitions);
+        executeQueryWithTiming("ebean", ebeanQuery, results, repetitions);
+        executeQueryWithTiming("jdbc", jdbcQuery, results, repetitions);
+        executeQueryWithTiming("jooq", jooqQuery, results, repetitions);
     }
 
     /**
@@ -529,52 +644,58 @@ public class OrchestratorController {
      * @param serviceName The name of the service executing the query
      * @param queryExecutor A lambda that executes the query
      * @param results The map to store the results
+     * @param repetitions The number of times to repeat the query execution
      */
-    private void executeQueryWithTiming(String serviceName, QueryExecutor queryExecutor, Map<String, Object> results) {
-        Map<String, Object> serviceResults = new HashMap<>();
+    private void executeQueryWithTiming(String serviceName, QueryExecutor queryExecutor, Map<String, Object> results, int repetitions) {
+        Map<String, Object> serviceResults = new LinkedHashMap<>();
+        double totalTime = 0.0;
+        double totalMemory = 0.0;
 
+        // warm up the JVM
         try {
-            // Execute the query
-            String responseStr = queryExecutor.execute();
-
-            // Parse the response
-            // If the response is in JSON format and contains executionTime and memoryUsage, use those values
-            // Otherwise, use default values
-            try {
-                // Try to parse the response as JSON
-                com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
-                Map<String, Object> responseMap = mapper.readValue(responseStr, Map.class);
-
-                // Extract execution time and memory usage if available
-                if (responseMap.containsKey("executionTime")) {
-                    serviceResults.put("executionTime", responseMap.get("executionTime"));
-                }
-
-                if (responseMap.containsKey("memoryUsage")) {
-                    serviceResults.put("memoryUsage", responseMap.get("memoryUsage"));
-                }
-
-                // Extract the response data
-                if (responseMap.containsKey("pricingSummary") || responseMap.containsKey("result")) {
-                    Object responseData = responseMap.containsKey("pricingSummary") ? 
-                                         responseMap.get("pricingSummary") : responseMap.get("result");
-                    serviceResults.put("response", responseData);
-                } else {
-                    // If no specific data field is found, use the whole response
-                    serviceResults.put("response", responseMap);
-                }
-
-                serviceResults.put("status", responseMap.containsKey("status") ? 
-                                  responseMap.get("status") : "success");
-            } catch (Exception e) {
-                // If parsing fails, use the raw response
-                serviceResults.put("response", responseStr);
-                serviceResults.put("status", "success");
-            }
+            queryExecutor.execute();
         } catch (Exception e) {
-            serviceResults.put("status", "error");
-            serviceResults.put("error", e.getMessage());
+            // Ignore any exceptions during warm-up
+            System.out.println("Warm-up failed for " + serviceName + ": " + e.getMessage());
         }
+
+        for (int i = 0; i < repetitions; i++) {
+            try {
+                Map<String, Object> response = queryExecutor.execute();
+                try {
+                    if (response.containsKey("elapsed")) {
+                        String elapsedStr = response.get("elapsed").toString();
+                        double executionTime = Double.parseDouble(elapsedStr.trim());
+                        totalTime += executionTime;
+                    }
+
+                    if (response.containsKey("delta")) {
+                        String memoryUsageStr = response.get("delta").toString();
+                        double memoryUsage = Double.parseDouble(memoryUsageStr.trim());
+                        totalMemory += memoryUsage;
+                    } else {
+                        serviceResults.put("delta", 0.0);
+                    }
+
+                    serviceResults.put("status", response.getOrDefault("status", "success"));
+                } catch (Exception e) {
+                    serviceResults.put("response", response);
+                    serviceResults.put("status", "success");
+                }
+            } catch (Exception e) {
+                serviceResults.put("status", "error");
+                serviceResults.put("error", e.getMessage());
+            }
+        }
+
+        serviceResults.put("repetition", repetitions);
+
+        double averageTime = totalTime / repetitions;
+        double averageTimeInMs = averageTime / 1000000;
+        serviceResults.put("averageExecutionTime", averageTimeInMs + " ms");
+
+        double averageMemory = totalMemory / repetitions;
+        serviceResults.put("averageMemoryUsage", averageMemory + " bytes");
 
         results.put(serviceName, serviceResults);
     }
@@ -584,6 +705,6 @@ public class OrchestratorController {
      */
     @FunctionalInterface
     private interface QueryExecutor {
-        String execute() throws Exception;
+        Map<String, Object> execute() throws Exception;
     }
 }

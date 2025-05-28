@@ -1,9 +1,180 @@
 # Queries
 
+## A) Selection, Projection, Source (of data)
+
+### A1) Non-Indexed Columns
+
+This query selects all records from the lineitem table
+```sql
+SELECT * FROM lineitem;
+```
+
+### A2) Non-Indexed Columns — Range Query
+
+This query selects all records from the orders table where the order date is between '1996-01-01' and '1996-12-31'
+```sql
+SELECT * FROM orders
+WHERE o_orderdate 
+    BETWEEN '1996-01-01' AND '1996-12-31';
+```
+
+### A3) Indexed Columns
+
+This query selects all records from the customer table
+```sql
+SELECT * FROM customer;
+```
+
+### A4) Indexed Columns — Range Query
+
+This query selects all records from the orders table where the order key is between 1000 and 50000
+```sql
+SELECT * FROM orders
+WHERE o_orderkey BETWEEN 1000 AND 50000;
+```
+
+## B) Aggregation
+
+### B1) COUNT
+
+This query counts the number of orders grouped by order month
+```sql
+SELECT COUNT(o.o_orderkey) AS order_count, 
+       DATE_FORMAT(o.o_orderdate, '%Y-%m') AS order_month
+FROM orders o
+GROUP BY order_month;
+```
+
+### B2) MAX
+
+This query finds the maximum extended price from the lineitem table grouped by ship month
+```sql
+SELECT DATE_FORMAT(l.l_shipdate, '%Y-%m') AS ship_month,
+       MAX(l.l_extendedprice) AS max_price
+FROM lineitem l
+GROUP BY ship_month;
+```
+
+## C) Joins
+
+### C1) Non-Indexed Columns
+
+This query gives customer names, order dates, and total prices for customers
+```sql
+SELECT c.c_name, o.o_orderdate, o.o_totalprice
+FROM customer c, orders o;
+```
+
+### C2) Indexed Columns
+
+This query gives customer names, order dates, and total prices for all customers
+```sql
+SELECT c.c_name, o.o_orderdate, o.o_totalprice
+FROM customer c
+JOIN orders o ON c.c_custkey = o.o_custkey;
+```
+
+### C3) Complex Join 1
+
+This query gives customer names, nation names, order dates, and total prices for customers
+```sql
+SELECT c.c_name, n.n_name, o.o_orderdate, o.o_totalprice
+FROM customer c
+JOIN nation n ON c.c_nationkey = n.n_nationkey
+JOIN orders o ON c.c_custkey = o.o_custkey;
+```
+
+### C4) Complex Join 2
+
+This query gives customer names, nation names, region names, order dates, and total prices for customers
+```sql
+SELECT c.c_name, n.n_name, r.r_name, o.o_orderdate, o.o_totalprice
+FROM customer c
+JOIN nation n ON c.c_nationkey = n.n_nationkey
+JOIN region r ON n.n_regionkey = r.r_regionkey
+JOIN orders o ON c.c_custkey = o.o_custkey;
+```
+
+### C5) Left Outer Join
+
+This query gives customer names and order dates for all customers, including those without orders
+```sql
+SELECT c.c_custkey, c.c_name, o.o_orderkey, o.o_orderdate
+FROM customer c
+LEFT OUTER JOIN orders o ON c.c_custkey = o.o_custkey;
+```
+
+## D) Set operations
+
+### D1) UNION
+
+This query combines customer and supplier nation keys
+```sql
+(SELECT c_nationkey FROM customer)
+UNION
+(SELECT s_nationkey FROM supplier);
+```
+
+### D2) INTERSECT
+
+This query finds common customer and supplier keys
+MySQL doesn't directly support INTERSECT, so I used IN
+```sql
+SELECT DISTINCT c.c_custkey
+FROM customer c
+WHERE c.c_custkey IN (
+    SELECT s.s_suppkey
+    FROM supplier s
+);
+```
+
+### D3) DIFFERENCE
+
+This query finds customer keys that are not in the supplier table
+MySQL doesn't directly support EXCEPT/MINUS, so I used NOT IN
+```sql
+SELECT DISTINCT c.c_custkey
+FROM customer c
+WHERE c.c_custkey NOT IN (
+    SELECT DISTINCT s.s_suppkey
+    FROM supplier s
+);
+```
+
+## E) Result Modification
+
+### E1) Non-Indexed Columns Sorting
+
+This query sorts customer names, addresses, and account balances in descending order of account balance
+```sql
+SELECT c_name, c_address, c_acctbal
+FROM customer
+ORDER BY c_acctbal DESC
+```
+
+### E2) Indexed Columns Sorting
+
+This query sorts order keys, customer keys, order dates, and total prices in ascending order of order key
+```sql
+SELECT o_orderkey, o_custkey, o_orderdate, o_totalprice
+FROM orders
+ORDER BY o_orderkey
+```
+
+### E3) Distinct
+
+This query selects distinct nation keys and market segments from the customer table
+```sql
+SELECT DISTINCT c_nationkey, c_mktsegment
+FROM customer;
+```
+
+## Advanced Queries
 ## TPC-H Benchmark Queries
 
 ### Q1) Pricing Summary Report Query
 
+//This query reports the amount of business that was billed, shipped, and returned
 ```sql
 SELECT
   l_returnflag,
@@ -24,6 +195,7 @@ ORDER BY l_returnflag, l_linestatus
 
 ### Q2) Minimum Cost Supplier Query
 
+//This query finds which supplier should be selected to place an order for a given part in a given region
 ```sql
 SELECT
   s.s_acctbal,
@@ -72,6 +244,7 @@ LIMIT 100
 
 ### Q3) Shipping Priority Query
 
+//This query retrieves the 10 unshipped orders with the highest value
 ```sql
 SELECT
   l.l_orderkey,
@@ -100,6 +273,7 @@ LIMIT 10
 
 ### Q4) Order Priority Checking Query
 
+//This query determines how well the order priority system is working and gives an assessment of customer satisfaction
 ```sql
 SELECT
   o_orderpriority,
@@ -125,6 +299,7 @@ ORDER BY
 
 ### Q5) Local Supplier Volume Query
 
+//This query lists the revenue volume done through local suppliers
 ```sql
 SELECT
   n.n_name,
@@ -150,226 +325,4 @@ GROUP BY
   n.n_name
 ORDER BY
   revenue DESC
-```
-
-## A) Selection, Projection, Source (of data)
-
-### A1) Non-Indexed Columns
-
-```sql
-SELECT * FROM lineitem 
-WHERE l_extendedprice < 1000.0;
-```
-
-### A2) Non-Indexed Columns — Range Query
-
-```sql
-SELECT * FROM orders
-WHERE o_orderdate 
-    BETWEEN '1996-01-01' AND '1996-12-31';
-```
-
-### A3) Indexed Columns
-
-```sql
-SELECT * FROM customer 
-WHERE c_custkey > 10;
-```
-
-### A4) Indexed Columns — Range Query
-
-```sql
-SELECT * FROM orders
-WHERE o_orderkey BETWEEN 1000 AND 50000;
-```
-
-## B) Aggregation
-
-### B1) COUNT
-
-```sql
-SELECT COUNT(o.o_orderkey) AS order_count, 
-       DATE_FORMAT(o.o_orderdate, '%Y-%m') AS order_month
-FROM orders o
-GROUP BY order_month
-ORDER BY order_month;
-```
-
-### B2) MAX
-
-```sql
-SELECT DATE_FORMAT(l.l_shipdate, '%Y-%m') AS ship_month,
-       MAX(l.l_extendedprice) AS max_price
-FROM lineitem l
-GROUP BY ship_month
-ORDER BY ship_month;
-```
-
-## C) Joins
-
-### C1) Non-Indexed Columns
-
-```sql
-SELECT c.c_name, o.o_orderdate, o.o_totalprice
-FROM customer c, orders o
-WHERE c.c_mktsegment = 'BUILDING'
-AND c.c_custkey = o.o_custkey;
-```
-
-### C2) Indexed Columns
-
-```sql
-SELECT c.c_name, o.o_orderdate, o.o_totalprice
-FROM customer c
-JOIN orders o ON c.c_custkey = o.o_custkey;
-```
-
-### C3) Complex Join 1
-
-```sql
-SELECT c.c_name, n.n_name, o.o_orderdate, o.o_totalprice
-FROM customer c
-JOIN nation n ON c.c_nationkey = n.n_nationkey
-JOIN orders o ON c.c_custkey = o.o_custkey
-WHERE n.n_name = 'GERMANY'
-AND o.o_orderdate BETWEEN '1996-01-01' AND '1996-12-31';
-```
-
-### C4) Complex Join 2
-
-```sql
-SELECT c.c_name, n.n_name, r.r_name, o.o_orderdate, o.o_totalprice
-FROM customer c
-JOIN nation n ON c.c_nationkey = n.n_nationkey
-JOIN region r ON n.n_regionkey = r.r_regionkey
-JOIN orders o ON c.c_custkey = o.o_custkey
-WHERE r.r_name = 'EUROPE'
-AND o.o_orderdate BETWEEN '1996-01-01' AND '1996-12-31';
-```
-
-### C5) Left Outer Join
-
-```sql
-SELECT c.c_custkey, c.c_name, o.o_orderkey, o.o_orderdate
-FROM customer c
-LEFT OUTER JOIN orders o ON c.c_custkey = o.o_custkey
-WHERE c.c_nationkey = 3;
-```
-
-## D) Set operations
-
-### D1) UNION
-
-```sql
-(SELECT c_nationkey FROM customer)
-UNION
-(SELECT s_nationkey FROM supplier);
-```
-
-### D2) INTERSECT
-
-```sql
--- MySQL doesn't directly support INTERSECT, so we use IN or JOIN
-SELECT DISTINCT c.c_custkey
-FROM customer c
-WHERE c.c_custkey IN (
-    SELECT s.s_suppkey
-    FROM supplier s
-);
-```
-
-### D3) DIFFERENCE
-
-```sql
--- MySQL doesn't directly support EXCEPT/MINUS, so we use NOT IN or LEFT JOIN
-SELECT DISTINCT c.c_custkey
-FROM customer c
-WHERE c.c_custkey NOT IN (
-    SELECT DISTINCT s.s_suppkey
-    FROM supplier s
-);
-```
-
-## E) Result Modification
-
-### E1) Non-Indexed Columns Sorting
-
-```sql
-SELECT c_name, c_address, c_acctbal
-FROM customer
-ORDER BY c_acctbal DESC
-```
-
-### E2) Indexed Columns Sorting
-
-```sql
-SELECT o_orderkey, o_custkey, o_orderdate, o_totalprice
-FROM orders
-ORDER BY o_orderkey
-```
-
-### E3) Distinct
-
-```sql
-SELECT DISTINCT c_nationkey, c_mktsegment
-FROM customer;
-```
-
-## F) Advanced Queries
-
-### F1) Subquery with Aggregation
-
-```sql
-SELECT c.c_custkey, c.c_name, c.c_acctbal, COUNT(o.o_orderkey) as order_count
-FROM customer c
-JOIN orders o ON c.c_custkey = o.o_custkey
-WHERE c.c_acctbal > (
-    SELECT AVG(c_acctbal) 
-    FROM customer
-)
-GROUP BY c.c_custkey, c.c_name, c.c_acctbal
-ORDER BY order_count DESC
-```
-
-### F2) GROUP BY with HAVING
-
-```sql
-SELECT n.n_name as nation, COUNT(c.c_custkey) as customer_count, 
-       AVG(c.c_acctbal) as avg_balance
-FROM customer c
-JOIN nation n ON c.c_nationkey = n.n_nationkey
-GROUP BY n.n_name
-HAVING COUNT(c.c_custkey) > 5
-ORDER BY customer_count DESC;
-```
-
-### F3) Window Functions
-
-```sql
-SELECT o.o_orderkey, o.o_custkey, o.o_totalprice,
-       RANK() OVER (PARTITION BY o.o_custkey ORDER BY o.o_totalprice DESC) as price_rank
-FROM orders o
-WHERE o.o_orderdate BETWEEN '1996-01-01' AND '1996-12-31'
-```
-
-### F4) Complex Business Query
-
-```sql
-SELECT 
-    n.n_name as nation,
-    YEAR(o.o_orderdate) as order_year,
-    SUM(l.l_extendedprice * (1 - l.l_discount)) as revenue
-FROM 
-    customer c
-    JOIN orders o ON c.c_custkey = o.o_custkey
-    JOIN lineitem l ON o.o_orderkey = l.l_orderkey
-    JOIN nation n ON c.c_nationkey = n.n_nationkey
-    JOIN region r ON n.n_regionkey = r.r_regionkey
-WHERE 
-    r.r_name = 'EUROPE'
-    AND o.o_orderdate BETWEEN '1995-01-01' AND '1996-12-31'
-GROUP BY 
-    nation, order_year
-ORDER BY 
-    nation, order_year;
 ```

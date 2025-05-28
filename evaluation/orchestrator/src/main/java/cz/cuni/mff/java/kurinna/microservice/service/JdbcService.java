@@ -1,128 +1,206 @@
 package cz.cuni.mff.java.kurinna.microservice.service;
 
+import cz.cuni.mff.java.kurinna.microservice.client.MicroserviceMysqlJdbcClient;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
+
+import java.util.Map;
 
 @Service
 public class JdbcService {
-    private final RestTemplate restTemplate;
-    private final String jdbcApi = System.getenv("JDBC_API");
+    private final MicroserviceMysqlJdbcClient jdbcClient;
 
-    public JdbcService(RestTemplate restTemplate) {
-        this.restTemplate = restTemplate;
+    public JdbcService(MicroserviceMysqlJdbcClient jdbcClient) {
+        this.jdbcClient = jdbcClient;
     }
 
+    // health check
     public String healthCheck() {
-        return restTemplate.getForObject(jdbcApi + "/health", String.class);
+        return jdbcClient.health().getBody();
     }
 
-    public String getPricingSummary() {
-        return restTemplate.getForObject(jdbcApi + "/q1", String.class);
+    // get pricing summary
+    public Map<String, Object> getPricingSummary() {
+        Map<String, Object> response = jdbcClient.getPricingSummary().getBody();
+        if (response == null || response.isEmpty()) {
+            throw new RuntimeException("No data found");
+        }
+        return response;
     }
 
-    public String getMinimumCostSupplier() {
-        return restTemplate.getForObject(jdbcApi + "/q2", String.class);
+    // get minimum cost supplier
+    public Map<String, Object> getMinimumCostSupplier() {
+        Map<String, Object> response = jdbcClient.getMinimumCostSupplier().getBody();
+        if (response == null || response.isEmpty()) {
+            throw new RuntimeException("No data found");
+        }
+        return response;
     }
 
-    public String getShippingPriority() {
-        return restTemplate.getForObject(jdbcApi + "/q3", String.class);
+    // get shipping priority
+    public Map<String, Object> getShippingPriority() {
+        Map<String, Object> response = jdbcClient.getShippingPriority().getBody();
+        if (response == null || response.isEmpty()) {
+            throw new RuntimeException("No data found");
+        }
+        return response;
     }
 
-    public String getOrderPriorityChecking() {
-        return restTemplate.getForObject(jdbcApi + "/q4", String.class);
+    // get order priority checking
+    public Map<String, Object> getOrderPriorityChecking() {
+        Map<String, Object> response = jdbcClient.getOrderPriorityChecking().getBody();
+        if (response == null || response.isEmpty()) {
+            throw new RuntimeException("No data found");
+        }
+        return response;
     }
 
-    public String getLocalSupplierVolume() {
-        return restTemplate.getForObject(jdbcApi + "/q5", String.class);
+    // get local supplier volume
+    public Map<String, Object> getLocalSupplierVolume() {
+        Map<String, Object> response = jdbcClient.getLocalSupplierVolume().getBody();
+        if (response == null || response.isEmpty()) {
+            throw new RuntimeException("No data found");
+        }
+        return response;
     }
 
     // A) Selection, Projection, Source (of data)
-    public String executeQueryA1() {
-        return restTemplate.getForObject(jdbcApi + "/a1", String.class);
+    public Map<String, Object> executeQueryA1() {
+        Map<String, Object> response = jdbcClient.getNonIndexedColumns().getBody();
+        if (response == null || response.isEmpty()) {
+            throw new RuntimeException("No data found");
+        }
+        return response;
     }
 
-    public String executeQueryA2() {
-        return restTemplate.getForObject(jdbcApi + "/a2", String.class);
+    public Map<String, Object> executeQueryA2() {
+        Map<String, Object> response = jdbcClient.getNonIndexedColumnsRangeQuery("1996-01-01", "1996-12-31").getBody();
+        if (response == null || response.isEmpty()) {
+            throw new RuntimeException("No data found");
+        }
+        return response;
     }
 
-    public String executeQueryA3() {
-        return restTemplate.getForObject(jdbcApi + "/a3", String.class);
+    public Map<String, Object> executeQueryA3() {
+        Map<String, Object> response = jdbcClient.getIndexedColumns().getBody();
+        if (response == null || response.isEmpty()) {
+            throw new RuntimeException("No data found");
+        }
+        return response;
     }
 
-    public String executeQueryA4() {
-        return restTemplate.getForObject(jdbcApi + "/a4", String.class);
+    public Map<String, Object> executeQueryA4() {
+        Map<String, Object> response = jdbcClient.getIndexedColumnsRangeQuery(1000, 50000).getBody();
+        if (response == null || response.isEmpty()) {
+            throw new RuntimeException("No data found");
+        }
+        return response;
     }
 
     // B) Aggregation
-    public String executeQueryB1() {
-        return restTemplate.getForObject(jdbcApi + "/b1", String.class);
+    public Map<String, Object> executeQueryB1() {
+        Map<String, Object> response = jdbcClient.getCount().getBody();
+        if (response == null || response.isEmpty()) {
+            throw new RuntimeException("No data found");
+        }
+        return response;
     }
 
-    public String executeQueryB2() {
-        return restTemplate.getForObject(jdbcApi + "/b2", String.class);
+    public Map<String, Object> executeQueryB2() {
+        Map<String, Object> response = jdbcClient.getMax().getBody();
+        if (response == null || response.isEmpty()) {
+            throw new RuntimeException("No data found");
+        }
+        return response;
     }
 
     // C) Joins
-    public String executeQueryC1() {
-        return restTemplate.getForObject(jdbcApi + "/c1", String.class);
+    public Map<String, Object> executeQueryC1() {
+        Map<String, Object> response = jdbcClient.getJoinNonIndexedColumns().getBody();
+        if (response == null || response.isEmpty()) {
+            throw new RuntimeException("No data found");
+        }
+        return response;
     }
 
-    public String executeQueryC2() {
-        return restTemplate.getForObject(jdbcApi + "/c2", String.class);
+    public Map<String, Object> executeQueryC2() {
+        Map<String, Object> response = jdbcClient.getJoinIndexedColumns().getBody();
+        if (response == null || response.isEmpty()) {
+            throw new RuntimeException("No data found");
+        }
+        return response;
     }
 
-    public String executeQueryC3() {
-        return restTemplate.getForObject(jdbcApi + "/c3", String.class);
+    public Map<String, Object> executeQueryC3() {
+        Map<String, Object> response = jdbcClient.getComplexJoin1().getBody();
+        if (response == null || response.isEmpty()) {
+            throw new RuntimeException("No data found");
+        }
+        return response;
     }
 
-    public String executeQueryC4() {
-        return restTemplate.getForObject(jdbcApi + "/c4", String.class);
+    public Map<String, Object> executeQueryC4() {
+        Map<String, Object> response = jdbcClient.getComplexJoin2().getBody();
+        if (response == null || response.isEmpty()) {
+            throw new RuntimeException("No data found");
+        }
+        return response;
     }
 
-    public String executeQueryC5() {
-        return restTemplate.getForObject(jdbcApi + "/c5", String.class);
+    public Map<String, Object> executeQueryC5() {
+        Map<String, Object> response = jdbcClient.getLeftOuterJoin().getBody();
+        if (response == null || response.isEmpty()) {
+            throw new RuntimeException("No data found");
+        }
+        return response;
     }
 
     // D) Set operations
-    public String executeQueryD1() {
-        return restTemplate.getForObject(jdbcApi + "/d1", String.class);
+    public Map<String, Object> executeQueryD1() {
+        Map<String, Object> response = jdbcClient.getUnion().getBody();
+        if (response == null || response.isEmpty()) {
+            throw new RuntimeException("No data found");
+        }
+        return response;
     }
 
-    public String executeQueryD2() {
-        return restTemplate.getForObject(jdbcApi + "/d2", String.class);
+    public Map<String, Object> executeQueryD2() {
+        Map<String, Object> response = jdbcClient.getIntersect().getBody();
+        if (response == null || response.isEmpty()) {
+            throw new RuntimeException("No data found");
+        }
+        return response;
     }
 
-    public String executeQueryD3() {
-        return restTemplate.getForObject(jdbcApi + "/d3", String.class);
+    public Map<String, Object> executeQueryD3() {
+        Map<String, Object> response = jdbcClient.getDifference().getBody();
+        if (response == null || response.isEmpty()) {
+            throw new RuntimeException("No data found");
+        }
+        return response;
     }
 
     // E) Result Modification
-    public String executeQueryE1() {
-        return restTemplate.getForObject(jdbcApi + "/e1", String.class);
+    public Map<String, Object> executeQueryE1() {
+        Map<String, Object> response = jdbcClient.getNonIndexedColumnsSorting().getBody();
+        if (response == null || response.isEmpty()) {
+            throw new RuntimeException("No data found");
+        }
+        return response;
     }
 
-    public String executeQueryE2() {
-        return restTemplate.getForObject(jdbcApi + "/e2", String.class);
+    public Map<String, Object> executeQueryE2() {
+        Map<String, Object> response = jdbcClient.getIndexedColumnsSorting().getBody();
+        if (response == null || response.isEmpty()) {
+            throw new RuntimeException("No data found");
+        }
+        return response;
     }
 
-    public String executeQueryE3() {
-        return restTemplate.getForObject(jdbcApi + "/e3", String.class);
-    }
-
-    // F) Advanced Queries
-    public String executeQueryF1() {
-        return restTemplate.getForObject(jdbcApi + "/f1", String.class);
-    }
-
-    public String executeQueryF2() {
-        return restTemplate.getForObject(jdbcApi + "/f2", String.class);
-    }
-
-    public String executeQueryF3() {
-        return restTemplate.getForObject(jdbcApi + "/f3", String.class);
-    }
-
-    public String executeQueryF4() {
-        return restTemplate.getForObject(jdbcApi + "/f4", String.class);
+    public Map<String, Object> executeQueryE3() {
+        Map<String, Object> response = jdbcClient.getDistinct().getBody();
+        if (response == null || response.isEmpty()) {
+            throw new RuntimeException("No data found");
+        }
+        return response;
     }
 }

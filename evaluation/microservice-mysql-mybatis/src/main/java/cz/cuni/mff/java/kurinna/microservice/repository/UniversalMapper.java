@@ -1,19 +1,145 @@
 package cz.cuni.mff.java.kurinna.microservice.repository;
 
-import cz.cuni.mff.java.kurinna.microservice.dto.PricingSummary;
-import cz.cuni.mff.java.kurinna.microservice.dto.MinimumCostSupplier;
-import cz.cuni.mff.java.kurinna.microservice.dto.ShippingPriority;
-import cz.cuni.mff.java.kurinna.microservice.dto.OrderPriorityChecking;
-import cz.cuni.mff.java.kurinna.microservice.dto.LocalSupplierVolume;
+import cz.cuni.mff.java.kurinna.microservice.dto.*;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
+import org.apache.ibatis.annotations.ResultType;
 
 import java.time.LocalDate;
 import java.util.List;
 
 @Mapper
 public interface UniversalMapper {
+    // A1) Non-Indexed Columns
+    @Select("SELECT * FROM lineitem")
+    List<LineItem> a1();
+
+    // A2) Non-Indexed Columns — Range Query
+    @Select("SELECT * FROM orders WHERE o_orderdate BETWEEN #{startDate} AND #{endDate}")
+    List<Order> a2(@Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate);
+
+    // A3) Indexed Columns
+    @Select("SELECT * FROM customer")
+    List<Customer> a3();
+
+    // A4) Indexed Columns — Range Query
+    @Select("SELECT * FROM orders WHERE o_orderkey BETWEEN #{minOrderKey} AND #{maxOrderKey}")
+    List<Order> a4(@Param("minOrderKey") int minOrderKey, @Param("maxOrderKey") int maxOrderKey);
+
+    // B1) COUNT
+    @Select("""
+            SELECT COUNT(o.o_orderkey) AS order_count, 
+                   DATE_FORMAT(o.o_orderdate, '%Y-%m') AS order_month
+            FROM orders o
+            GROUP BY order_month
+            """)
+    List<OrderCount> b1();
+
+    // B2) MAX
+    @Select("""
+            SELECT DATE_FORMAT(l.l_shipdate, '%Y-%m') AS ship_month,
+                   MAX(l.l_extendedprice) AS max_price
+            FROM lineitem l
+            GROUP BY ship_month
+            """)
+    List<MaxPrice> b2();
+
+    // C1) Non-Indexed Columns
+    @Select("""
+            SELECT c.c_name, o.o_orderdate, o.o_totalprice
+            FROM customer c, orders o
+            """)
+    List<CustomerOrder> c1();
+
+    // C2) Indexed Columns
+    @Select("""
+            SELECT c.c_name, o.o_orderdate, o.o_totalprice
+            FROM customer c
+            JOIN orders o ON c.c_custkey = o.o_custkey
+            """)
+    List<CustomerOrder> c2();
+
+    // C3) Complex Join 1
+    @Select("""
+            SELECT c.c_name, n.n_name, o.o_orderdate, o.o_totalprice
+            FROM customer c
+            JOIN nation n ON c.c_nationkey = n.n_nationkey
+            JOIN orders o ON c.c_custkey = o.o_custkey
+            """)
+    List<CustomerNationOrder> c3();
+
+    // C4) Complex Join 2
+    @Select("""
+            SELECT c.c_name, n.n_name, r.r_name, o.o_orderdate, o.o_totalprice
+            FROM customer c
+            JOIN nation n ON c.c_nationkey = n.n_nationkey
+            JOIN region r ON n.n_regionkey = r.r_regionkey
+            JOIN orders o ON c.c_custkey = o.o_custkey
+            """)
+    List<CustomerNationRegionOrder> c4();
+
+    // C5) Left Outer Join
+    @Select("""
+            SELECT c.c_custkey, c.c_name, o.o_orderkey, o.o_orderdate
+            FROM customer c
+            LEFT OUTER JOIN orders o ON c.c_custkey = o.o_custkey
+            """)
+    List<CustomerOrderDetail> c5();
+
+    // D1) UNION
+    @Select("""
+            (SELECT c_nationkey AS nationkey FROM customer)
+            UNION
+            (SELECT s_nationkey AS nationkey FROM supplier)
+            """)
+    List<NationKey> d1();
+
+    // D2) INTERSECT
+    @Select("""
+            SELECT DISTINCT c.c_custkey AS custkey
+            FROM customer c
+            WHERE c.c_custkey IN (
+                SELECT s.s_suppkey
+                FROM supplier s
+            )
+            """)
+    List<CustomerKey> d2();
+
+    // D3) DIFFERENCE
+    @Select("""
+            SELECT DISTINCT c.c_custkey AS custkey
+            FROM customer c
+            WHERE c.c_custkey NOT IN (
+                SELECT DISTINCT s.s_suppkey
+                FROM supplier s
+            )
+            """)
+    List<CustomerKey> d3();
+
+    // E1) Non-Indexed Columns Sorting
+    @Select("""
+            SELECT c_name, c_address, c_acctbal
+            FROM customer
+            ORDER BY c_acctbal DESC
+            """)
+    List<CustomerDetail> e1();
+
+    // E2) Indexed Columns Sorting
+    @Select("""
+            SELECT o_orderkey, o_custkey, o_orderdate, o_totalprice
+            FROM orders
+            ORDER BY o_orderkey
+            """)
+    List<OrderDetail> e2();
+
+    // E3) Distinct
+    @Select("""
+            SELECT DISTINCT c_nationkey, c_mktsegment
+            FROM customer
+            """)
+    List<QueryResult> e3();
+
     @Select("""
             SELECT
               l_returnflag,
@@ -32,7 +158,7 @@ public interface UniversalMapper {
             GROUP BY l_returnflag, l_linestatus
             ORDER BY l_returnflag, l_linestatus
             """)
-    List<PricingSummary> fetchPricingSummary(int days);
+    List<PricingSummary> q1(int days);
 
     @Select("""
             SELECT
@@ -79,7 +205,7 @@ public interface UniversalMapper {
               p.p_partkey
             LIMIT 100
             """)
-    List<MinimumCostSupplier> fetchMinimumCostSupplier(@Param("size") int size, @Param("type") String type, @Param("region") String region);
+    List<MinimumCostSupplier> q2(@Param("size") int size, @Param("type") String type, @Param("region") String region);
 
     @Select("""
             SELECT
@@ -106,7 +232,7 @@ public interface UniversalMapper {
               o.o_orderdate
             LIMIT 10
             """)
-    List<ShippingPriority> fetchShippingPriority(@Param("segment") String segment, @Param("orderDate") LocalDate orderDate, @Param("shipDate") LocalDate shipDate);
+    List<ShippingPriority> q3(@Param("segment") String segment, @Param("orderDate") LocalDate orderDate, @Param("shipDate") LocalDate shipDate);
 
     @Select("""
             SELECT
@@ -130,7 +256,7 @@ public interface UniversalMapper {
             ORDER BY
               o_orderpriority
             """)
-    List<OrderPriorityChecking> fetchOrderPriorityChecking(@Param("orderDate") LocalDate orderDate);
+    List<OrderPriorityChecking> q4(@Param("orderDate") LocalDate orderDate);
 
     @Select("""
             SELECT
@@ -158,5 +284,5 @@ public interface UniversalMapper {
             ORDER BY
               revenue DESC
             """)
-    List<LocalSupplierVolume> fetchLocalSupplierVolume(@Param("region") String region, @Param("orderDate") LocalDate orderDate);
+    List<LocalSupplierVolume> q5(@Param("region") String region, @Param("orderDate") LocalDate orderDate);
 }

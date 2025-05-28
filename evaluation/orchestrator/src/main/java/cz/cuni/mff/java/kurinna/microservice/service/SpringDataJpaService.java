@@ -1,161 +1,206 @@
 package cz.cuni.mff.java.kurinna.microservice.service;
 
+import cz.cuni.mff.java.kurinna.microservice.client.MicroserviceMysqlSpringDataJpaClient;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
+
+import java.util.Map;
 
 @Service
 public class SpringDataJpaService {
-    private final RestTemplate restTemplate;
-    private final String springdataJpaApi = System.getenv("SPRINGDATA_JPA_API");
+    private final MicroserviceMysqlSpringDataJpaClient springDataJpaClient;
 
-    public SpringDataJpaService(RestTemplate restTemplate) {
-        this.restTemplate = restTemplate;
+    public SpringDataJpaService(MicroserviceMysqlSpringDataJpaClient springDataJpaClient) {
+        this.springDataJpaClient = springDataJpaClient;
     }
 
     // health check
     public String healthCheck() {
-        String url = springdataJpaApi + "/health";
-        return restTemplate.getForObject(url, String.class);
+        return springDataJpaClient.health().getBody();
     }
 
     // get pricing summary
-    public String getPricingSummary() {
-        String url = springdataJpaApi + "/q1";
-        return restTemplate.getForObject(url, String.class);
+    public Map<String, Object> getPricingSummary() {
+        Map<String, Object> response = springDataJpaClient.getPricingSummary().getBody();
+        if (response == null || response.isEmpty()) {
+            throw new RuntimeException("No data found");
+        }
+        return response;
     }
 
     // get minimum cost supplier
-    public String getMinimumCostSupplier() {
-        String url = springdataJpaApi + "/q2";
-        return restTemplate.getForObject(url, String.class);
+    public Map<String, Object> getMinimumCostSupplier() {
+        Map<String, Object> response = springDataJpaClient.getMinimumCostSupplier().getBody();
+        if (response == null || response.isEmpty()) {
+            throw new RuntimeException("No data found");
+        }
+        return response;
     }
 
     // get shipping priority
-    public String getShippingPriority() {
-        String url = springdataJpaApi + "/q3";
-        return restTemplate.getForObject(url, String.class);
+    public Map<String, Object> getShippingPriority() {
+        Map<String, Object> response = springDataJpaClient.getShippingPriority().getBody();
+        if (response == null || response.isEmpty()) {
+            throw new RuntimeException("No data found");
+        }
+        return response;
     }
 
     // get order priority checking
-    public String getOrderPriorityChecking() {
-        String url = springdataJpaApi + "/q4";
-        return restTemplate.getForObject(url, String.class);
+    public Map<String, Object> getOrderPriorityChecking() {
+        Map<String, Object> response = springDataJpaClient.getOrderPriorityChecking().getBody();
+        if (response == null || response.isEmpty()) {
+            throw new RuntimeException("No data found");
+        }
+        return response;
     }
 
     // get local supplier volume
-    public String getLocalSupplierVolume() {
-        String url = springdataJpaApi + "/q5";
-        return restTemplate.getForObject(url, String.class);
+    public Map<String, Object> getLocalSupplierVolume() {
+        Map<String, Object> response = springDataJpaClient.getLocalSupplierVolume().getBody();
+        if (response == null || response.isEmpty()) {
+            throw new RuntimeException("No data found");
+        }
+        return response;
     }
 
     // A) Selection, Projection, Source (of data)
-    public String executeQueryA1() {
-        String url = springdataJpaApi + "/a1";
-        return restTemplate.getForObject(url, String.class);
+    public Map<String, Object> executeQueryA1() {
+        Map<String, Object> response = springDataJpaClient.getNonIndexedColumns().getBody();
+        if (response == null || response.isEmpty()) {
+            throw new RuntimeException("No data found");
+        }
+        return response;
     }
 
-    public String executeQueryA2() {
-        String url = springdataJpaApi + "/a2";
-        return restTemplate.getForObject(url, String.class);
+    public Map<String, Object> executeQueryA2() {
+        Map<String, Object> response = springDataJpaClient.getNonIndexedColumnsRangeQuery("1996-01-01", "1996-12-31").getBody();
+        if (response == null || response.isEmpty()) {
+            throw new RuntimeException("No data found");
+        }
+        return response;
     }
 
-    public String executeQueryA3() {
-        String url = springdataJpaApi + "/a3";
-        return restTemplate.getForObject(url, String.class);
+    public Map<String, Object> executeQueryA3() {
+        Map<String, Object> response = springDataJpaClient.getIndexedColumns().getBody();
+        if (response == null || response.isEmpty()) {
+            throw new RuntimeException("No data found");
+        }
+        return response;
     }
 
-    public String executeQueryA4() {
-        String url = springdataJpaApi + "/a4";
-        return restTemplate.getForObject(url, String.class);
+    public Map<String, Object> executeQueryA4() {
+        Map<String, Object> response = springDataJpaClient.getIndexedColumnsRangeQuery(1000, 50000).getBody();
+        if (response == null || response.isEmpty()) {
+            throw new RuntimeException("No data found");
+        }
+        return response;
     }
 
     // B) Aggregation
-    public String executeQueryB1() {
-        String url = springdataJpaApi + "/b1";
-        return restTemplate.getForObject(url, String.class);
+    public Map<String, Object> executeQueryB1() {
+        Map<String, Object> response = springDataJpaClient.getCount().getBody();
+        if (response == null || response.isEmpty()) {
+            throw new RuntimeException("No data found");
+        }
+        return response;
     }
 
-    public String executeQueryB2() {
-        String url = springdataJpaApi + "/b2";
-        return restTemplate.getForObject(url, String.class);
+    public Map<String, Object> executeQueryB2() {
+        Map<String, Object> response = springDataJpaClient.getMax().getBody();
+        if (response == null || response.isEmpty()) {
+            throw new RuntimeException("No data found");
+        }
+        return response;
     }
 
     // C) Joins
-    public String executeQueryC1() {
-        String url = springdataJpaApi + "/c1";
-        return restTemplate.getForObject(url, String.class);
+    public Map<String, Object> executeQueryC1() {
+        Map<String, Object> response = springDataJpaClient.getJoinNonIndexedColumns().getBody();
+        if (response == null || response.isEmpty()) {
+            throw new RuntimeException("No data found");
+        }
+        return response;
     }
 
-    public String executeQueryC2() {
-        String url = springdataJpaApi + "/c2";
-        return restTemplate.getForObject(url, String.class);
+    public Map<String, Object> executeQueryC2() {
+        Map<String, Object> response = springDataJpaClient.getJoinIndexedColumns().getBody();
+        if (response == null || response.isEmpty()) {
+            throw new RuntimeException("No data found");
+        }
+        return response;
     }
 
-    public String executeQueryC3() {
-        String url = springdataJpaApi + "/c3";
-        return restTemplate.getForObject(url, String.class);
+    public Map<String, Object> executeQueryC3() {
+        Map<String, Object> response = springDataJpaClient.getComplexJoin1().getBody();
+        if (response == null || response.isEmpty()) {
+            throw new RuntimeException("No data found");
+        }
+        return response;
     }
 
-    public String executeQueryC4() {
-        String url = springdataJpaApi + "/c4";
-        return restTemplate.getForObject(url, String.class);
+    public Map<String, Object> executeQueryC4() {
+        Map<String, Object> response = springDataJpaClient.getComplexJoin2().getBody();
+        if (response == null || response.isEmpty()) {
+            throw new RuntimeException("No data found");
+        }
+        return response;
     }
 
-    public String executeQueryC5() {
-        String url = springdataJpaApi + "/c5";
-        return restTemplate.getForObject(url, String.class);
+    public Map<String, Object> executeQueryC5() {
+        Map<String, Object> response = springDataJpaClient.getLeftOuterJoin().getBody();
+        if (response == null || response.isEmpty()) {
+            throw new RuntimeException("No data found");
+        }
+        return response;
     }
 
     // D) Set operations
-    public String executeQueryD1() {
-        String url = springdataJpaApi + "/d1";
-        return restTemplate.getForObject(url, String.class);
+    public Map<String, Object> executeQueryD1() {
+        Map<String, Object> response = springDataJpaClient.getUnion().getBody();
+        if (response == null || response.isEmpty()) {
+            throw new RuntimeException("No data found");
+        }
+        return response;
     }
 
-    public String executeQueryD2() {
-        String url = springdataJpaApi + "/d2";
-        return restTemplate.getForObject(url, String.class);
+    public Map<String, Object> executeQueryD2() {
+        Map<String, Object> response = springDataJpaClient.getIntersect().getBody();
+        if (response == null || response.isEmpty()) {
+            throw new RuntimeException("No data found");
+        }
+        return response;
     }
 
-    public String executeQueryD3() {
-        String url = springdataJpaApi + "/d3";
-        return restTemplate.getForObject(url, String.class);
+    public Map<String, Object> executeQueryD3() {
+        Map<String, Object> response = springDataJpaClient.getDifference().getBody();
+        if (response == null || response.isEmpty()) {
+            throw new RuntimeException("No data found");
+        }
+        return response;
     }
 
     // E) Result Modification
-    public String executeQueryE1() {
-        String url = springdataJpaApi + "/e1";
-        return restTemplate.getForObject(url, String.class);
+    public Map<String, Object> executeQueryE1() {
+        Map<String, Object> response = springDataJpaClient.getNonIndexedColumnsSorting().getBody();
+        if (response == null || response.isEmpty()) {
+            throw new RuntimeException("No data found");
+        }
+        return response;
     }
 
-    public String executeQueryE2() {
-        String url = springdataJpaApi + "/e2";
-        return restTemplate.getForObject(url, String.class);
+    public Map<String, Object> executeQueryE2() {
+        Map<String, Object> response = springDataJpaClient.getIndexedColumnsSorting().getBody();
+        if (response == null || response.isEmpty()) {
+            throw new RuntimeException("No data found");
+        }
+        return response;
     }
 
-    public String executeQueryE3() {
-        String url = springdataJpaApi + "/e3";
-        return restTemplate.getForObject(url, String.class);
-    }
-
-    // F) Advanced Queries
-    public String executeQueryF1() {
-        String url = springdataJpaApi + "/f1";
-        return restTemplate.getForObject(url, String.class);
-    }
-
-    public String executeQueryF2() {
-        String url = springdataJpaApi + "/f2";
-        return restTemplate.getForObject(url, String.class);
-    }
-
-    public String executeQueryF3() {
-        String url = springdataJpaApi + "/f3";
-        return restTemplate.getForObject(url, String.class);
-    }
-
-    public String executeQueryF4() {
-        String url = springdataJpaApi + "/f4";
-        return restTemplate.getForObject(url, String.class);
+    public Map<String, Object> executeQueryE3() {
+        Map<String, Object> response = springDataJpaClient.getDistinct().getBody();
+        if (response == null || response.isEmpty()) {
+            throw new RuntimeException("No data found");
+        }
+        return response;
     }
 }

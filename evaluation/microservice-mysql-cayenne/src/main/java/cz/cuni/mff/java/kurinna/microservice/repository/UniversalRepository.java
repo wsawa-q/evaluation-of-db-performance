@@ -1,5 +1,6 @@
 package cz.cuni.mff.java.kurinna.microservice.repository;
 
+import cz.cuni.mff.java.kurinna.microservice.dto.QueryResult;
 import org.apache.cayenne.DataRow;
 import org.apache.cayenne.ObjectContext;
 import org.apache.cayenne.query.SQLSelect;
@@ -7,12 +8,199 @@ import org.springframework.stereotype.Repository;
 
 import java.sql.Date;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 @Repository
 public class UniversalRepository {
+    // Helper method to convert DataRow to QueryResult
+    private List<QueryResult> convertToQueryResults(List<DataRow> dataRows) {
+        List<QueryResult> queryResults = new ArrayList<>();
+        for (DataRow dataRow : dataRows) {
+            Map<String, Object> data = new HashMap<>(dataRow);
+            queryResults.add(new QueryResult(data));
+        }
+        return queryResults;
+    }
+
+    // A1) Non-Indexed Columns
+    public List<QueryResult> a1(ObjectContext context) {
+        String sql = "SELECT * FROM lineitem";
+        SQLSelect<DataRow> query = SQLSelect.dataRowQuery(sql);
+        List<DataRow> results = query.select(context);
+        return convertToQueryResults(results);
+    }
+
+    // A2) Non-Indexed Columns — Range Query
+    public List<QueryResult> a2(ObjectContext context, LocalDate startDate, LocalDate endDate) {
+        String sql = "SELECT * FROM orders WHERE o_orderdate BETWEEN #bind($startDate) AND #bind($endDate)";
+        SQLSelect<DataRow> query = SQLSelect.dataRowQuery(sql);
+
+        Map<String, Object> parameters = new HashMap<>();
+        parameters.put("startDate", Date.valueOf(startDate));
+        parameters.put("endDate", Date.valueOf(endDate));
+        query.params(parameters);
+
+        List<DataRow> results = query.select(context);
+        return convertToQueryResults(results);
+    }
+
+    // A3) Indexed Columns
+    public List<QueryResult> a3(ObjectContext context) {
+        String sql = "SELECT * FROM customer";
+        SQLSelect<DataRow> query = SQLSelect.dataRowQuery(sql);
+        List<DataRow> results = query.select(context);
+        return convertToQueryResults(results);
+    }
+
+    // A4) Indexed Columns — Range Query
+    public List<QueryResult> a4(ObjectContext context, int minOrderKey, int maxOrderKey) {
+        String sql = "SELECT * FROM orders WHERE o_orderkey BETWEEN #bind($minOrderKey) AND #bind($maxOrderKey)";
+        SQLSelect<DataRow> query = SQLSelect.dataRowQuery(sql);
+
+        Map<String, Object> parameters = new HashMap<>();
+        parameters.put("minOrderKey", minOrderKey);
+        parameters.put("maxOrderKey", maxOrderKey);
+        query.params(parameters);
+
+        List<DataRow> results = query.select(context);
+        return convertToQueryResults(results);
+    }
+
+    // B1) COUNT
+    public List<QueryResult> b1(ObjectContext context) {
+        String sql = "SELECT COUNT(o.o_orderkey) AS order_count, " +
+                "DATE_FORMAT(o.o_orderdate, '%Y-%m') AS order_month " +
+                "FROM orders o " +
+                "GROUP BY order_month";
+        SQLSelect<DataRow> query = SQLSelect.dataRowQuery(sql);
+        List<DataRow> results = query.select(context);
+        return convertToQueryResults(results);
+    }
+
+    // B2) MAX
+    public List<QueryResult> b2(ObjectContext context) {
+        String sql = "SELECT DATE_FORMAT(l.l_shipdate, '%Y-%m') AS ship_month, " +
+                "MAX(l.l_extendedprice) AS max_price " +
+                "FROM lineitem l " +
+                "GROUP BY ship_month";
+        SQLSelect<DataRow> query = SQLSelect.dataRowQuery(sql);
+        List<DataRow> results = query.select(context);
+        return convertToQueryResults(results);
+    }
+
+    // C1) Non-Indexed Columns
+    public List<QueryResult> c1(ObjectContext context) {
+        String sql = "SELECT c.c_name, o.o_orderdate, o.o_totalprice " +
+                "FROM customer c, orders o";
+        SQLSelect<DataRow> query = SQLSelect.dataRowQuery(sql);
+        List<DataRow> results = query.select(context);
+        return convertToQueryResults(results);
+    }
+
+    // C2) Indexed Columns
+    public List<QueryResult> c2(ObjectContext context) {
+        String sql = "SELECT c.c_name, o.o_orderdate, o.o_totalprice " +
+                "FROM customer c " +
+                "JOIN orders o ON c.c_custkey = o.o_custkey";
+        SQLSelect<DataRow> query = SQLSelect.dataRowQuery(sql);
+        List<DataRow> results = query.select(context);
+        return convertToQueryResults(results);
+    }
+
+    // C3) Complex Join 1
+    public List<QueryResult> c3(ObjectContext context) {
+        String sql = "SELECT c.c_name, n.n_name, o.o_orderdate, o.o_totalprice " +
+                "FROM customer c " +
+                "JOIN nation n ON c.c_nationkey = n.n_nationkey " +
+                "JOIN orders o ON c.c_custkey = o.o_custkey";
+        SQLSelect<DataRow> query = SQLSelect.dataRowQuery(sql);
+        List<DataRow> results = query.select(context);
+        return convertToQueryResults(results);
+    }
+
+    // C4) Complex Join 2
+    public List<QueryResult> c4(ObjectContext context) {
+        String sql = "SELECT c.c_name, n.n_name, r.r_name, o.o_orderdate, o.o_totalprice " +
+                "FROM customer c " +
+                "JOIN nation n ON c.c_nationkey = n.n_nationkey " +
+                "JOIN region r ON n.n_regionkey = r.r_regionkey " +
+                "JOIN orders o ON c.c_custkey = o.o_custkey";
+        SQLSelect<DataRow> query = SQLSelect.dataRowQuery(sql);
+        List<DataRow> results = query.select(context);
+        return convertToQueryResults(results);
+    }
+
+    // C5) Left Outer Join
+    public List<QueryResult> c5(ObjectContext context) {
+        String sql = "SELECT c.c_custkey, c.c_name, o.o_orderkey, o.o_orderdate " +
+                "FROM customer c " +
+                "LEFT OUTER JOIN orders o ON c.c_custkey = o.o_custkey";
+        SQLSelect<DataRow> query = SQLSelect.dataRowQuery(sql);
+        List<DataRow> results = query.select(context);
+        return convertToQueryResults(results);
+    }
+
+    // D1) UNION
+    public List<QueryResult> d1(ObjectContext context) {
+        String sql = "(SELECT c_nationkey AS nationkey FROM customer) " +
+                "UNION " +
+                "(SELECT s_nationkey AS nationkey FROM supplier)";
+        SQLSelect<DataRow> query = SQLSelect.dataRowQuery(sql);
+        List<DataRow> results = query.select(context);
+        return convertToQueryResults(results);
+    }
+
+    // D2) INTERSECT
+    public List<QueryResult> d2(ObjectContext context) {
+        String sql = "SELECT DISTINCT c.c_custkey AS custkey " +
+                "FROM customer c " +
+                "WHERE c.c_custkey IN (SELECT s.s_suppkey FROM supplier s)";
+        SQLSelect<DataRow> query = SQLSelect.dataRowQuery(sql);
+        List<DataRow> results = query.select(context);
+        return convertToQueryResults(results);
+    }
+
+    // D3) DIFFERENCE
+    public List<QueryResult> d3(ObjectContext context) {
+        String sql = "SELECT DISTINCT c.c_custkey AS custkey " +
+                "FROM customer c " +
+                "WHERE c.c_custkey NOT IN (SELECT DISTINCT s.s_suppkey FROM supplier s)";
+        SQLSelect<DataRow> query = SQLSelect.dataRowQuery(sql);
+        List<DataRow> results = query.select(context);
+        return convertToQueryResults(results);
+    }
+
+    // E1) Non-Indexed Columns Sorting
+    public List<QueryResult> e1(ObjectContext context) {
+        String sql = "SELECT c_name, c_address, c_acctbal " +
+                "FROM customer " +
+                "ORDER BY c_acctbal DESC";
+        SQLSelect<DataRow> query = SQLSelect.dataRowQuery(sql);
+        List<DataRow> results = query.select(context);
+        return convertToQueryResults(results);
+    }
+
+    // E2) Indexed Columns Sorting
+    public List<QueryResult> e2(ObjectContext context) {
+        String sql = "SELECT o_orderkey, o_custkey, o_orderdate, o_totalprice " +
+                "FROM orders " +
+                "ORDER BY o_orderkey";
+        SQLSelect<DataRow> query = SQLSelect.dataRowQuery(sql);
+        List<DataRow> results = query.select(context);
+        return convertToQueryResults(results);
+    }
+
+    // E3) Distinct
+    public List<QueryResult> e3(ObjectContext context) {
+        String sql = "SELECT DISTINCT c_nationkey, c_mktsegment " +
+                "FROM customer";
+        SQLSelect<DataRow> query = SQLSelect.dataRowQuery(sql);
+        List<DataRow> results = query.select(context);
+        return convertToQueryResults(results);
+    }
     public List<DataRow> q1(ObjectContext context, int deltaDays) {
         LocalDate baseDate = LocalDate.of(1998, 12, 1);
         LocalDate shipDateThreshold = baseDate.minusDays(deltaDays);
@@ -90,8 +278,7 @@ public class UniversalRepository {
                 "    s.s_acctbal DESC, " +
                 "    n.n_name, " +
                 "    s.s_name, " +
-                "    p.p_partkey " +
-                "LIMIT 100";
+                "    p.p_partkey ";
 
         SQLSelect<DataRow> query = SQLSelect.dataRowQuery(sql);
 
@@ -126,8 +313,7 @@ public class UniversalRepository {
                 "    o.o_shippriority " +
                 "ORDER BY " +
                 "    revenue DESC, " +
-                "    o.o_orderdate " +
-                "LIMIT 10";
+                "    o.o_orderdate ";
 
         SQLSelect<DataRow> query = SQLSelect.dataRowQuery(sql);
 

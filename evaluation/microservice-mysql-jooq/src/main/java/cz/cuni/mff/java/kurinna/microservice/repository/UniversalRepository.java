@@ -5,6 +5,7 @@ import cz.cuni.mff.java.kurinna.microservice.dto.MinimumCostSupplier;
 import cz.cuni.mff.java.kurinna.microservice.dto.ShippingPriority;
 import cz.cuni.mff.java.kurinna.microservice.dto.OrderPriorityChecking;
 import cz.cuni.mff.java.kurinna.microservice.dto.LocalSupplierVolume;
+import cz.cuni.mff.java.kurinna.microservice.dto.QueryResult;
 import org.jooq.DSLContext;
 import org.jooq.Record10;
 import static org.jooq.impl.DSL.*;
@@ -13,7 +14,10 @@ import org.springframework.stereotype.Repository;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static cz.cuni.mff.java.kurinna.microservice.model.tables.Lineitem.LINEITEM;
 import static cz.cuni.mff.java.kurinna.microservice.model.tables.Part.PART;
@@ -30,6 +34,256 @@ public class UniversalRepository {
 
     public UniversalRepository(DSLContext dslContext) {
         this.dslContext = dslContext;
+    }
+
+    // A1) Non-Indexed Columns
+    public List<QueryResult> a1() {
+        Result<?> result = dslContext
+            .select()
+            .from(LINEITEM)
+            .fetch();
+
+        return convertToQueryResults(result);
+    }
+
+    // A2) Non-Indexed Columns — Range Query
+    public List<QueryResult> a2(LocalDate startDate, LocalDate endDate) {
+        Result<?> result = dslContext
+            .select()
+            .from(ORDERS)
+            .where(ORDERS.O_ORDERDATE.between(startDate, endDate))
+            .fetch();
+
+        return convertToQueryResults(result);
+    }
+
+    // A3) Indexed Columns
+    public List<QueryResult> a3() {
+        Result<?> result = dslContext
+            .select()
+            .from(CUSTOMER)
+            .fetch();
+
+        return convertToQueryResults(result);
+    }
+
+    // A4) Indexed Columns — Range Query
+    public List<QueryResult> a4(int minOrderKey, int maxOrderKey) {
+        Result<?> result = dslContext
+            .select()
+            .from(ORDERS)
+            .where(ORDERS.O_ORDERKEY.between((long) minOrderKey, (long) maxOrderKey))
+            .fetch();
+
+        return convertToQueryResults(result);
+    }
+
+    // B1) COUNT
+    public List<QueryResult> b1() {
+        Result<?> result = dslContext
+            .select(
+                count(ORDERS.O_ORDERKEY).as("order_count"),
+                function("DATE_FORMAT", String.class, ORDERS.O_ORDERDATE, inline("%Y-%m")).as("order_month")
+            )
+            .from(ORDERS)
+            .groupBy(field("order_month"))
+            .fetch();
+
+        return convertToQueryResults(result);
+    }
+
+    // B2) MAX
+    public List<QueryResult> b2() {
+        Result<?> result = dslContext
+            .select(
+                function("DATE_FORMAT", String.class, LINEITEM.L_SHIPDATE, inline("%Y-%m")).as("ship_month"),
+                max(LINEITEM.L_EXTENDEDPRICE).as("max_price")
+            )
+            .from(LINEITEM)
+            .groupBy(field("ship_month"))
+            .fetch();
+
+        return convertToQueryResults(result);
+    }
+
+    // C1) Non-Indexed Columns
+    public List<QueryResult> c1() {
+        Result<?> result = dslContext
+            .select(
+                CUSTOMER.C_NAME,
+                ORDERS.O_ORDERDATE,
+                ORDERS.O_TOTALPRICE
+            )
+            .from(CUSTOMER, ORDERS)
+            .fetch();
+
+        return convertToQueryResults(result);
+    }
+
+    // C2) Indexed Columns
+    public List<QueryResult> c2() {
+        Result<?> result = dslContext
+            .select(
+                CUSTOMER.C_NAME,
+                ORDERS.O_ORDERDATE,
+                ORDERS.O_TOTALPRICE
+            )
+            .from(CUSTOMER)
+            .join(ORDERS).on(CUSTOMER.C_CUSTKEY.eq(ORDERS.O_CUSTKEY))
+            .fetch();
+
+        return convertToQueryResults(result);
+    }
+
+    // C3) Complex Join 1
+    public List<QueryResult> c3() {
+        Result<?> result = dslContext
+            .select(
+                CUSTOMER.C_NAME,
+                NATION.N_NAME,
+                ORDERS.O_ORDERDATE,
+                ORDERS.O_TOTALPRICE
+            )
+            .from(CUSTOMER)
+            .join(NATION).on(CUSTOMER.C_NATIONKEY.eq(NATION.N_NATIONKEY))
+            .join(ORDERS).on(CUSTOMER.C_CUSTKEY.eq(ORDERS.O_CUSTKEY))
+            .fetch();
+
+        return convertToQueryResults(result);
+    }
+
+    // C4) Complex Join 2
+    public List<QueryResult> c4() {
+        Result<?> result = dslContext
+            .select(
+                CUSTOMER.C_NAME,
+                NATION.N_NAME,
+                REGION.R_NAME,
+                ORDERS.O_ORDERDATE,
+                ORDERS.O_TOTALPRICE
+            )
+            .from(CUSTOMER)
+            .join(NATION).on(CUSTOMER.C_NATIONKEY.eq(NATION.N_NATIONKEY))
+            .join(REGION).on(NATION.N_REGIONKEY.eq(REGION.R_REGIONKEY))
+            .join(ORDERS).on(CUSTOMER.C_CUSTKEY.eq(ORDERS.O_CUSTKEY))
+            .fetch();
+
+        return convertToQueryResults(result);
+    }
+
+    // C5) Left Outer Join
+    public List<QueryResult> c5() {
+        Result<?> result = dslContext
+            .select(
+                CUSTOMER.C_CUSTKEY,
+                CUSTOMER.C_NAME,
+                ORDERS.O_ORDERKEY,
+                ORDERS.O_ORDERDATE
+            )
+            .from(CUSTOMER)
+            .leftOuterJoin(ORDERS).on(CUSTOMER.C_CUSTKEY.eq(ORDERS.O_CUSTKEY))
+            .fetch();
+
+        return convertToQueryResults(result);
+    }
+
+    // D1) UNION
+    public List<QueryResult> d1() {
+        Result<?> result = dslContext
+            .select(CUSTOMER.C_NATIONKEY.as("nationkey"))
+            .from(CUSTOMER)
+            .union(
+                select(SUPPLIER.S_NATIONKEY.as("nationkey"))
+                .from(SUPPLIER)
+            )
+            .fetch();
+
+        return convertToQueryResults(result);
+    }
+
+    // D2) INTERSECT
+    public List<QueryResult> d2() {
+        Result<?> result = dslContext
+            .selectDistinct(CUSTOMER.C_CUSTKEY.as("custkey"))
+            .from(CUSTOMER)
+            .where(CUSTOMER.C_CUSTKEY.in(
+                select(SUPPLIER.S_SUPPKEY)
+                .from(SUPPLIER)
+            ))
+            .fetch();
+
+        return convertToQueryResults(result);
+    }
+
+    // D3) DIFFERENCE
+    public List<QueryResult> d3() {
+        Result<?> result = dslContext
+            .selectDistinct(CUSTOMER.C_CUSTKEY.as("custkey"))
+            .from(CUSTOMER)
+            .where(CUSTOMER.C_CUSTKEY.notIn(
+                selectDistinct(SUPPLIER.S_SUPPKEY)
+                .from(SUPPLIER)
+            ))
+            .fetch();
+
+        return convertToQueryResults(result);
+    }
+
+    // E1) Non-Indexed Columns Sorting
+    public List<QueryResult> e1() {
+        Result<?> result = dslContext
+            .select(
+                CUSTOMER.C_NAME,
+                CUSTOMER.C_ADDRESS,
+                CUSTOMER.C_ACCTBAL
+            )
+            .from(CUSTOMER)
+            .orderBy(CUSTOMER.C_ACCTBAL.desc())
+            .fetch();
+
+        return convertToQueryResults(result);
+    }
+
+    // E2) Indexed Columns Sorting
+    public List<QueryResult> e2() {
+        Result<?> result = dslContext
+            .select(
+                ORDERS.O_ORDERKEY,
+                ORDERS.O_CUSTKEY,
+                ORDERS.O_ORDERDATE,
+                ORDERS.O_TOTALPRICE
+            )
+            .from(ORDERS)
+            .orderBy(ORDERS.O_ORDERKEY.asc())
+            .fetch();
+
+        return convertToQueryResults(result);
+    }
+
+    // E3) Distinct
+    public List<QueryResult> e3() {
+        Result<?> result = dslContext
+            .selectDistinct(
+                CUSTOMER.C_NATIONKEY,
+                CUSTOMER.C_MKTSEGMENT
+            )
+            .from(CUSTOMER)
+            .fetch();
+
+        return convertToQueryResults(result);
+    }
+
+    // Helper method to convert JOOQ Result to List<QueryResult>
+    private List<QueryResult> convertToQueryResults(Result<?> result) {
+        List<QueryResult> queryResults = new ArrayList<>();
+        for (org.jooq.Record record : result) {
+            Map<String, Object> data = new HashMap<>();
+            for (int i = 0; i < record.size(); i++) {
+                data.put(record.field(i).getName(), record.getValue(i));
+            }
+            queryResults.add(new QueryResult(data));
+        }
+        return queryResults;
     }
 
     public List<PricingSummary> q1(int days) {
