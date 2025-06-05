@@ -21,15 +21,6 @@ services:
       - mysql_data:/var/lib/mysql
       - ./database/mysql/mysql_initial.sql:/docker-entrypoint-initdb.d/initial.sql
 
-  adminer:
-    image: adminer
-    restart: always
-    ports:
-      - "8090:8080"
-    depends_on:
-      db:
-        condition: service_healthy
-
   eureka-server:
     build: ./eureka-server
     container_name: eureka-server
@@ -79,6 +70,7 @@ services:
       dockerfile: microservice-mysql-mybatis/Dockerfile
     container_name: ms-mysql-mybatis
     restart: unless-stopped
+    mem_limit: 4096m
     environment:
       MYSQL_HOST: db
       MYSQL_USER: ${MYSQL_USER}
@@ -157,6 +149,15 @@ services:
     depends_on:
       db:
         condition: service_healthy
+
+  frontend:
+    build: ./frontend
+    container_name: frontend
+    restart: unless-stopped
+    environment:
+      VITE_ORCHESTRATOR_API_URL: http://orchestrator:8080
+    ports:
+      - "3000:80"
 
 volumes:
   mysql_data:
