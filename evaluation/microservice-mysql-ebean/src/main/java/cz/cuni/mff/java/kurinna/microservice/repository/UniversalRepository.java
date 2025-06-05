@@ -19,9 +19,9 @@ public class UniversalRepository {
     }
 
     // A1) Non-Indexed Columns
-    public List<SqlRow> a1() {
+    public int a1() {
         String sql = "SELECT * FROM lineitem";
-        return database.sqlQuery(sql).findList();
+        return database.sqlQuery(sql).findList().size();
     }
 
     // A2) Non-Indexed Columns — Range Query
@@ -85,10 +85,10 @@ public class UniversalRepository {
     }
 
     // C1) Non-Indexed Columns
-    public List<QueryResult> c1() {
+    public int c1() {
         String sql = "SELECT c.c_name, o.o_orderdate, o.o_totalprice " +
                 "FROM customer c, orders o";
-        return executeQueryAndConvertToQueryResults(sql);
+        return executeQueryAndConvertToQueryResults(sql).size();
     }
 
     // C2) Indexed Columns
@@ -173,7 +173,8 @@ public class UniversalRepository {
         return executeQueryAndConvertToQueryResults(sql);
     }
 
-    // Helper method to execute a query and convert the results to QueryResult objects
+    // Helper method to execute a query and convert the results to QueryResult
+    // objects
     private List<QueryResult> executeQueryAndConvertToQueryResults(String sql) {
         return database.sqlQuery(sql)
                 .findList()
@@ -191,8 +192,7 @@ public class UniversalRepository {
     public List<Map<String, Object>> q1(int days) {
         LocalDate cutoff = LocalDate.of(1998, 12, 1).minusDays(days);
 
-        String sql =
-            "SELECT l_returnflag, l_linestatus, " +
+        String sql = "SELECT l_returnflag, l_linestatus, " +
                 "SUM(l_quantity)    AS sum_qty, " +
                 "SUM(l_extendedprice) AS sum_base_price, " +
                 "SUM(l_extendedprice * (1 - l_discount)) AS sum_disc_price, " +
@@ -220,12 +220,11 @@ public class UniversalRepository {
                         "avg_qty", row.get("avg_qty"),
                         "avg_price", row.get("avg_price"),
                         "avg_disc", row.get("avg_disc"),
-                        "count_order", row.get("count_order")
-                ))
+                        "count_order", row.get("count_order")))
                 .toList();
     }
 
-    public List<Map<String, Object>> q2(int size, String type, String region) {
+    public int q2(int size, String type, String region) {
         String sql = "SELECT " +
                 "s.s_acctbal, " +
                 "s.s_name, " +
@@ -275,18 +274,7 @@ public class UniversalRepository {
                 .setParameter("type", type)
                 .setParameter("region", region)
                 .findList()
-                .stream()
-                .map(row -> Map.of(
-                        "s_acctbal", row.get("s_acctbal"),
-                        "s_name", row.get("s_name"),
-                        "n_name", row.get("n_name"),
-                        "p_partkey", row.get("p_partkey"),
-                        "p_mfgr", row.get("p_mfgr"),
-                        "s_address", row.get("s_address"),
-                        "s_phone", row.get("s_phone"),
-                        "s_comment", row.get("s_comment")
-                ))
-                .toList();
+                .size();
     }
 
     public List<Map<String, Object>> q3(String segment, LocalDate orderDate, LocalDate shipDate) {
@@ -324,8 +312,7 @@ public class UniversalRepository {
                         "l_orderkey", row.get("l_orderkey"),
                         "revenue", row.get("revenue"),
                         "o_orderdate", row.get("o_orderdate"),
-                        "o_shippriority", row.get("o_shippriority")
-                ))
+                        "o_shippriority", row.get("o_shippriority")))
                 .toList();
     }
 
@@ -360,8 +347,7 @@ public class UniversalRepository {
                 .stream()
                 .map(row -> Map.of(
                         "o_orderpriority", row.get("o_orderpriority"),
-                        "order_count", row.get("order_count")
-                ))
+                        "order_count", row.get("order_count")))
                 .toList();
     }
 
@@ -401,8 +387,7 @@ public class UniversalRepository {
                 .stream()
                 .map(row -> Map.of(
                         "n_name", row.get("n_name"),
-                        "revenue", row.get("revenue")
-                ))
+                        "revenue", row.get("revenue")))
                 .toList();
     }
 }

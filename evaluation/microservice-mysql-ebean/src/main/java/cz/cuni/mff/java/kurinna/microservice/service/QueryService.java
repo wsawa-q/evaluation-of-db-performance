@@ -18,7 +18,7 @@ public class QueryService {
     }
 
     // Basic queries
-    public List<SqlRow> a1() {
+    public int a1() {
         return universalRepository.a1();
     }
 
@@ -42,7 +42,7 @@ public class QueryService {
         return universalRepository.b2();
     }
 
-    public List<QueryResult> c1() {
+    public int c1() {
         return universalRepository.c1();
     }
 
@@ -91,7 +91,7 @@ public class QueryService {
         return universalRepository.q1(days);
     }
 
-    public List<Map<String, Object>> q2(int size, String type, String region) {
+    public int q2(int size, String type, String region) {
         return universalRepository.q2(size, type, region);
     }
 
