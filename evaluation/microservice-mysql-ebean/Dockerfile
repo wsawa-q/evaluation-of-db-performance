@@ -18,4 +18,4 @@ WORKDIR /app
 COPY --from=build /workspace/microservice/target/*.jar ./app.jar
 
 EXPOSE 8080
-ENTRYPOINT ["java", "-jar", "app.jar"]
+ENTRYPOINT ["java", "-Xms512m", "-Xmx12g", "-jar", "app.jar"]
