@@ -11,10 +11,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/orchestrator")
-@CrossOrigin(origins = "*")
 public class OrchestratorController {
     private final MyBatisService myBatisService;
     private final SpringDataJpaService springDataJpaService;
@@ -23,7 +23,6 @@ public class OrchestratorController {
     private final JdbcService jdbcService;
     private final JooqService jooqService;
 
-
     public OrchestratorController(MyBatisService myBatisService, SpringDataJpaService springDataJpaService, CayenneService cayenneService, EbeanService ebeanService, JdbcService jdbcService, JooqService jooqService) {
         this.myBatisService = myBatisService;
         this.springDataJpaService = springDataJpaService;
@@ -31,6 +30,21 @@ public class OrchestratorController {
         this.ebeanService = ebeanService;
         this.jdbcService = jdbcService;
         this.jooqService = jooqService;
+    }
+
+
+    private static final List<String> ALL_SERVICES = List.of(
+            "myBatis","springDataJpa","cayenne","ebean","jdbc","jooq"
+    );
+
+    private Set<String> parseServices(Optional<String> servicesOpt) {
+        return servicesOpt
+                .map(s -> Arrays.stream(s.split(","))
+                        .map(String::trim)
+                        .filter(ALL_SERVICES::contains)
+                        .collect(Collectors.toCollection(LinkedHashSet::new))
+                )
+                .orElse(new LinkedHashSet<>(ALL_SERVICES));
     }
 
     @GetMapping("/health")
@@ -85,7 +99,10 @@ public class OrchestratorController {
     }
 
     @GetMapping(value = "/q1", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Map<String, Object>> getPricingSummary(@RequestParam Optional<String> repetitions) {
+    public ResponseEntity<Map<String, Object>> getPricingSummary(
+            @RequestParam Optional<String> repetitions,
+            @RequestParam Optional<String> services) {
+        Set<String> selected = parseServices(services);
         int rep = parseRepetitions(repetitions);
         Map<String, Object> results = createResultsMap(
             "Q1) Pricing Summary Report Query",
@@ -93,8 +110,9 @@ public class OrchestratorController {
         );
 
         executeQueriesAcrossAllServices(
-            results, 
+            results,
             rep,
+            selected,
             myBatisService::getPricingSummary,
             springDataJpaService::getPricingSummary,
             cayenneService::getPricingSummary,
@@ -107,7 +125,10 @@ public class OrchestratorController {
     }
 
     @GetMapping(value = "/q2", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Map<String, Object>> getMinimumCostSupplier(@RequestParam Optional<String> repetitions) {
+    public ResponseEntity<Map<String, Object>> getMinimumCostSupplier(
+            @RequestParam Optional<String> repetitions,
+            @RequestParam Optional<String> services) {
+        Set<String> selected = parseServices(services);
         int rep = parseRepetitions(repetitions);
         Map<String, Object> results = createResultsMap(
             "Q2) Minimum Cost Supplier Query",
@@ -117,6 +138,7 @@ public class OrchestratorController {
         executeQueriesAcrossAllServices(
             results,
             rep,
+            selected,
             myBatisService::getMinimumCostSupplier,
             springDataJpaService::getMinimumCostSupplier,
             cayenneService::getMinimumCostSupplier,
@@ -129,7 +151,10 @@ public class OrchestratorController {
     }
 
     @GetMapping(value = "/q3", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Map<String, Object>> getShippingPriority(@RequestParam Optional<String> repetitions) {
+    public ResponseEntity<Map<String, Object>> getShippingPriority(
+            @RequestParam Optional<String> repetitions,
+            @RequestParam Optional<String> services) {
+        Set<String> selected = parseServices(services);
         int rep = parseRepetitions(repetitions);
         Map<String, Object> results = createResultsMap(
             "Q3) Shipping Priority Query",
@@ -139,6 +164,7 @@ public class OrchestratorController {
         executeQueriesAcrossAllServices(
             results,
             rep,
+            selected,
             myBatisService::getShippingPriority,
             springDataJpaService::getShippingPriority,
             cayenneService::getShippingPriority,
@@ -151,7 +177,10 @@ public class OrchestratorController {
     }
 
     @GetMapping(value = "/q4", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Map<String, Object>> getOrderPriorityChecking(@RequestParam Optional<String> repetitions) {
+    public ResponseEntity<Map<String, Object>> getOrderPriorityChecking(
+            @RequestParam Optional<String> repetitions,
+            @RequestParam Optional<String> services) {
+        Set<String> selected = parseServices(services);
         int rep = parseRepetitions(repetitions);
         Map<String, Object> results = createResultsMap(
             "Q4) Order Priority Checking Query",
@@ -161,6 +190,7 @@ public class OrchestratorController {
         executeQueriesAcrossAllServices(
             results,
             rep,
+            selected,
             myBatisService::getOrderPriorityChecking,
             springDataJpaService::getOrderPriorityChecking,
             cayenneService::getOrderPriorityChecking,
@@ -173,7 +203,10 @@ public class OrchestratorController {
     }
 
     @GetMapping(value = "/q5", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Map<String, Object>> getLocalSupplierVolume(@RequestParam Optional<String> repetitions) {
+    public ResponseEntity<Map<String, Object>> getLocalSupplierVolume(
+            @RequestParam Optional<String> repetitions,
+            @RequestParam Optional<String> services) {
+        Set<String> selected = parseServices(services);
         int rep = parseRepetitions(repetitions);
         Map<String, Object> results = createResultsMap(
             "Q5) Local Supplier Volume Query",
@@ -183,6 +216,7 @@ public class OrchestratorController {
         executeQueriesAcrossAllServices(
             results,
             rep,
+            selected,
             myBatisService::getLocalSupplierVolume,
             springDataJpaService::getLocalSupplierVolume,
             cayenneService::getLocalSupplierVolume,
@@ -197,7 +231,10 @@ public class OrchestratorController {
     // A) Selection, Projection, Source (of data)
 
     @GetMapping(value = "/a1", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Map<String, Object>> executeQueryA1(@RequestParam Optional<String> repetitions) {
+    public ResponseEntity<Map<String, Object>> executeQueryA1(
+            @RequestParam Optional<String> repetitions,
+            @RequestParam Optional<String> services) {
+        Set<String> selected = parseServices(services);
         int rep = parseRepetitions(repetitions);
         Map<String, Object> results = createResultsMap(
             "A1) Non-Indexed Columns",
@@ -207,6 +244,7 @@ public class OrchestratorController {
         executeQueriesAcrossAllServices(
             results,
             rep,
+            selected,
             myBatisService::executeQueryA1,
             springDataJpaService::executeQueryA1,
             cayenneService::executeQueryA1,
@@ -219,7 +257,10 @@ public class OrchestratorController {
     }
 
     @GetMapping(value = "/a2", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Map<String, Object>> executeQueryA2(@RequestParam Optional<String> repetitions) {
+    public ResponseEntity<Map<String, Object>> executeQueryA2(
+            @RequestParam Optional<String> repetitions,
+            @RequestParam Optional<String> services) {
+        Set<String> selected = parseServices(services);
         int rep = parseRepetitions(repetitions);
         Map<String, Object> results = createResultsMap(
             "A2) Non-Indexed Columns — Range Query",
@@ -229,6 +270,7 @@ public class OrchestratorController {
         executeQueriesAcrossAllServices(
             results,
             rep,
+            selected,
             myBatisService::executeQueryA2,
             springDataJpaService::executeQueryA2,
             cayenneService::executeQueryA2,
@@ -241,7 +283,10 @@ public class OrchestratorController {
     }
 
     @GetMapping(value = "/a3", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Map<String, Object>> executeQueryA3(@RequestParam Optional<String> repetitions) {
+    public ResponseEntity<Map<String, Object>> executeQueryA3(
+            @RequestParam Optional<String> repetitions,
+            @RequestParam Optional<String> services) {
+        Set<String> selected = parseServices(services);
         int rep = parseRepetitions(repetitions);
         Map<String, Object> results = createResultsMap(
             "A3) Indexed Columns",
@@ -251,6 +296,7 @@ public class OrchestratorController {
         executeQueriesAcrossAllServices(
             results,
             rep,
+            selected,
             myBatisService::executeQueryA3,
             springDataJpaService::executeQueryA3,
             cayenneService::executeQueryA3,
@@ -263,7 +309,10 @@ public class OrchestratorController {
     }
 
     @GetMapping(value = "/a4", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Map<String, Object>> executeQueryA4(@RequestParam Optional<String> repetitions) {
+    public ResponseEntity<Map<String, Object>> executeQueryA4(
+            @RequestParam Optional<String> repetitions,
+            @RequestParam Optional<String> services) {
+        Set<String> selected = parseServices(services);
         int rep = parseRepetitions(repetitions);
         Map<String, Object> results = createResultsMap(
             "A4) Indexed Columns — Range Query",
@@ -273,6 +322,7 @@ public class OrchestratorController {
         executeQueriesAcrossAllServices(
             results,
             rep,
+            selected,
             myBatisService::executeQueryA4,
             springDataJpaService::executeQueryA4,
             cayenneService::executeQueryA4,
@@ -287,7 +337,10 @@ public class OrchestratorController {
     // B) Aggregation
 
     @GetMapping(value = "/b1", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Map<String, Object>> executeQueryB1(@RequestParam Optional<String> repetitions) {
+    public ResponseEntity<Map<String, Object>> executeQueryB1(
+            @RequestParam Optional<String> repetitions,
+            @RequestParam Optional<String> services) {
+        Set<String> selected = parseServices(services);
         int rep = parseRepetitions(repetitions);
         Map<String, Object> results = createResultsMap(
             "B1) COUNT",
@@ -297,6 +350,7 @@ public class OrchestratorController {
         executeQueriesAcrossAllServices(
             results,
             rep,
+            selected,
             myBatisService::executeQueryB1,
             springDataJpaService::executeQueryB1,
             cayenneService::executeQueryB1,
@@ -309,7 +363,10 @@ public class OrchestratorController {
     }
 
     @GetMapping(value = "/b2", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Map<String, Object>> executeQueryB2(@RequestParam Optional<String> repetitions) {
+    public ResponseEntity<Map<String, Object>> executeQueryB2(
+            @RequestParam Optional<String> repetitions,
+            @RequestParam Optional<String> services) {
+        Set<String> selected = parseServices(services);
         int rep = parseRepetitions(repetitions);
         Map<String, Object> results = createResultsMap(
             "B2) MAX",
@@ -319,6 +376,7 @@ public class OrchestratorController {
         executeQueriesAcrossAllServices(
             results,
             rep,
+            selected,
             myBatisService::executeQueryB2,
             springDataJpaService::executeQueryB2,
             cayenneService::executeQueryB2,
@@ -333,7 +391,10 @@ public class OrchestratorController {
     // C) Joins
 
     @GetMapping(value = "/c1", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Map<String, Object>> executeQueryC1(@RequestParam Optional<String> repetitions) {
+    public ResponseEntity<Map<String, Object>> executeQueryC1(
+            @RequestParam Optional<String> repetitions,
+            @RequestParam Optional<String> services) {
+        Set<String> selected = parseServices(services);
         int rep = parseRepetitions(repetitions);
         Map<String, Object> results = createResultsMap(
             "C1) Non-Indexed Columns",
@@ -343,6 +404,7 @@ public class OrchestratorController {
         executeQueriesAcrossAllServices(
             results,
             rep,
+            selected,
             myBatisService::executeQueryC1,
             springDataJpaService::executeQueryC1,
             cayenneService::executeQueryC1,
@@ -355,7 +417,10 @@ public class OrchestratorController {
     }
 
     @GetMapping(value = "/c2", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Map<String, Object>> executeQueryC2(@RequestParam Optional<String> repetitions) {
+    public ResponseEntity<Map<String, Object>> executeQueryC2(
+            @RequestParam Optional<String> repetitions,
+            @RequestParam Optional<String> services) {
+        Set<String> selected = parseServices(services);
         int rep = parseRepetitions(repetitions);
         Map<String, Object> results = createResultsMap(
             "C2) Indexed Columns",
@@ -365,6 +430,7 @@ public class OrchestratorController {
         executeQueriesAcrossAllServices(
             results,
             rep,
+            selected,
             myBatisService::executeQueryC2,
             springDataJpaService::executeQueryC2,
             cayenneService::executeQueryC2,
@@ -377,7 +443,10 @@ public class OrchestratorController {
     }
 
     @GetMapping(value = "/c3", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Map<String, Object>> executeQueryC3(@RequestParam Optional<String> repetitions) {
+    public ResponseEntity<Map<String, Object>> executeQueryC3(
+            @RequestParam Optional<String> repetitions,
+            @RequestParam Optional<String> services) {
+        Set<String> selected = parseServices(services);
         int rep = parseRepetitions(repetitions);
         Map<String, Object> results = createResultsMap(
             "C3) Complex Join 1",
@@ -387,6 +456,7 @@ public class OrchestratorController {
         executeQueriesAcrossAllServices(
             results,
             rep,
+            selected,
             myBatisService::executeQueryC3,
             springDataJpaService::executeQueryC3,
             cayenneService::executeQueryC3,
@@ -399,7 +469,10 @@ public class OrchestratorController {
     }
 
     @GetMapping(value = "/c4", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Map<String, Object>> executeQueryC4(@RequestParam Optional<String> repetitions) {
+    public ResponseEntity<Map<String, Object>> executeQueryC4(
+            @RequestParam Optional<String> repetitions,
+            @RequestParam Optional<String> services) {
+        Set<String> selected = parseServices(services);
         int rep = parseRepetitions(repetitions);
         Map<String, Object> results = createResultsMap(
             "C4) Complex Join 2",
@@ -409,6 +482,7 @@ public class OrchestratorController {
         executeQueriesAcrossAllServices(
             results,
             rep,
+            selected,
             myBatisService::executeQueryC4,
             springDataJpaService::executeQueryC4,
             cayenneService::executeQueryC4,
@@ -421,7 +495,10 @@ public class OrchestratorController {
     }
 
     @GetMapping(value = "/c5", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Map<String, Object>> executeQueryC5(@RequestParam Optional<String> repetitions) {
+    public ResponseEntity<Map<String, Object>> executeQueryC5(
+            @RequestParam Optional<String> repetitions,
+            @RequestParam Optional<String> services) {
+        Set<String> selected = parseServices(services);
         int rep = parseRepetitions(repetitions);
         Map<String, Object> results = createResultsMap(
             "C5) Left Outer Join",
@@ -431,6 +508,7 @@ public class OrchestratorController {
         executeQueriesAcrossAllServices(
             results,
             rep,
+            selected,
             myBatisService::executeQueryC5,
             springDataJpaService::executeQueryC5,
             cayenneService::executeQueryC5,
@@ -445,7 +523,10 @@ public class OrchestratorController {
     // D) Set operations
 
     @GetMapping(value = "/d1", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Map<String, Object>> executeQueryD1(@RequestParam Optional<String> repetitions) {
+    public ResponseEntity<Map<String, Object>> executeQueryD1(
+            @RequestParam Optional<String> repetitions,
+            @RequestParam Optional<String> services) {
+        Set<String> selected = parseServices(services);
         int rep = parseRepetitions(repetitions);
         Map<String, Object> results = createResultsMap(
             "D1) UNION",
@@ -455,6 +536,7 @@ public class OrchestratorController {
         executeQueriesAcrossAllServices(
             results,
             rep,
+            selected,
             myBatisService::executeQueryD1,
             springDataJpaService::executeQueryD1,
             cayenneService::executeQueryD1,
@@ -467,7 +549,10 @@ public class OrchestratorController {
     }
 
     @GetMapping(value = "/d2", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Map<String, Object>> executeQueryD2(@RequestParam Optional<String> repetitions) {
+    public ResponseEntity<Map<String, Object>> executeQueryD2(
+            @RequestParam Optional<String> repetitions,
+            @RequestParam Optional<String> services) {
+        Set<String> selected = parseServices(services);
         int rep = parseRepetitions(repetitions);
         Map<String, Object> results = createResultsMap(
             "D2) INTERSECT",
@@ -477,6 +562,7 @@ public class OrchestratorController {
         executeQueriesAcrossAllServices(
             results,
             rep,
+            selected,
             myBatisService::executeQueryD2,
             springDataJpaService::executeQueryD2,
             cayenneService::executeQueryD2,
@@ -489,7 +575,10 @@ public class OrchestratorController {
     }
 
     @GetMapping(value = "/d3", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Map<String, Object>> executeQueryD3(@RequestParam Optional<String> repetitions) {
+    public ResponseEntity<Map<String, Object>> executeQueryD3(
+            @RequestParam Optional<String> repetitions,
+            @RequestParam Optional<String> services) {
+        Set<String> selected = parseServices(services);
         int rep = parseRepetitions(repetitions);
         Map<String, Object> results = createResultsMap(
             "D3) DIFFERENCE",
@@ -499,6 +588,7 @@ public class OrchestratorController {
         executeQueriesAcrossAllServices(
             results,
             rep,
+            selected,
             myBatisService::executeQueryD3,
             springDataJpaService::executeQueryD3,
             cayenneService::executeQueryD3,
@@ -513,7 +603,10 @@ public class OrchestratorController {
     // E) Result Modification
 
     @GetMapping(value = "/e1", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Map<String, Object>> executeQueryE1(@RequestParam Optional<String> repetitions) {
+    public ResponseEntity<Map<String, Object>> executeQueryE1(
+            @RequestParam Optional<String> repetitions,
+            @RequestParam Optional<String> services) {
+        Set<String> selected = parseServices(services);
         int rep = parseRepetitions(repetitions);
         Map<String, Object> results = createResultsMap(
             "E1) Non-Indexed Columns Sorting",
@@ -523,6 +616,7 @@ public class OrchestratorController {
         executeQueriesAcrossAllServices(
             results,
             rep,
+            selected,
             myBatisService::executeQueryE1,
             springDataJpaService::executeQueryE1,
             cayenneService::executeQueryE1,
@@ -535,7 +629,10 @@ public class OrchestratorController {
     }
 
     @GetMapping(value = "/e2", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Map<String, Object>> executeQueryE2(@RequestParam Optional<String> repetitions) {
+    public ResponseEntity<Map<String, Object>> executeQueryE2(
+            @RequestParam Optional<String> repetitions,
+            @RequestParam Optional<String> services) {
+        Set<String> selected = parseServices(services);
         int rep = parseRepetitions(repetitions);
         Map<String, Object> results = createResultsMap(
             "E2) Indexed Columns Sorting",
@@ -545,6 +642,7 @@ public class OrchestratorController {
         executeQueriesAcrossAllServices(
             results,
             rep,
+            selected,
             myBatisService::executeQueryE2,
             springDataJpaService::executeQueryE2,
             cayenneService::executeQueryE2,
@@ -557,7 +655,10 @@ public class OrchestratorController {
     }
 
     @GetMapping(value = "/e3", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Map<String, Object>> executeQueryE3(@RequestParam Optional<String> repetitions) {
+    public ResponseEntity<Map<String, Object>> executeQueryE3(
+            @RequestParam Optional<String> repetitions,
+            @RequestParam Optional<String> services) {
+        Set<String> selected = parseServices(services);
         int rep = parseRepetitions(repetitions);
         Map<String, Object> results = createResultsMap(
             "E3) Distinct",
@@ -567,6 +668,7 @@ public class OrchestratorController {
         executeQueriesAcrossAllServices(
             results,
             rep,
+            selected,
             myBatisService::executeQueryE3,
             springDataJpaService::executeQueryE3,
             cayenneService::executeQueryE3,
@@ -580,7 +682,7 @@ public class OrchestratorController {
 
     /**
      * Helper method to parse the repetitions parameter
-     * 
+     *
      * @param repetitions Optional parameter for number of repetitions
      * @return The parsed number of repetitions, defaulting to 1 if not provided or invalid
      */
@@ -596,7 +698,7 @@ public class OrchestratorController {
 
     /**
      * Helper method to create a results map with query info
-     * 
+     *
      * @param queryName The name of the query
      * @param description The description of the query
      * @return A map containing the query info
@@ -610,7 +712,7 @@ public class OrchestratorController {
 
     /**
      * Helper method to execute queries across all services
-     * 
+     *
      * @param results The map to store the results
      * @param repetitions The number of times to repeat the query execution
      * @param myBatisQuery The MyBatis query executor
@@ -621,8 +723,9 @@ public class OrchestratorController {
      * @param jooqQuery The JOOQ query executor
      */
     private void executeQueriesAcrossAllServices(
-            Map<String, Object> results, 
+            Map<String, Object> results,
             int repetitions,
+            Set<String> services,
             QueryExecutor myBatisQuery,
             QueryExecutor springDataJpaQuery,
             QueryExecutor cayenneQuery,
@@ -630,17 +733,29 @@ public class OrchestratorController {
             QueryExecutor jdbcQuery,
             QueryExecutor jooqQuery) {
 
-        executeQueryWithTiming("myBatis", myBatisQuery, results, repetitions);
-        executeQueryWithTiming("springDataJpa", springDataJpaQuery, results, repetitions);
-        executeQueryWithTiming("cayenne", cayenneQuery, results, repetitions);
-        executeQueryWithTiming("ebean", ebeanQuery, results, repetitions);
-        executeQueryWithTiming("jdbc", jdbcQuery, results, repetitions);
-        executeQueryWithTiming("jooq", jooqQuery, results, repetitions);
+        if (services.contains("myBatis")) {
+            executeQueryWithTiming("myBatis", myBatisQuery, results, repetitions);
+        }
+        if (services.contains("springDataJpa")) {
+            executeQueryWithTiming("springDataJpa", springDataJpaQuery, results, repetitions);
+        }
+        if (services.contains("cayenne")) {
+            executeQueryWithTiming("cayenne", cayenneQuery, results, repetitions);
+        }
+        if (services.contains("ebean")) {
+            executeQueryWithTiming("ebean", ebeanQuery, results, repetitions);
+        }
+        if (services.contains("jdbc")) {
+            executeQueryWithTiming("jdbc", jdbcQuery, results, repetitions);
+        }
+        if (services.contains("jooq")) {
+            executeQueryWithTiming("jooq", jooqQuery, results, repetitions);
+        }
     }
 
     /**
      * Helper method to execute a query and extract its execution time and memory usage from the response
-     * 
+     *
      * @param serviceName The name of the service executing the query
      * @param queryExecutor A lambda that executes the query
      * @param results The map to store the results
@@ -652,12 +767,12 @@ public class OrchestratorController {
         double totalMemory = 0.0;
 
         // warm up the JVM
-        try {
-            queryExecutor.execute();
-        } catch (Exception e) {
-            // Ignore any exceptions during warm-up
-            System.out.println("Warm-up failed for " + serviceName + ": " + e.getMessage());
-        }
+//        try {
+//            queryExecutor.execute();
+//        } catch (Exception e) {
+//            // Ignore any exceptions during warm-up
+//            System.out.println("Warm-up failed for " + serviceName + ": " + e.getMessage());
+//        }
 
         for (int i = 0; i < repetitions; i++) {
             try {
@@ -692,10 +807,10 @@ public class OrchestratorController {
 
         double averageTime = totalTime / repetitions;
         double averageTimeInMs = averageTime / 1000000;
-        serviceResults.put("averageExecutionTime", averageTimeInMs + " ms");
+        serviceResults.put("averageExecutionTime", averageTimeInMs);
 
         double averageMemory = totalMemory / repetitions;
-        serviceResults.put("averageMemoryUsage", averageMemory + " bytes");
+        serviceResults.put("averageMemoryUsage", averageMemory);
 
         results.put(serviceName, serviceResults);
     }
@@ -708,3 +823,7 @@ public class OrchestratorController {
         Map<String, Object> execute() throws Exception;
     }
 }
+
+
+
+
