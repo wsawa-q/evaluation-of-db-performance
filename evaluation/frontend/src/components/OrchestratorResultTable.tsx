@@ -1,8 +1,9 @@
-import { Carousel, Table } from 'antd'
+import { Button, Carousel, Table } from 'antd'
 import type { OrchestratorType } from '../types'
-import { Column } from '@ant-design/charts'
+import { Column } from '@ant-design/plots'
 import styles from './OrchestratorResultTable.module.scss'
 import Title from 'antd/es/typography/Title'
+import { exportOrchestratorCsv } from '../service/utils'
 
 export const OrchestratorResultTable: React.FC<{
   data: OrchestratorType
@@ -12,18 +13,36 @@ export const OrchestratorResultTable: React.FC<{
     { title: 'Name', dataIndex: 'name', key: 'name' },
     { title: 'Repetitions', dataIndex: 'repetition', key: 'repetition' },
     {
-      title: 'Average Time Execution',
+      title: 'Average Time Execution (ms)',
       dataIndex: 'averageExecutionTime',
       key: 'averageExecutionTime',
     },
     {
-      title: 'Average Memory Usage',
+      title: 'Average Memory Usage (B)',
       dataIndex: 'averageMemoryUsage',
       key: 'averageMemoryUsage',
     },
+    {
+      title: 'Max Time Execution (ms)',
+      dataIndex: 'maxExecutionTime',
+      key: 'maxExecutionTime',
+    },
+    {
+      title: 'Min Time Execution (ms)',
+      dataIndex: 'minExecutionTime',
+      key: 'minExecutionTime',
+    },
+    {
+      title: 'Max Memory Usage (B)',
+      dataIndex: 'maxMemoryUsage',
+      key: 'maxMemoryUsage',
+    },
+    {
+      title: 'Min Memory Usage (B)',
+      dataIndex: 'minMemoryUsage',
+      key: 'minMemoryUsage',
+    },
   ]
-
-  console.log({ data })
 
   const ormNames: Record<string, string> = {
     cayenne: 'Cayenne',
@@ -49,30 +68,37 @@ export const OrchestratorResultTable: React.FC<{
       return {
         name: ormNames[key] || key,
         repetition: value.repetition,
-        averageExecutionTime: Number(value.averageExecutionTime),
+        averageExecutionTime: value.averageExecutionTime,
         averageMemoryUsage: value.averageMemoryUsage,
+        maxExecutionTime: value.maxExecutionTime,
+        minExecutionTime: value.minExecutionTime,
+        maxMemoryUsage: value.maxMemoryUsage,
+        minMemoryUsage: value.minMemoryUsage,
+        iterationResults: value.iterationResults || [],
       }
     })
-
-  console.log('Rows:', rows)
 
   const chartData = Object.entries(rows).map(([key, value]) => ({
     name: value?.name || key,
     averageExecutionTime: value?.averageExecutionTime,
     averageMemoryUsage: value?.averageMemoryUsage,
+    maxExecutionTime: value?.maxExecutionTime,
+    minExecutionTime: value?.minExecutionTime,
+    maxMemoryUsage: value?.maxMemoryUsage,
+    minMemoryUsage: value?.minMemoryUsage,
   }))
-
-  console.log('Chart Data:', chartData)
 
   const chartConfig = {
     width: 600,
     height: 400,
     lazyLoad: true,
     centerMode: true,
-    slidesToShow: 1,
-    slidesToScroll: 1,
     legend: {
       position: 'top-left',
+    },
+    style: {
+      radiusTopLeft: 10,
+      radiusTopRight: 10,
     },
   }
 
@@ -87,6 +113,31 @@ export const OrchestratorResultTable: React.FC<{
     data: chartData,
     xField: 'name',
     yField: 'averageMemoryUsage',
+    ...chartConfig,
+  }
+
+  const maxExecutionTimeChartConfig = {
+    data: chartData,
+    xField: 'name',
+    yField: 'maxExecutionTime',
+    ...chartConfig,
+  }
+  const minExecutionTimeChartConfig = {
+    data: chartData,
+    xField: 'name',
+    yField: 'minExecutionTime',
+    ...chartConfig,
+  }
+  const maxMemoryUsageChartConfig = {
+    data: chartData,
+    xField: 'name',
+    yField: 'maxMemoryUsage',
+    ...chartConfig,
+  }
+  const minMemoryUsageChartConfig = {
+    data: chartData,
+    xField: 'name',
+    yField: 'minMemoryUsage',
     ...chartConfig,
   }
 
@@ -105,14 +156,36 @@ export const OrchestratorResultTable: React.FC<{
         rowKey="name"
         pagination={false}
         bordered
+        expandable={{
+          expandedRowRender: (record) => (
+            <Table
+              dataSource={record?.iterationResults}
+              columns={[
+                { title: 'Iteration', render: (_, __, index) => index + 1 },
+                { title: 'Time (ms)', dataIndex: 'elapsed', key: 'elapsed' },
+                { title: 'Memory (B)', dataIndex: 'delta', key: 'delta' },
+              ]}
+              rowKey="service"
+              pagination={false}
+            />
+          ),
+        }}
       />
+      <Button
+        type="primary"
+        onClick={() => exportOrchestratorCsv(data)}
+        style={{ margin: '16px 0' }}
+      >
+        Export CSV
+      </Button>
       <div>
         <Carousel
           style={{
-            width: '100%',
-            maxWidth: 1200,
+            // width: '100%',
+            maxWidth: 700,
           }}
           arrows
+          dots={false}
           draggable
           // autoplay
           // autoplaySpeed={5000}
@@ -120,7 +193,7 @@ export const OrchestratorResultTable: React.FC<{
           <div>
             <div className={styles.slide}>
               <Title level={3} className={styles.chartTitle}>
-                Average Execution Time
+                Average Execution Time (ms)
               </Title>
               <Column {...timeChartConfig} />
             </div>
@@ -128,9 +201,41 @@ export const OrchestratorResultTable: React.FC<{
           <div>
             <div className={styles.slide}>
               <Title level={3} className={styles.chartTitle}>
-                Average Memory Usage
+                Average Memory Usage (B)
               </Title>
               <Column {...memoryChartConfig} />
+            </div>
+          </div>
+          <div>
+            <div className={styles.slide}>
+              <Title level={3} className={styles.chartTitle}>
+                Max Execution Time (ms)
+              </Title>
+              <Column {...maxExecutionTimeChartConfig} />
+            </div>
+          </div>
+          <div>
+            <div className={styles.slide}>
+              <Title level={3} className={styles.chartTitle}>
+                Min Execution Time (ms)
+              </Title>
+              <Column {...minExecutionTimeChartConfig} />
+            </div>
+          </div>
+          <div>
+            <div className={styles.slide}>
+              <Title level={3} className={styles.chartTitle}>
+                Max Memory Usage (B)
+              </Title>
+              <Column {...maxMemoryUsageChartConfig} />
+            </div>
+          </div>
+          <div>
+            <div className={styles.slide}>
+              <Title level={3} className={styles.chartTitle}>
+                Min Memory Usage (B)
+              </Title>
+              <Column {...minMemoryUsageChartConfig} />
             </div>
           </div>
         </Carousel>

@@ -7,6 +7,7 @@ import jdk.jfr.consumer.RecordingFile;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Supplier;
@@ -18,7 +19,7 @@ public class QueryExecutor {
      * @param supplier A lambda that executes the query and returns the result
      * @return A map containing the result, execution time, and memory usage
      */
-    public static <T> Map<String, Object> executeWithMeasurement(Supplier<T> supplier) {
+    public static <T extends Collection> Map<String, Object> executeWithMeasurement(Supplier<T> supplier) {
         Map<String, Object> response = new HashMap<>();
         Recording recording = new Recording();
         Path tempJfrFile = null;
@@ -78,9 +79,9 @@ public class QueryExecutor {
 //                            "max", p.getUsage().getMax(),
 //                            "type", p.getType().name()))
 //                    .toList());
-            response.put("elapsed", elapsed);
+            response.put("elapsed", elapsed / 1_000_000.0); // Convert to milliseconds
             response.put("status", "success");
-            response.put("result", result);
+            response.put("result", result.size());
         } catch (Exception e) {
             response.put("status", "error");
             response.put("error", e.getMessage());

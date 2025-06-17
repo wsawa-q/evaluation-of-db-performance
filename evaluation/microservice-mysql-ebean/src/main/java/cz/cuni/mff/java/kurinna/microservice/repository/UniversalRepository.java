@@ -1,14 +1,11 @@
 package cz.cuni.mff.java.kurinna.microservice.repository;
 
-import cz.cuni.mff.java.kurinna.microservice.dto.QueryResult;
 import io.ebean.Database;
 import io.ebean.SqlRow;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 @Repository
 public class UniversalRepository {
@@ -19,55 +16,37 @@ public class UniversalRepository {
     }
 
     // A1) Non-Indexed Columns
-    public int a1() {
+    public List<SqlRow> a1() {
         String sql = "SELECT * FROM lineitem";
-        return database.sqlQuery(sql).findList().size();
+        return database.sqlQuery(sql).findList();
     }
 
     // A2) Non-Indexed Columns — Range Query
-    public List<QueryResult> a2(LocalDate startDate, LocalDate endDate) {
+    public List<SqlRow> a2(LocalDate startDate, LocalDate endDate) {
         String sql = "SELECT * FROM orders WHERE o_orderdate BETWEEN :startDate AND :endDate";
         return database.sqlQuery(sql)
                 .setParameter("startDate", startDate)
                 .setParameter("endDate", endDate)
-                .findList()
-                .stream()
-                .map(row -> {
-                    Map<String, Object> data = new HashMap<>();
-                    for (String col : row.keySet()) {
-                        data.put(col, row.get(col));
-                    }
-                    return new QueryResult(data);
-                })
-                .toList();
+                .findList();
     }
 
     // A3) Indexed Columns
-    public List<QueryResult> a3() {
+    public List<SqlRow> a3() {
         String sql = "SELECT * FROM customer";
         return executeQueryAndConvertToQueryResults(sql);
     }
 
     // A4) Indexed Columns — Range Query
-    public List<QueryResult> a4(int minOrderKey, int maxOrderKey) {
+    public List<SqlRow> a4(int minOrderKey, int maxOrderKey) {
         String sql = "SELECT * FROM orders WHERE o_orderkey BETWEEN :minOrderKey AND :maxOrderKey";
         return database.sqlQuery(sql)
                 .setParameter("minOrderKey", minOrderKey)
                 .setParameter("maxOrderKey", maxOrderKey)
-                .findList()
-                .stream()
-                .map(row -> {
-                    Map<String, Object> data = new HashMap<>();
-                    for (String col : row.keySet()) {
-                        data.put(col, row.get(col));
-                    }
-                    return new QueryResult(data);
-                })
-                .toList();
+                .findList();
     }
 
     // B1) COUNT
-    public List<QueryResult> b1() {
+    public List<SqlRow> b1() {
         String sql = "SELECT COUNT(o.o_orderkey) AS order_count, " +
                 "DATE_FORMAT(o.o_orderdate, '%Y-%m') AS order_month " +
                 "FROM orders o " +
@@ -76,7 +55,7 @@ public class UniversalRepository {
     }
 
     // B2) MAX
-    public List<QueryResult> b2() {
+    public List<SqlRow> b2() {
         String sql = "SELECT DATE_FORMAT(l.l_shipdate, '%Y-%m') AS ship_month, " +
                 "MAX(l.l_extendedprice) AS max_price " +
                 "FROM lineitem l " +
@@ -85,14 +64,14 @@ public class UniversalRepository {
     }
 
     // C1) Non-Indexed Columns
-    public int c1() {
+    public List<SqlRow> c1() {
         String sql = "SELECT c.c_name, o.o_orderdate, o.o_totalprice " +
                 "FROM customer c, orders o";
-        return executeQueryAndConvertToQueryResults(sql).size();
+        return executeQueryAndConvertToQueryResults(sql);
     }
 
     // C2) Indexed Columns
-    public List<QueryResult> c2() {
+    public List<SqlRow> c2() {
         String sql = "SELECT c.c_name, o.o_orderdate, o.o_totalprice " +
                 "FROM customer c " +
                 "JOIN orders o ON c.c_custkey = o.o_custkey";
@@ -100,7 +79,7 @@ public class UniversalRepository {
     }
 
     // C3) Complex Join 1
-    public List<QueryResult> c3() {
+    public List<SqlRow> c3() {
         String sql = "SELECT c.c_name, n.n_name, o.o_orderdate, o.o_totalprice " +
                 "FROM customer c " +
                 "JOIN nation n ON c.c_nationkey = n.n_nationkey " +
@@ -109,7 +88,7 @@ public class UniversalRepository {
     }
 
     // C4) Complex Join 2
-    public List<QueryResult> c4() {
+    public List<SqlRow> c4() {
         String sql = "SELECT c.c_name, n.n_name, r.r_name, o.o_orderdate, o.o_totalprice " +
                 "FROM customer c " +
                 "JOIN nation n ON c.c_nationkey = n.n_nationkey " +
@@ -119,7 +98,7 @@ public class UniversalRepository {
     }
 
     // C5) Left Outer Join
-    public List<QueryResult> c5() {
+    public List<SqlRow> c5() {
         String sql = "SELECT c.c_custkey, c.c_name, o.o_orderkey, o.o_orderdate " +
                 "FROM customer c " +
                 "LEFT OUTER JOIN orders o ON c.c_custkey = o.o_custkey";
@@ -127,7 +106,7 @@ public class UniversalRepository {
     }
 
     // D1) UNION
-    public List<QueryResult> d1() {
+    public List<SqlRow> d1() {
         String sql = "(SELECT c_nationkey AS nationkey FROM customer) " +
                 "UNION " +
                 "(SELECT s_nationkey AS nationkey FROM supplier)";
@@ -135,7 +114,7 @@ public class UniversalRepository {
     }
 
     // D2) INTERSECT
-    public List<QueryResult> d2() {
+    public List<SqlRow> d2() {
         String sql = "SELECT DISTINCT c.c_custkey AS custkey " +
                 "FROM customer c " +
                 "WHERE c.c_custkey IN (SELECT s.s_suppkey FROM supplier s)";
@@ -143,7 +122,7 @@ public class UniversalRepository {
     }
 
     // D3) DIFFERENCE
-    public List<QueryResult> d3() {
+    public List<SqlRow> d3() {
         String sql = "SELECT DISTINCT c.c_custkey AS custkey " +
                 "FROM customer c " +
                 "WHERE c.c_custkey NOT IN (SELECT DISTINCT s.s_suppkey FROM supplier s)";
@@ -151,7 +130,7 @@ public class UniversalRepository {
     }
 
     // E1) Non-Indexed Columns Sorting
-    public List<QueryResult> e1() {
+    public List<SqlRow> e1() {
         String sql = "SELECT c_name, c_address, c_acctbal " +
                 "FROM customer " +
                 "ORDER BY c_acctbal DESC";
@@ -159,7 +138,7 @@ public class UniversalRepository {
     }
 
     // E2) Indexed Columns Sorting
-    public List<QueryResult> e2() {
+    public List<SqlRow> e2() {
         String sql = "SELECT o_orderkey, o_custkey, o_orderdate, o_totalprice " +
                 "FROM orders " +
                 "ORDER BY o_orderkey";
@@ -167,7 +146,7 @@ public class UniversalRepository {
     }
 
     // E3) Distinct
-    public List<QueryResult> e3() {
+    public List<SqlRow> e3() {
         String sql = "SELECT DISTINCT c_nationkey, c_mktsegment " +
                 "FROM customer";
         return executeQueryAndConvertToQueryResults(sql);
@@ -175,21 +154,12 @@ public class UniversalRepository {
 
     // Helper method to execute a query and convert the results to QueryResult
     // objects
-    private List<QueryResult> executeQueryAndConvertToQueryResults(String sql) {
+    private List<SqlRow> executeQueryAndConvertToQueryResults(String sql) {
         return database.sqlQuery(sql)
-                .findList()
-                .stream()
-                .map(row -> {
-                    Map<String, Object> data = new HashMap<>();
-                    for (String col : row.keySet()) {
-                        data.put(col, row.get(col));
-                    }
-                    return new QueryResult(data);
-                })
-                .toList();
+                .findList();
     }
 
-    public List<Map<String, Object>> q1(int days) {
+    public List<SqlRow> q1(int days) {
         LocalDate cutoff = LocalDate.of(1998, 12, 1).minusDays(days);
 
         String sql = "SELECT l_returnflag, l_linestatus, " +
@@ -208,23 +178,10 @@ public class UniversalRepository {
 
         return database.sqlQuery(sql)
                 .setParameter("cutoff", cutoff)
-                .findList()
-                .stream()
-                .map(row -> Map.of(
-                        "l_returnflag", row.get("l_returnflag"),
-                        "l_linestatus", row.get("l_linestatus"),
-                        "sum_qty", row.get("sum_qty"),
-                        "sum_base_price", row.get("sum_base_price"),
-                        "sum_disc_price", row.get("sum_disc_price"),
-                        "sum_charge", row.get("sum_charge"),
-                        "avg_qty", row.get("avg_qty"),
-                        "avg_price", row.get("avg_price"),
-                        "avg_disc", row.get("avg_disc"),
-                        "count_order", row.get("count_order")))
-                .toList();
+                .findList();
     }
 
-    public int q2(int size, String type, String region) {
+    public List<SqlRow> q2(int size, String type, String region) {
         String sql = "SELECT " +
                 "s.s_acctbal, " +
                 "s.s_name, " +
@@ -273,11 +230,10 @@ public class UniversalRepository {
                 .setParameter("size", size)
                 .setParameter("type", type)
                 .setParameter("region", region)
-                .findList()
-                .size();
+                .findList();
     }
 
-    public List<Map<String, Object>> q3(String segment, LocalDate orderDate, LocalDate shipDate) {
+    public List<SqlRow> q3(String segment, LocalDate orderDate, LocalDate shipDate) {
         String sql = "SELECT " +
                 "l.l_orderkey, " +
                 "SUM(l.l_extendedprice * (1 - l.l_discount)) AS revenue, " +
@@ -306,17 +262,10 @@ public class UniversalRepository {
                 .setParameter("segment", segment)
                 .setParameter("orderDate", orderDate)
                 .setParameter("shipDate", shipDate)
-                .findList()
-                .stream()
-                .map(row -> Map.of(
-                        "l_orderkey", row.get("l_orderkey"),
-                        "revenue", row.get("revenue"),
-                        "o_orderdate", row.get("o_orderdate"),
-                        "o_shippriority", row.get("o_shippriority")))
-                .toList();
+                .findList();
     }
 
-    public List<Map<String, Object>> q4(LocalDate orderDate) {
+    public List<SqlRow> q4(LocalDate orderDate) {
         LocalDate endDate = orderDate.plusMonths(3);
 
         String sql = "SELECT " +
@@ -343,15 +292,10 @@ public class UniversalRepository {
         return database.sqlQuery(sql)
                 .setParameter("orderDate", orderDate)
                 .setParameter("endDate", endDate)
-                .findList()
-                .stream()
-                .map(row -> Map.of(
-                        "o_orderpriority", row.get("o_orderpriority"),
-                        "order_count", row.get("order_count")))
-                .toList();
+                .findList();
     }
 
-    public List<Map<String, Object>> q5(String region, LocalDate orderDate) {
+    public List<SqlRow> q5(String region, LocalDate orderDate) {
         LocalDate endDate = orderDate.plusYears(1);
 
         String sql = "SELECT " +
@@ -383,11 +327,6 @@ public class UniversalRepository {
                 .setParameter("region", region)
                 .setParameter("orderDate", orderDate)
                 .setParameter("endDate", endDate)
-                .findList()
-                .stream()
-                .map(row -> Map.of(
-                        "n_name", row.get("n_name"),
-                        "revenue", row.get("revenue")))
-                .toList();
+                .findList();
     }
 }

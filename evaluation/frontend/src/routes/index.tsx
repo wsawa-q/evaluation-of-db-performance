@@ -1,6 +1,7 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import {
   Button,
+  Card,
   Checkbox,
   Form,
   Input,
@@ -9,6 +10,10 @@ import {
   type CheckboxOptionType,
 } from 'antd'
 import { useQueryEndpoints } from '../hooks/useQueryEndpoints'
+import { useState } from 'react'
+import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
+import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism'
+import { format } from 'sql-formatter'
 
 export const Route = createFileRoute('/')({
   component: Home,
@@ -46,16 +51,28 @@ const options: CheckboxOptionType<string>[] = [
 function Home() {
   const [form] = Form.useForm()
   const { data: queryEndpoints } = useQueryEndpoints()
+  const [selectedQuery, setSelectedQuery] = useState<string | undefined>()
   const navigate = useNavigate()
 
   const allValues = options.map((opt) => opt.value)
+  const queryOptions = Object.entries(queryEndpoints || {})
+    .map(([key]) => ({
+      label: key,
+      value: key,
+    }))
+    .sort((a, b) => a.label.localeCompare(b.label))
 
-  const onFinish = (values: { items: string[]; query: string }) => {
+  const onFinish = (values: {
+    items: string[]
+    query: string
+    repetitions: number
+  }) => {
     navigate({
       to: '/orchestrator',
       search: {
         items: values.items,
         query: values.query,
+        repetitions: values.repetitions,
       },
     })
   }
@@ -121,10 +138,7 @@ function Home() {
           >
             <Select
               placeholder="Select a query"
-              options={queryEndpoints?.map((endpoint) => ({
-                label: endpoint,
-                value: endpoint,
-              }))}
+              options={queryOptions}
               style={{ width: '100%' }}
               allowClear
               showSearch
@@ -133,6 +147,7 @@ function Home() {
                   .toLowerCase()
                   .includes(input.toLowerCase())
               }
+              onChange={(value) => setSelectedQuery(value)}
               optionFilterProp="label"
             />
           </Form.Item>
@@ -151,6 +166,24 @@ function Home() {
             Execute
           </Button>
         </Form.Item>
+
+        {selectedQuery && queryEndpoints && (
+          <Card style={{ maxWidth: 600, margin: '2rem auto' }}>
+            <SyntaxHighlighter
+              language="sql"
+              style={vscDarkPlus}
+              customStyle={{
+                margin: -24,
+                padding: '16px 24px',
+                borderRadius: '8px',
+              }}
+              wrapLines={true}
+              wrapLongLines={true}
+            >
+              {format(queryEndpoints[selectedQuery], { language: 'mysql' })}
+            </SyntaxHighlighter>
+          </Card>
+        )}
       </Form>
     </div>
   )

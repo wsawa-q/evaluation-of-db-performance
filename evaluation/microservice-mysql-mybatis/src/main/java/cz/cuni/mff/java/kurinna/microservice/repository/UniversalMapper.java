@@ -1,31 +1,30 @@
 package cz.cuni.mff.java.kurinna.microservice.repository;
 
-import cz.cuni.mff.java.kurinna.microservice.dto.*;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
-import org.apache.ibatis.annotations.ResultType;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 
 @Mapper
 public interface UniversalMapper {
     // A1) Non-Indexed Columns
     @Select("SELECT * FROM lineitem")
-    List<LineItem> a1();
+    List<Map<String, Object>> a1();
 
     // A2) Non-Indexed Columns — Range Query
     @Select("SELECT * FROM orders WHERE o_orderdate BETWEEN #{startDate} AND #{endDate}")
-    List<Order> a2(@Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate);
+    List<Map<String, Object>> a2(@Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate);
 
     // A3) Indexed Columns
     @Select("SELECT * FROM customer")
-    List<Customer> a3();
+    List<Map<String, Object>> a3();
 
     // A4) Indexed Columns — Range Query
     @Select("SELECT * FROM orders WHERE o_orderkey BETWEEN #{minOrderKey} AND #{maxOrderKey}")
-    List<Order> a4(@Param("minOrderKey") int minOrderKey, @Param("maxOrderKey") int maxOrderKey);
+    List<Map<String, Object>> a4(@Param("minOrderKey") int minOrderKey, @Param("maxOrderKey") int maxOrderKey);
 
     // B1) COUNT
     @Select("""
@@ -34,7 +33,7 @@ public interface UniversalMapper {
             FROM orders o
             GROUP BY order_month
             """)
-    List<OrderCount> b1();
+    List<Map<String, Object>> b1();
 
     // B2) MAX
     @Select("""
@@ -43,14 +42,14 @@ public interface UniversalMapper {
             FROM lineitem l
             GROUP BY ship_month
             """)
-    List<MaxPrice> b2();
+    List<Map<String, Object>> b2();
 
     // C1) Non-Indexed Columns
     @Select("""
             SELECT c.c_name, o.o_orderdate, o.o_totalprice
             FROM customer c, orders o
             """)
-    List<CustomerOrder> c1();
+    List<Map<String, Object>> c1();
 
     // C2) Indexed Columns
     @Select("""
@@ -58,7 +57,7 @@ public interface UniversalMapper {
             FROM customer c
             JOIN orders o ON c.c_custkey = o.o_custkey
             """)
-    List<CustomerOrder> c2();
+    List<Map<String, Object>> c2();
 
     // C3) Complex Join 1
     @Select("""
@@ -67,7 +66,7 @@ public interface UniversalMapper {
             JOIN nation n ON c.c_nationkey = n.n_nationkey
             JOIN orders o ON c.c_custkey = o.o_custkey
             """)
-    List<CustomerNationOrder> c3();
+    List<Map<String, Object>> c3();
 
     // C4) Complex Join 2
     @Select("""
@@ -77,7 +76,7 @@ public interface UniversalMapper {
             JOIN region r ON n.n_regionkey = r.r_regionkey
             JOIN orders o ON c.c_custkey = o.o_custkey
             """)
-    List<CustomerNationRegionOrder> c4();
+    List<Map<String, Object>> c4();
 
     // C5) Left Outer Join
     @Select("""
@@ -85,7 +84,7 @@ public interface UniversalMapper {
             FROM customer c
             LEFT OUTER JOIN orders o ON c.c_custkey = o.o_custkey
             """)
-    List<CustomerOrderDetail> c5();
+    List<Map<String, Object>> c5();
 
     // D1) UNION
     @Select("""
@@ -93,7 +92,7 @@ public interface UniversalMapper {
             UNION
             (SELECT s_nationkey AS nationkey FROM supplier)
             """)
-    List<NationKey> d1();
+    List<Map<String, Object>> d1();
 
     // D2) INTERSECT
     @Select("""
@@ -104,7 +103,7 @@ public interface UniversalMapper {
                 FROM supplier s
             )
             """)
-    List<CustomerKey> d2();
+    List<Map<String, Object>> d2();
 
     // D3) DIFFERENCE
     @Select("""
@@ -115,7 +114,7 @@ public interface UniversalMapper {
                 FROM supplier s
             )
             """)
-    List<CustomerKey> d3();
+    List<Map<String, Object>> d3();
 
     // E1) Non-Indexed Columns Sorting
     @Select("""
@@ -123,7 +122,7 @@ public interface UniversalMapper {
             FROM customer
             ORDER BY c_acctbal DESC
             """)
-    List<CustomerDetail> e1();
+    List<Map<String, Object>> e1();
 
     // E2) Indexed Columns Sorting
     @Select("""
@@ -131,14 +130,14 @@ public interface UniversalMapper {
             FROM orders
             ORDER BY o_orderkey
             """)
-    List<OrderDetail> e2();
+    List<Map<String, Object>> e2();
 
     // E3) Distinct
     @Select("""
             SELECT DISTINCT c_nationkey, c_mktsegment
             FROM customer
             """)
-    List<QueryResult> e3();
+    List<Map<String, Object>> e3();
 
     @Select("""
             SELECT
@@ -158,7 +157,7 @@ public interface UniversalMapper {
             GROUP BY l_returnflag, l_linestatus
             ORDER BY l_returnflag, l_linestatus
             """)
-    List<PricingSummary> q1(int days);
+    List<Map<String, Object>> q1(int days);
 
     @Select("""
             SELECT
@@ -205,7 +204,7 @@ public interface UniversalMapper {
               p.p_partkey
             LIMIT 100
             """)
-    List<MinimumCostSupplier> q2(@Param("size") int size, @Param("type") String type, @Param("region") String region);
+    List<Map<String, Object>> q2(@Param("size") int size, @Param("type") String type, @Param("region") String region);
 
     @Select("""
             SELECT
@@ -232,7 +231,7 @@ public interface UniversalMapper {
               o.o_orderdate
             LIMIT 10
             """)
-    List<ShippingPriority> q3(@Param("segment") String segment, @Param("orderDate") LocalDate orderDate, @Param("shipDate") LocalDate shipDate);
+    List<Map<String, Object>> q3(@Param("segment") String segment, @Param("orderDate") LocalDate orderDate, @Param("shipDate") LocalDate shipDate);
 
     @Select("""
             SELECT
@@ -256,7 +255,7 @@ public interface UniversalMapper {
             ORDER BY
               o_orderpriority
             """)
-    List<OrderPriorityChecking> q4(@Param("orderDate") LocalDate orderDate);
+    List<Map<String, Object>> q4(@Param("orderDate") LocalDate orderDate);
 
     @Select("""
             SELECT
@@ -284,5 +283,5 @@ public interface UniversalMapper {
             ORDER BY
               revenue DESC
             """)
-    List<LocalSupplierVolume> q5(@Param("region") String region, @Param("orderDate") LocalDate orderDate);
+    List<Map<String, Object>> q5(@Param("region") String region, @Param("orderDate") LocalDate orderDate);
 }

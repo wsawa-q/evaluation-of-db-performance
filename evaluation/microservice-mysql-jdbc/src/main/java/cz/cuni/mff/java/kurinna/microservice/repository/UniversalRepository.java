@@ -1,26 +1,26 @@
 package cz.cuni.mff.java.kurinna.microservice.repository;
 
-import cz.cuni.mff.java.kurinna.microservice.dto.*;
-import org.springframework.jdbc.core.RowMapper;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
 
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 
 @Repository
 public class UniversalRepository {
+    private final NamedParameterJdbcTemplate namedParameterJdbcTemplate;
+    private final JdbcTemplate jdbcTemplate;
 
-    private final NamedParameterJdbcTemplate jdbc;
+    public UniversalRepository(NamedParameterJdbcTemplate namedParameterJdbcTemplate, JdbcTemplate jdbcTemplate) {
+        this.namedParameterJdbcTemplate = namedParameterJdbcTemplate;
+        this.jdbcTemplate = jdbcTemplate;
 
-    public UniversalRepository(NamedParameterJdbcTemplate jdbc) {
-        this.jdbc = jdbc;
     }
 
-    public List<PricingSummary> q1(int days) {
+    public List<Map<String, Object>> q1(int days) {
         String sql = """
             SELECT
               l_returnflag,
@@ -43,10 +43,10 @@ public class UniversalRepository {
         MapSqlParameterSource params = new MapSqlParameterSource();
         params.addValue("days", days);
 
-        return jdbc.query(sql, params, pricingSummaryMapper);
+        return namedParameterJdbcTemplate.queryForList(sql, params);
     }
 
-    public List<MinimumCostSupplier> q2(int size, String type, String region) {
+    public List<Map<String, Object>> q2(int size, String type, String region) {
         String sql = """
             SELECT
               s.s_acctbal,
@@ -98,10 +98,10 @@ public class UniversalRepository {
         params.addValue("type", type);
         params.addValue("region", region);
 
-        return jdbc.query(sql, params, minimumCostSupplierMapper);
+        return namedParameterJdbcTemplate.queryForList(sql, params);
     }
 
-    public List<ShippingPriority> q3(String segment, LocalDate orderDate, LocalDate shipDate) {
+    public List<Map<String, Object>> q3(String segment, LocalDate orderDate, LocalDate shipDate) {
         String sql = """
             SELECT
               l.l_orderkey,
@@ -133,10 +133,10 @@ public class UniversalRepository {
         params.addValue("orderDate", java.sql.Date.valueOf(orderDate));
         params.addValue("shipDate", java.sql.Date.valueOf(shipDate));
 
-        return jdbc.query(sql, params, shippingPriorityMapper);
+        return namedParameterJdbcTemplate.queryForList(sql, params);
     }
 
-    public List<OrderPriorityChecking> q4(LocalDate orderDate) {
+    public List<Map<String, Object>> q4(LocalDate orderDate) {
         LocalDate endDate = orderDate.plusMonths(3);
 
         String sql = """
@@ -166,10 +166,10 @@ public class UniversalRepository {
         params.addValue("orderDate", java.sql.Date.valueOf(orderDate));
         params.addValue("endDate", java.sql.Date.valueOf(endDate));
 
-        return jdbc.query(sql, params, orderPriorityCheckingMapper);
+        return namedParameterJdbcTemplate.queryForList(sql, params);
     }
 
-    public List<LocalSupplierVolume> q5(String region, LocalDate orderDate) {
+    public List<Map<String, Object>> q5(String region, LocalDate orderDate) {
         LocalDate endDate = orderDate.plusYears(1);
 
         String sql = """
@@ -204,89 +204,23 @@ public class UniversalRepository {
         params.addValue("orderDate", java.sql.Date.valueOf(orderDate));
         params.addValue("endDate", java.sql.Date.valueOf(endDate));
 
-        return jdbc.query(sql, params, localSupplierVolumeMapper);
+        return namedParameterJdbcTemplate.queryForList(sql, params);
     }
 
-    private final RowMapper<PricingSummary> pricingSummaryMapper = new RowMapper<>() {
-        @Override
-        public PricingSummary mapRow(ResultSet rs, int rowNum) throws SQLException {
-            return new PricingSummary(
-                    rs.getString("l_returnflag"),
-                    rs.getString("l_linestatus"),
-                    rs.getDouble("sum_qty"),
-                    rs.getDouble("sum_base_price"),
-                    rs.getDouble("sum_disc_price"),
-                    rs.getDouble("sum_charge"),
-                    rs.getDouble("avg_qty"),
-                    rs.getDouble("avg_price"),
-                    rs.getDouble("avg_disc"),
-                    rs.getLong("count_order")
-            );
-        }
-    };
-
-    private final RowMapper<MinimumCostSupplier> minimumCostSupplierMapper = new RowMapper<>() {
-        @Override
-        public MinimumCostSupplier mapRow(ResultSet rs, int rowNum) throws SQLException {
-            return new MinimumCostSupplier(
-                    rs.getDouble("s_acctbal"),
-                    rs.getString("s_name"),
-                    rs.getString("n_name"),
-                    rs.getInt("p_partkey"),
-                    rs.getString("p_mfgr"),
-                    rs.getString("s_address"),
-                    rs.getString("s_phone"),
-                    rs.getString("s_comment")
-            );
-        }
-    };
-
-    private final RowMapper<ShippingPriority> shippingPriorityMapper = new RowMapper<>() {
-        @Override
-        public ShippingPriority mapRow(ResultSet rs, int rowNum) throws SQLException {
-            return new ShippingPriority(
-                    rs.getInt("l_orderkey"),
-                    rs.getDouble("revenue"),
-                    rs.getDate("o_orderdate").toLocalDate(),
-                    rs.getInt("o_shippriority")
-            );
-        }
-    };
-
-    private final RowMapper<OrderPriorityChecking> orderPriorityCheckingMapper = new RowMapper<>() {
-        @Override
-        public OrderPriorityChecking mapRow(ResultSet rs, int rowNum) throws SQLException {
-            return new OrderPriorityChecking(
-                    rs.getString("o_orderpriority"),
-                    rs.getLong("order_count")
-            );
-        }
-    };
-
-    private final RowMapper<LocalSupplierVolume> localSupplierVolumeMapper = new RowMapper<>() {
-        @Override
-        public LocalSupplierVolume mapRow(ResultSet rs, int rowNum) throws SQLException {
-            return new LocalSupplierVolume(
-                    rs.getString("n_name"),
-                    rs.getDouble("revenue")
-            );
-        }
-    };
-
     // A1) Non-Indexed Columns
-    public List<LineItem> a1() {
+    public List<Map<String, Object>> a1() {
         String sql = """
             SELECT * FROM lineitem
             """;
 
-        return jdbc.query(sql, lineItemMapper);
+        return jdbcTemplate.queryForList(sql);
     }
 
     // A2) Non-Indexed Columns — Range Query
-    public List<Order> a2(LocalDate startDate, LocalDate endDate) {
+    public List<Map<String, Object>> a2(LocalDate startDate, LocalDate endDate) {
         String sql = """
             SELECT * FROM orders
-            WHERE o_orderdate 
+            WHERE o_orderdate
                 BETWEEN :startDate AND :endDate
             """;
 
@@ -294,20 +228,20 @@ public class UniversalRepository {
         params.addValue("startDate", java.sql.Date.valueOf(startDate));
         params.addValue("endDate", java.sql.Date.valueOf(endDate));
 
-        return jdbc.query(sql, params, orderMapper);
+        return namedParameterJdbcTemplate.queryForList(sql, params);
     }
 
     // A3) Indexed Columns
-    public List<Customer> a3() {
+    public List<Map<String, Object>> a3() {
         String sql = """
             SELECT * FROM customer
             """;
 
-        return jdbc.query(sql, customerMapper);
+        return jdbcTemplate.queryForList(sql);
     }
 
     // A4) Indexed Columns — Range Query
-    public List<Order> a4(int startKey, int endKey) {
+    public List<Map<String, Object>> a4(int startKey, int endKey) {
         String sql = """
             SELECT * FROM orders
             WHERE o_orderkey BETWEEN :startKey AND :endKey
@@ -317,23 +251,23 @@ public class UniversalRepository {
         params.addValue("startKey", startKey);
         params.addValue("endKey", endKey);
 
-        return jdbc.query(sql, params, orderMapper);
+        return namedParameterJdbcTemplate.queryForList(sql, params);
     }
 
     // B1) COUNT
-    public List<OrderCount> b1() {
+    public List<Map<String, Object>> b1() {
         String sql = """
-            SELECT COUNT(o.o_orderkey) AS order_count, 
+            SELECT COUNT(o.o_orderkey) AS order_count,
                    DATE_FORMAT(o.o_orderdate, '%Y-%m') AS order_month
             FROM orders o
             GROUP BY order_month
             """;
 
-        return jdbc.query(sql, orderCountMapper);
+        return jdbcTemplate.queryForList(sql);
     }
 
     // B2) MAX
-    public List<MaxPrice> b2() {
+    public List<Map<String, Object>> b2() {
         String sql = """
             SELECT DATE_FORMAT(l.l_shipdate, '%Y-%m') AS ship_month,
                    MAX(l.l_extendedprice) AS max_price
@@ -341,32 +275,32 @@ public class UniversalRepository {
             GROUP BY ship_month
             """;
 
-        return jdbc.query(sql, maxPriceMapper);
+        return jdbcTemplate.queryForList(sql);
     }
 
     // C1) Non-Indexed Columns
-    public List<CustomerOrder> c1() {
+    public List<Map<String, Object>> c1() {
         String sql = """
             SELECT c.c_name, o.o_orderdate, o.o_totalprice
             FROM customer c, orders o
             """;
 
-        return jdbc.query(sql, customerOrderMapper);
+        return jdbcTemplate.queryForList(sql);
     }
 
     // C2) Indexed Columns
-    public List<CustomerOrder> c2() {
+    public List<Map<String, Object>> c2() {
         String sql = """
             SELECT c.c_name, o.o_orderdate, o.o_totalprice
             FROM customer c
             JOIN orders o ON c.c_custkey = o.o_custkey
             """;
 
-        return jdbc.query(sql, customerOrderMapper);
+        return jdbcTemplate.queryForList(sql);
     }
 
     // C3) Complex Join 1
-    public List<CustomerNationOrder> c3() {
+    public List<Map<String, Object>> c3() {
         String sql = """
             SELECT c.c_name, n.n_name, o.o_orderdate, o.o_totalprice
             FROM customer c
@@ -374,11 +308,11 @@ public class UniversalRepository {
             JOIN orders o ON c.c_custkey = o.o_custkey
             """;
 
-        return jdbc.query(sql, customerNationOrderMapper);
+        return jdbcTemplate.queryForList(sql);
     }
 
     // C4) Complex Join 2
-    public List<CustomerNationRegionOrder> c4() {
+    public List<Map<String, Object>> c4() {
         String sql = """
             SELECT c.c_name, n.n_name, r.r_name, o.o_orderdate, o.o_totalprice
             FROM customer c
@@ -387,33 +321,33 @@ public class UniversalRepository {
             JOIN orders o ON c.c_custkey = o.o_custkey
             """;
 
-        return jdbc.query(sql, customerNationRegionOrderMapper);
+        return jdbcTemplate.queryForList(sql);
     }
 
     // C5) Left Outer Join
-    public List<CustomerOrderDetail> c5() {
+    public List<Map<String, Object>> c5() {
         String sql = """
             SELECT c.c_custkey, c.c_name, o.o_orderkey, o.o_orderdate
             FROM customer c
             LEFT OUTER JOIN orders o ON c.c_custkey = o.o_custkey
             """;
 
-        return jdbc.query(sql, customerOrderDetailMapper);
+        return jdbcTemplate.queryForList(sql);
     }
 
     // D1) UNION
-    public List<NationKey> d1() {
+    public List<Map<String, Object>> d1() {
         String sql = """
             (SELECT c_nationkey AS nation_key FROM customer)
             UNION
             (SELECT s_nationkey AS nation_key FROM supplier)
             """;
 
-        return jdbc.query(sql, nationKeyMapper);
+        return jdbcTemplate.queryForList(sql);
     }
 
     // D2) INTERSECT
-    public List<CustomerKey> d2() {
+    public List<Map<String, Object>> d2() {
         String sql = """
             SELECT DISTINCT c.c_custkey AS cust_key
             FROM customer c
@@ -423,11 +357,11 @@ public class UniversalRepository {
             )
             """;
 
-        return jdbc.query(sql, customerKeyMapper);
+        return jdbcTemplate.queryForList(sql);
     }
 
     // D3) DIFFERENCE
-    public List<CustomerKey> d3() {
+    public List<Map<String, Object>> d3() {
         String sql = """
             SELECT DISTINCT c.c_custkey AS cust_key
             FROM customer c
@@ -437,218 +371,38 @@ public class UniversalRepository {
             )
             """;
 
-        return jdbc.query(sql, customerKeyMapper);
+        return jdbcTemplate.queryForList(sql);
     }
 
     // E1) Non-Indexed Columns Sorting
-    public List<CustomerDetail> e1() {
+    public List<Map<String, Object>> e1() {
         String sql = """
             SELECT c_name, c_address, c_acctbal
             FROM customer
             ORDER BY c_acctbal DESC
             """;
 
-        return jdbc.query(sql, customerDetailMapper);
+        return jdbcTemplate.queryForList(sql);
     }
 
     // E2) Indexed Columns Sorting
-    public List<OrderDetail> e2() {
+    public List<Map<String, Object>> e2() {
         String sql = """
             SELECT o_orderkey, o_custkey, o_orderdate, o_totalprice
             FROM orders
             ORDER BY o_orderkey
             """;
 
-        return jdbc.query(sql, orderDetailMapper);
+        return jdbcTemplate.queryForList(sql);
     }
 
     // E3) Distinct
-    public List<CustomerSegment> e3() {
+    public List<Map<String, Object>> e3() {
         String sql = """
             SELECT DISTINCT c_nationkey, c_mktsegment
             FROM customer
             """;
 
-        return jdbc.query(sql, customerSegmentMapper);
+        return jdbcTemplate.queryForList(sql);
     }
-
-    private final RowMapper<LineItem> lineItemMapper = new RowMapper<>() {
-        @Override
-        public LineItem mapRow(ResultSet rs, int rowNum) throws SQLException {
-            return new LineItem(
-                    rs.getInt("l_orderkey"),
-                    rs.getInt("l_partkey"),
-                    rs.getInt("l_suppkey"),
-                    rs.getInt("l_linenumber"),
-                    rs.getDouble("l_quantity"),
-                    rs.getDouble("l_extendedprice"),
-                    rs.getDouble("l_discount"),
-                    rs.getDouble("l_tax"),
-                    rs.getString("l_returnflag"),
-                    rs.getString("l_linestatus"),
-                    rs.getDate("l_shipdate").toLocalDate(),
-                    rs.getDate("l_commitdate").toLocalDate(),
-                    rs.getDate("l_receiptdate").toLocalDate(),
-                    rs.getString("l_shipinstruct"),
-                    rs.getString("l_shipmode"),
-                    rs.getString("l_comment")
-            );
-        }
-    };
-
-    private final RowMapper<Order> orderMapper = new RowMapper<>() {
-        @Override
-        public Order mapRow(ResultSet rs, int rowNum) throws SQLException {
-            return new Order(
-                    rs.getInt("o_orderkey"),
-                    rs.getInt("o_custkey"),
-                    rs.getString("o_orderstatus"),
-                    rs.getDouble("o_totalprice"),
-                    rs.getDate("o_orderdate").toLocalDate(),
-                    rs.getString("o_orderpriority"),
-                    rs.getString("o_clerk"),
-                    rs.getInt("o_shippriority"),
-                    rs.getString("o_comment")
-            );
-        }
-    };
-
-    private final RowMapper<Customer> customerMapper = new RowMapper<>() {
-        @Override
-        public Customer mapRow(ResultSet rs, int rowNum) throws SQLException {
-            return new Customer(
-                    rs.getInt("c_custkey"),
-                    rs.getString("c_name"),
-                    rs.getString("c_address"),
-                    rs.getInt("c_nationkey"),
-                    rs.getString("c_phone"),
-                    rs.getDouble("c_acctbal"),
-                    rs.getString("c_mktsegment"),
-                    rs.getString("c_comment")
-            );
-        }
-    };
-
-    private final RowMapper<OrderCount> orderCountMapper = new RowMapper<>() {
-        @Override
-        public OrderCount mapRow(ResultSet rs, int rowNum) throws SQLException {
-            return new OrderCount(
-                    rs.getLong("order_count"),
-                    rs.getString("order_month")
-            );
-        }
-    };
-
-    private final RowMapper<MaxPrice> maxPriceMapper = new RowMapper<>() {
-        @Override
-        public MaxPrice mapRow(ResultSet rs, int rowNum) throws SQLException {
-            return new MaxPrice(
-                    rs.getString("ship_month"),
-                    rs.getDouble("max_price")
-            );
-        }
-    };
-
-    private final RowMapper<CustomerOrder> customerOrderMapper = new RowMapper<>() {
-        @Override
-        public CustomerOrder mapRow(ResultSet rs, int rowNum) throws SQLException {
-            return new CustomerOrder(
-                    rs.getString("c_name"),
-                    rs.getDate("o_orderdate").toLocalDate(),
-                    rs.getDouble("o_totalprice")
-            );
-        }
-    };
-
-    private final RowMapper<CustomerNationOrder> customerNationOrderMapper = new RowMapper<>() {
-        @Override
-        public CustomerNationOrder mapRow(ResultSet rs, int rowNum) throws SQLException {
-            return new CustomerNationOrder(
-                    rs.getString("c_name"),
-                    rs.getString("n_name"),
-                    rs.getDate("o_orderdate").toLocalDate(),
-                    rs.getDouble("o_totalprice")
-            );
-        }
-    };
-
-    private final RowMapper<CustomerNationRegionOrder> customerNationRegionOrderMapper = new RowMapper<>() {
-        @Override
-        public CustomerNationRegionOrder mapRow(ResultSet rs, int rowNum) throws SQLException {
-            return new CustomerNationRegionOrder(
-                    rs.getString("c_name"),
-                    rs.getString("n_name"),
-                    rs.getString("r_name"),
-                    rs.getDate("o_orderdate").toLocalDate(),
-                    rs.getDouble("o_totalprice")
-            );
-        }
-    };
-
-    private final RowMapper<CustomerOrderDetail> customerOrderDetailMapper = new RowMapper<>() {
-        @Override
-        public CustomerOrderDetail mapRow(ResultSet rs, int rowNum) throws SQLException {
-            LocalDate orderDate = null;
-            if (rs.getDate("o_orderdate") != null) {
-                orderDate = rs.getDate("o_orderdate").toLocalDate();
-            }
-            return new CustomerOrderDetail(
-                    rs.getInt("c_custkey"),
-                    rs.getString("c_name"),
-                    rs.getObject("o_orderkey", Integer.class),
-                    orderDate
-            );
-        }
-    };
-
-    private final RowMapper<NationKey> nationKeyMapper = new RowMapper<>() {
-        @Override
-        public NationKey mapRow(ResultSet rs, int rowNum) throws SQLException {
-            return new NationKey(
-                    rs.getInt("nation_key")
-            );
-        }
-    };
-
-    private final RowMapper<CustomerKey> customerKeyMapper = new RowMapper<>() {
-        @Override
-        public CustomerKey mapRow(ResultSet rs, int rowNum) throws SQLException {
-            return new CustomerKey(
-                    rs.getInt("cust_key")
-            );
-        }
-    };
-
-    private final RowMapper<CustomerDetail> customerDetailMapper = new RowMapper<>() {
-        @Override
-        public CustomerDetail mapRow(ResultSet rs, int rowNum) throws SQLException {
-            return new CustomerDetail(
-                    rs.getString("c_name"),
-                    rs.getString("c_address"),
-                    rs.getDouble("c_acctbal")
-            );
-        }
-    };
-
-    private final RowMapper<OrderDetail> orderDetailMapper = new RowMapper<>() {
-        @Override
-        public OrderDetail mapRow(ResultSet rs, int rowNum) throws SQLException {
-            return new OrderDetail(
-                    rs.getInt("o_orderkey"),
-                    rs.getInt("o_custkey"),
-                    rs.getDate("o_orderdate").toLocalDate(),
-                    rs.getDouble("o_totalprice")
-            );
-        }
-    };
-
-    private final RowMapper<CustomerSegment> customerSegmentMapper = new RowMapper<>() {
-        @Override
-        public CustomerSegment mapRow(ResultSet rs, int rowNum) throws SQLException {
-            return new CustomerSegment(
-                    rs.getInt("c_nationkey"),
-                    rs.getString("c_mktsegment")
-            );
-        }
-    };
 }

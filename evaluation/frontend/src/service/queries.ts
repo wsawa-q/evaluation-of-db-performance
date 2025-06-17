@@ -7,10 +7,15 @@ import type {
 
 export const fethchOrchestratorQuery = async ({
   query,
+  repetitions = 1,
   services,
 }: OrchestratorQueryType): Promise<OrchestratorType> => {
+  const queryParam = new URLSearchParams({
+    repetitions: repetitions.toString(),
+    ...(services && { services }),
+  }).toString()
   const response = await fetch(
-    `http://localhost:8100/orchestrator/${query}?${services ? `services=${services}` : ''}`,
+    `http://localhost:8100/orchestrator/${query}?${queryParam}`,
     {
       method: 'GET',
       headers: {
@@ -24,7 +29,6 @@ export const fethchOrchestratorQuery = async ({
   }
 
   const data = await response.json()
-  console.log('Orchestrator Query Data:', data)
   return data
 }
 
@@ -47,12 +51,15 @@ export const fetchMicroserviceQuery = async ({
   }
 
   const data = await response.json()
-  console.log('Microservice Query Data:', data)
   return data
 }
 
-export const fetchQueryEndpoints = async (): Promise<string[]> => {
-  const response = await fetch('http://localhost:8100/getQueryEndpoints', {
+type QueryDescriptionType = {
+  [key: string]: string
+}
+
+export const fetchQueryEndpoints = async (): Promise<QueryDescriptionType> => {
+  const response = await fetch('http://localhost:8100/getQueryDescriptions', {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',
@@ -64,7 +71,6 @@ export const fetchQueryEndpoints = async (): Promise<string[]> => {
   }
 
   const data = await response.json()
-  console.log('Query Endpoints:', data)
   return data
 }
 
@@ -84,6 +90,5 @@ export const fetchMicroserviceEndpoints = async (): Promise<string[]> => {
   }
 
   const data = await response.json()
-  console.log('Microservice Endpoints:', data)
   return data
 }

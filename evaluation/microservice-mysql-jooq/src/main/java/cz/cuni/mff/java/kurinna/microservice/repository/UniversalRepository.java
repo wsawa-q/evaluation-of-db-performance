@@ -1,23 +1,11 @@
 package cz.cuni.mff.java.kurinna.microservice.repository;
 
-import cz.cuni.mff.java.kurinna.microservice.dto.PricingSummary;
-import cz.cuni.mff.java.kurinna.microservice.dto.MinimumCostSupplier;
-import cz.cuni.mff.java.kurinna.microservice.dto.ShippingPriority;
-import cz.cuni.mff.java.kurinna.microservice.dto.OrderPriorityChecking;
-import cz.cuni.mff.java.kurinna.microservice.dto.LocalSupplierVolume;
-import cz.cuni.mff.java.kurinna.microservice.dto.QueryResult;
 import org.jooq.DSLContext;
-import org.jooq.Record10;
 import static org.jooq.impl.DSL.*;
-import org.jooq.Result;
 import org.springframework.stereotype.Repository;
 
-import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import static cz.cuni.mff.java.kurinna.microservice.model.tables.Lineitem.LINEITEM;
 import static cz.cuni.mff.java.kurinna.microservice.model.tables.Part.PART;
@@ -37,50 +25,42 @@ public class UniversalRepository {
     }
 
     // A1) Non-Indexed Columns
-    public List<QueryResult> a1() {
-        Result<?> result = dslContext
+    public List<?> a1() {
+        return dslContext
             .select()
             .from(LINEITEM)
             .fetch();
-
-        return convertToQueryResults(result);
     }
 
     // A2) Non-Indexed Columns — Range Query
-    public List<QueryResult> a2(LocalDate startDate, LocalDate endDate) {
-        Result<?> result = dslContext
+    public List<?> a2(LocalDate startDate, LocalDate endDate) {
+        return dslContext
             .select()
             .from(ORDERS)
             .where(ORDERS.O_ORDERDATE.between(startDate, endDate))
             .fetch();
-
-        return convertToQueryResults(result);
     }
 
     // A3) Indexed Columns
-    public List<QueryResult> a3() {
-        Result<?> result = dslContext
+    public List<?> a3() {
+        return dslContext
             .select()
             .from(CUSTOMER)
             .fetch();
-
-        return convertToQueryResults(result);
     }
 
     // A4) Indexed Columns — Range Query
-    public List<QueryResult> a4(int minOrderKey, int maxOrderKey) {
-        Result<?> result = dslContext
+    public List<?> a4(int minOrderKey, int maxOrderKey) {
+        return dslContext
             .select()
             .from(ORDERS)
             .where(ORDERS.O_ORDERKEY.between((long) minOrderKey, (long) maxOrderKey))
             .fetch();
-
-        return convertToQueryResults(result);
     }
 
     // B1) COUNT
-    public List<QueryResult> b1() {
-        Result<?> result = dslContext
+    public List<?> b1() {
+        return dslContext
             .select(
                 count(ORDERS.O_ORDERKEY).as("order_count"),
                 function("DATE_FORMAT", String.class, ORDERS.O_ORDERDATE, inline("%Y-%m")).as("order_month")
@@ -88,13 +68,11 @@ public class UniversalRepository {
             .from(ORDERS)
             .groupBy(field("order_month"))
             .fetch();
-
-        return convertToQueryResults(result);
     }
 
     // B2) MAX
-    public List<QueryResult> b2() {
-        Result<?> result = dslContext
+    public List<?> b2() {
+        return dslContext
             .select(
                 function("DATE_FORMAT", String.class, LINEITEM.L_SHIPDATE, inline("%Y-%m")).as("ship_month"),
                 max(LINEITEM.L_EXTENDEDPRICE).as("max_price")
@@ -102,13 +80,11 @@ public class UniversalRepository {
             .from(LINEITEM)
             .groupBy(field("ship_month"))
             .fetch();
-
-        return convertToQueryResults(result);
     }
 
     // C1) Non-Indexed Columns
-    public List<QueryResult> c1() {
-        Result<?> result = dslContext
+    public List<?> c1() {
+        return dslContext
             .select(
                 CUSTOMER.C_NAME,
                 ORDERS.O_ORDERDATE,
@@ -116,13 +92,11 @@ public class UniversalRepository {
             )
             .from(CUSTOMER, ORDERS)
             .fetch();
-
-        return convertToQueryResults(result);
     }
 
     // C2) Indexed Columns
-    public List<QueryResult> c2() {
-        Result<?> result = dslContext
+    public List<?> c2() {
+        return dslContext
             .select(
                 CUSTOMER.C_NAME,
                 ORDERS.O_ORDERDATE,
@@ -131,13 +105,11 @@ public class UniversalRepository {
             .from(CUSTOMER)
             .join(ORDERS).on(CUSTOMER.C_CUSTKEY.eq(ORDERS.O_CUSTKEY))
             .fetch();
-
-        return convertToQueryResults(result);
     }
 
     // C3) Complex Join 1
-    public List<QueryResult> c3() {
-        Result<?> result = dslContext
+    public List<?> c3() {
+        return dslContext
             .select(
                 CUSTOMER.C_NAME,
                 NATION.N_NAME,
@@ -148,13 +120,11 @@ public class UniversalRepository {
             .join(NATION).on(CUSTOMER.C_NATIONKEY.eq(NATION.N_NATIONKEY))
             .join(ORDERS).on(CUSTOMER.C_CUSTKEY.eq(ORDERS.O_CUSTKEY))
             .fetch();
-
-        return convertToQueryResults(result);
     }
 
     // C4) Complex Join 2
-    public List<QueryResult> c4() {
-        Result<?> result = dslContext
+    public List<?> c4() {
+        return dslContext
             .select(
                 CUSTOMER.C_NAME,
                 NATION.N_NAME,
@@ -167,13 +137,11 @@ public class UniversalRepository {
             .join(REGION).on(NATION.N_REGIONKEY.eq(REGION.R_REGIONKEY))
             .join(ORDERS).on(CUSTOMER.C_CUSTKEY.eq(ORDERS.O_CUSTKEY))
             .fetch();
-
-        return convertToQueryResults(result);
     }
 
     // C5) Left Outer Join
-    public List<QueryResult> c5() {
-        Result<?> result = dslContext
+    public List<?> c5() {
+        return dslContext
             .select(
                 CUSTOMER.C_CUSTKEY,
                 CUSTOMER.C_NAME,
@@ -183,13 +151,11 @@ public class UniversalRepository {
             .from(CUSTOMER)
             .leftOuterJoin(ORDERS).on(CUSTOMER.C_CUSTKEY.eq(ORDERS.O_CUSTKEY))
             .fetch();
-
-        return convertToQueryResults(result);
     }
 
     // D1) UNION
-    public List<QueryResult> d1() {
-        Result<?> result = dslContext
+    public List<?> d1() {
+        return dslContext
             .select(CUSTOMER.C_NATIONKEY.as("nationkey"))
             .from(CUSTOMER)
             .union(
@@ -197,13 +163,11 @@ public class UniversalRepository {
                 .from(SUPPLIER)
             )
             .fetch();
-
-        return convertToQueryResults(result);
     }
 
     // D2) INTERSECT
-    public List<QueryResult> d2() {
-        Result<?> result = dslContext
+    public List<?> d2() {
+        return dslContext
             .selectDistinct(CUSTOMER.C_CUSTKEY.as("custkey"))
             .from(CUSTOMER)
             .where(CUSTOMER.C_CUSTKEY.in(
@@ -211,13 +175,11 @@ public class UniversalRepository {
                 .from(SUPPLIER)
             ))
             .fetch();
-
-        return convertToQueryResults(result);
     }
 
     // D3) DIFFERENCE
-    public List<QueryResult> d3() {
-        Result<?> result = dslContext
+    public List<?> d3() {
+        return dslContext
             .selectDistinct(CUSTOMER.C_CUSTKEY.as("custkey"))
             .from(CUSTOMER)
             .where(CUSTOMER.C_CUSTKEY.notIn(
@@ -225,13 +187,11 @@ public class UniversalRepository {
                 .from(SUPPLIER)
             ))
             .fetch();
-
-        return convertToQueryResults(result);
     }
 
     // E1) Non-Indexed Columns Sorting
-    public List<QueryResult> e1() {
-        Result<?> result = dslContext
+    public List<?> e1() {
+        return dslContext
             .select(
                 CUSTOMER.C_NAME,
                 CUSTOMER.C_ADDRESS,
@@ -240,13 +200,11 @@ public class UniversalRepository {
             .from(CUSTOMER)
             .orderBy(CUSTOMER.C_ACCTBAL.desc())
             .fetch();
-
-        return convertToQueryResults(result);
     }
 
     // E2) Indexed Columns Sorting
-    public List<QueryResult> e2() {
-        Result<?> result = dslContext
+    public List<?> e2() {
+        return dslContext
             .select(
                 ORDERS.O_ORDERKEY,
                 ORDERS.O_CUSTKEY,
@@ -256,37 +214,20 @@ public class UniversalRepository {
             .from(ORDERS)
             .orderBy(ORDERS.O_ORDERKEY.asc())
             .fetch();
-
-        return convertToQueryResults(result);
     }
 
     // E3) Distinct
-    public List<QueryResult> e3() {
-        Result<?> result = dslContext
+    public List<?> e3() {
+        return dslContext
             .selectDistinct(
                 CUSTOMER.C_NATIONKEY,
                 CUSTOMER.C_MKTSEGMENT
             )
             .from(CUSTOMER)
             .fetch();
-
-        return convertToQueryResults(result);
     }
 
-    // Helper method to convert JOOQ Result to List<QueryResult>
-    private List<QueryResult> convertToQueryResults(Result<?> result) {
-        List<QueryResult> queryResults = new ArrayList<>();
-        for (org.jooq.Record record : result) {
-            Map<String, Object> data = new HashMap<>();
-            for (int i = 0; i < record.size(); i++) {
-                data.put(record.field(i).getName(), record.getValue(i));
-            }
-            queryResults.add(new QueryResult(data));
-        }
-        return queryResults;
-    }
-
-    public List<PricingSummary> q1(int days) {
+    public List<?> q1(int days) {
     // Using static value 90 instead of parameterized days
     LocalDate cutoff = LocalDate.of(1998, 12, 1)
             .minusDays(90);
@@ -308,10 +249,10 @@ public class UniversalRepository {
         .where(LINEITEM.L_SHIPDATE.le(val(cutoff)))
         .groupBy(LINEITEM.L_RETURNFLAG, LINEITEM.L_LINESTATUS)
         .orderBy(LINEITEM.L_RETURNFLAG, LINEITEM.L_LINESTATUS)
-        .fetchInto(PricingSummary.class);
+        .fetch();
     }
 
-    public List<MinimumCostSupplier> q2(int size, String type, String region) {
+    public List<?> q2(int size, String type, String region) {
         return dslContext
             .select(
                 SUPPLIER.S_ACCTBAL.as("acctbal"),
@@ -347,10 +288,10 @@ public class UniversalRepository {
                 PART.P_PARTKEY.asc()
             )
             .limit(100)
-            .fetchInto(MinimumCostSupplier.class);
+            .fetch();
     }
 
-    public List<ShippingPriority> q3(String segment, LocalDate orderDate, LocalDate shipDate) {
+    public List<?> q3(String segment, LocalDate orderDate, LocalDate shipDate) {
         return dslContext
             .select(
                 LINEITEM.L_ORDERKEY.as("orderKey"),
@@ -367,10 +308,10 @@ public class UniversalRepository {
             .groupBy(LINEITEM.L_ORDERKEY, ORDERS.O_ORDERDATE, ORDERS.O_SHIPPRIORITY)
             .orderBy(field("revenue").desc(), ORDERS.O_ORDERDATE.asc())
             .limit(10)
-            .fetchInto(ShippingPriority.class);
+            .fetch();
     }
 
-    public List<OrderPriorityChecking> q4(LocalDate orderDate) {
+    public List<?> q4(LocalDate orderDate) {
         LocalDate endDate = orderDate.plusMonths(3);
 
         return dslContext
@@ -389,10 +330,10 @@ public class UniversalRepository {
             ))
             .groupBy(ORDERS.O_ORDERPRIORITY)
             .orderBy(ORDERS.O_ORDERPRIORITY.asc())
-            .fetchInto(OrderPriorityChecking.class);
+            .fetch();
     }
 
-    public List<LocalSupplierVolume> q5(String region, LocalDate orderDate) {
+    public List<?> q5(String region, LocalDate orderDate) {
         LocalDate endDate = orderDate.plusYears(1);
 
         return dslContext
@@ -412,6 +353,6 @@ public class UniversalRepository {
             .and(CUSTOMER.C_NATIONKEY.eq(SUPPLIER.S_NATIONKEY))
             .groupBy(NATION.N_NAME)
             .orderBy(field("revenue").desc())
-            .fetchInto(LocalSupplierVolume.class);
+            .fetch();
     }
 }

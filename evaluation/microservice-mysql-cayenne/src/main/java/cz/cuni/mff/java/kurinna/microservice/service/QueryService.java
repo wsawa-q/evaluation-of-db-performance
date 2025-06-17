@@ -1,8 +1,7 @@
 package cz.cuni.mff.java.kurinna.microservice.service;
 
-import cz.cuni.mff.java.kurinna.microservice.dto.QueryResult;
-import cz.cuni.mff.java.kurinna.microservice.repository.UniversalRepository;
 import org.apache.cayenne.DataRow;
+import cz.cuni.mff.java.kurinna.microservice.repository.UniversalRepository;
 import org.apache.cayenne.ObjectContext;
 import org.springframework.stereotype.Service;
 
@@ -21,71 +20,71 @@ public class QueryService {
     }
 
     // Basic queries
-    public List<QueryResult> a1() {
+    public List<DataRow> a1() {
         return universalRepository.a1(objectContext);
     }
 
-    public List<QueryResult> a2(LocalDate startDate, LocalDate endDate) {
+    public List<DataRow> a2(LocalDate startDate, LocalDate endDate) {
         return universalRepository.a2(objectContext, startDate, endDate);
     }
 
-    public List<QueryResult> a3() {
+    public List<DataRow> a3() {
         return universalRepository.a3(objectContext);
     }
 
-    public List<QueryResult> a4(int minOrderKey, int maxOrderKey) {
+    public List<DataRow> a4(int minOrderKey, int maxOrderKey) {
         return universalRepository.a4(objectContext, minOrderKey, maxOrderKey);
     }
 
-    public List<QueryResult> b1() {
+    public List<DataRow> b1() {
         return universalRepository.b1(objectContext);
     }
 
-    public List<QueryResult> b2() {
+    public List<DataRow> b2() {
         return universalRepository.b2(objectContext);
     }
 
-    public List<QueryResult> c1() {
+    public List<DataRow> c1() {
         return universalRepository.c1(objectContext);
     }
 
-    public List<QueryResult> c2() {
+    public List<DataRow> c2() {
         return universalRepository.c2(objectContext);
     }
 
-    public List<QueryResult> c3() {
+    public List<DataRow> c3() {
         return universalRepository.c3(objectContext);
     }
 
-    public List<QueryResult> c4() {
+    public List<DataRow> c4() {
         return universalRepository.c4(objectContext);
     }
 
-    public List<QueryResult> c5() {
+    public List<DataRow> c5() {
         return universalRepository.c5(objectContext);
     }
 
-    public List<QueryResult> d1() {
+    public List<DataRow> d1() {
         return universalRepository.d1(objectContext);
     }
 
-    public List<QueryResult> d2() {
+    public List<DataRow> d2() {
         return universalRepository.d2(objectContext);
     }
 
-    public List<QueryResult> d3() {
+    public List<DataRow> d3() {
         return universalRepository.d3(objectContext);
     }
 
-    public List<QueryResult> e1() {
+    public List<DataRow> e1() {
         return universalRepository.e1(objectContext);
     }
 
-    public List<QueryResult> e2() {
+    public List<DataRow> e2() {
         return universalRepository.e2(objectContext);
     }
 
-    public List<QueryResult> e3() {
+    public List<DataRow> e3() {
         return universalRepository.e3(objectContext);
     }
 

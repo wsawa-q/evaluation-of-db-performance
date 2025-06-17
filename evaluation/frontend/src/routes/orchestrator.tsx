@@ -9,9 +9,11 @@ export const Route = createFileRoute('/orchestrator')({
   ): OrchestratorSearchParamsType => {
     const items = (search.items as string[]) || []
     const query = (search.query as string) || ''
+    const repetitions = (search.repetitions as number) || 1
     return {
       items,
       query,
+      repetitions,
     }
   },
   component: RouteComponent,
@@ -26,6 +28,7 @@ function RouteComponent() {
     <OrchestratorPage
       queryEndpoint={search.query}
       microservices={search.items}
+      repetitions={search.repetitions}
     />
   )
 }

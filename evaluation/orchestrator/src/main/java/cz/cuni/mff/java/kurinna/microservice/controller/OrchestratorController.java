@@ -765,6 +765,11 @@ public class OrchestratorController {
         Map<String, Object> serviceResults = new LinkedHashMap<>();
         double totalTime = 0.0;
         double totalMemory = 0.0;
+        double maxMemory = 0.0;
+        double minMemory = 0.0;
+        double maxTime = 0.0;
+        double minTime = 0.0;
+        List<Map<String, Object>> iterationResultsList = new ArrayList<>();
 
         // warm up the JVM
 //        try {
@@ -782,17 +787,32 @@ public class OrchestratorController {
                         String elapsedStr = response.get("elapsed").toString();
                         double executionTime = Double.parseDouble(elapsedStr.trim());
                         totalTime += executionTime;
+
+                        if (executionTime > maxTime) {
+                            maxTime = executionTime;
+                        }
+                        if (executionTime < minTime || minTime == 0.0) {
+                            minTime = executionTime;
+                        }
                     }
 
                     if (response.containsKey("delta")) {
                         String memoryUsageStr = response.get("delta").toString();
                         double memoryUsage = Double.parseDouble(memoryUsageStr.trim());
                         totalMemory += memoryUsage;
+
+                        if (memoryUsage > maxMemory) {
+                            maxMemory = memoryUsage;
+                        }
+                        if (memoryUsage < minMemory || minMemory == 0.0) {
+                            minMemory = memoryUsage;
+                        }
                     } else {
                         serviceResults.put("delta", 0.0);
                     }
 
                     serviceResults.put("status", response.getOrDefault("status", "success"));
+                    iterationResultsList.add(response);
                 } catch (Exception e) {
                     serviceResults.put("response", response);
                     serviceResults.put("status", "success");
@@ -811,6 +831,12 @@ public class OrchestratorController {
 
         double averageMemory = totalMemory / repetitions;
         serviceResults.put("averageMemoryUsage", averageMemory);
+
+        serviceResults.put("maxExecutionTime", maxTime / 1000000);
+        serviceResults.put("minExecutionTime", minTime / 1000000);
+        serviceResults.put("maxMemoryUsage", maxMemory);
+        serviceResults.put("minMemoryUsage", minMemory);
+        serviceResults.put("iterationResults", iterationResultsList);
 
         results.put(serviceName, serviceResults);
     }

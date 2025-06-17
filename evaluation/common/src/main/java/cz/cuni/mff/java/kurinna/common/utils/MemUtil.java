@@ -14,4 +14,14 @@ public class MemUtil {
                 .mapToLong(p -> p.getUsage().getUsed())
                 .sum();
     }
+
+    public static List<MemoryPoolMXBean> heapPools() {
+        return  ManagementFactory.getMemoryPoolMXBeans().stream()
+                .filter(p -> p.getType() == MemoryType.HEAP)
+                .toList();
+    }
+
+    public static long getUsage() {
+        return ManagementFactory.getMemoryMXBean().getHeapMemoryUsage().getUsed();
+    }
 }
