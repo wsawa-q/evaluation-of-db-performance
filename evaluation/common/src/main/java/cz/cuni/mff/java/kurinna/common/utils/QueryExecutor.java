@@ -14,7 +14,8 @@ import java.util.function.Supplier;
 
 public class QueryExecutor {
     /**
-     * Helper method to execute a query and measure its execution time and memory usage
+     * Helper method to execute a query and measure its execution time and memory
+     * usage
      *
      * @param supplier A lambda that executes the query and returns the result
      * @return A map containing the result, execution time, and memory usage
@@ -35,22 +36,12 @@ public class QueryExecutor {
             Thread.sleep(100);
 
             recording.start();
-//            List<MemoryPoolMXBean> heapPoolsBefore = MemUtil.heapPools();
-//            long altBefore = MemUtil.getUsage();
-//            long before = MemUtil.usedHeapBytes();
             long t0 = System.nanoTime();
 
             // Execute the query
             T result = supplier.get();
 
             long elapsed = System.nanoTime() - t0;
-//            System.gc();
-//            Thread.sleep(100);
-
-//            long altAfter = MemUtil.getUsage();
-//            long after = MemUtil.usedHeapBytes();
-//            List<MemoryPoolMXBean> heapPoolsAfter = MemUtil.heapPools();
-//            long diff = after - before;
 
             recording.stop();
             tempJfrFile = Files.createTempFile("query-execution", ".jfr");
@@ -60,25 +51,6 @@ public class QueryExecutor {
 
             response.put("delta", jfrStats.get("totalAllocated"));
             response.put("jfr", jfrStats);
-//            response.put("altBefore", altBefore);
-//            response.put("altAfter", altAfter);
-//            response.put("altDiff", altAfter - altBefore);
-//            response.put("memoryBefore", heapPoolsBefore.stream()
-//                    .map(p -> Map.of(
-//                            "name", p.getName(),
-//                            "used", p.getUsage().getUsed(),
-//                            "committed", p.getUsage().getCommitted(),
-//                            "max", p.getUsage().getMax(),
-//                            "type", p.getType().name()))
-//                    .toList());
-//            response.put("memoryAfter", heapPoolsAfter.stream()
-//                    .map(p -> Map.of(
-//                            "name", p.getName(),
-//                            "used", p.getUsage().getUsed(),
-//                            "committed", p.getUsage().getCommitted(),
-//                            "max", p.getUsage().getMax(),
-//                            "type", p.getType().name()))
-//                    .toList());
             response.put("elapsed", elapsed / 1_000_000.0); // Convert to milliseconds
             response.put("status", "success");
             response.put("result", result.size());
@@ -88,8 +60,10 @@ public class QueryExecutor {
         } finally {
             recording.close();
             try {
-                if (tempJfrFile != null) Files.deleteIfExists(tempJfrFile);
-            } catch (IOException ignored) {}
+                if (tempJfrFile != null)
+                    Files.deleteIfExists(tempJfrFile);
+            } catch (IOException ignored) {
+            }
         }
 
         return response;
@@ -127,7 +101,8 @@ public class QueryExecutor {
                     }
                 }
             }
-        } catch (Exception ignored) {}
+        } catch (Exception ignored) {
+        }
 
         jfrStats.put("heapUsedAvg", heapSamples > 0 ? totalHeapUsed / heapSamples : 0);
         jfrStats.put("gcCount", gcCount);

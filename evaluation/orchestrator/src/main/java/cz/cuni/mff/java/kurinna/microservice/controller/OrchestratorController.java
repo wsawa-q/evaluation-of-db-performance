@@ -13,6 +13,8 @@ import org.springframework.web.bind.annotation.*;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static cz.cuni.mff.java.kurinna.microservice.utils.Utils.ALL_SERVICES;
+
 @RestController
 @RequestMapping("/orchestrator")
 public class OrchestratorController {
@@ -23,7 +25,9 @@ public class OrchestratorController {
     private final JdbcService jdbcService;
     private final JooqService jooqService;
 
-    public OrchestratorController(MyBatisService myBatisService, SpringDataJpaService springDataJpaService, CayenneService cayenneService, EbeanService ebeanService, JdbcService jdbcService, JooqService jooqService) {
+    public OrchestratorController(MyBatisService myBatisService, SpringDataJpaService springDataJpaService,
+            CayenneService cayenneService, EbeanService ebeanService, JdbcService jdbcService,
+            JooqService jooqService) {
         this.myBatisService = myBatisService;
         this.springDataJpaService = springDataJpaService;
         this.cayenneService = cayenneService;
@@ -32,70 +36,19 @@ public class OrchestratorController {
         this.jooqService = jooqService;
     }
 
-
-    private static final List<String> ALL_SERVICES = List.of(
-            "myBatis","springDataJpa","cayenne","ebean","jdbc","jooq"
-    );
-
     private Set<String> parseServices(Optional<String> servicesOpt) {
+        List<String> allServicesList = Arrays.asList(ALL_SERVICES);
         return servicesOpt
                 .map(s -> Arrays.stream(s.split(","))
                         .map(String::trim)
-                        .filter(ALL_SERVICES::contains)
-                        .collect(Collectors.toCollection(LinkedHashSet::new))
-                )
-                .orElse(new LinkedHashSet<>(ALL_SERVICES));
+                        .filter(allServicesList::contains)
+                        .collect(Collectors.toCollection(LinkedHashSet::new)))
+                .orElse(new LinkedHashSet<>(allServicesList));
     }
 
     @GetMapping("/health")
     public String healthCheck() {
         return "OK";
-    }
-
-    @GetMapping("/")
-    public ResponseEntity<Map<String, Object>> index() {
-        Map<String, Object> response = new LinkedHashMap<>();
-        SortedMap<String, String> queries = new TreeMap<>();
-
-        // TPC-H Queries
-        queries.put("/q1", "Q1) Pricing Summary Report Query");
-        queries.put("/q2", "Q2) Minimum Cost Supplier Query");
-        queries.put("/q3", "Q3) Shipping Priority Query");
-        queries.put("/q4", "Q4) Order Priority Checking Query");
-        queries.put("/q5", "Q5) Local Supplier Volume Query");
-
-        // A) Selection, Projection, Source (of data)
-        queries.put("/a1", "A1) Non-Indexed Columns");
-        queries.put("/a2", "A2) Non-Indexed Columns — Range Query");
-        queries.put("/a3", "A3) Indexed Columns");
-        queries.put("/a4", "A4) Indexed Columns — Range Query");
-
-        // B) Aggregation
-        queries.put("/b1", "B1) COUNT");
-        queries.put("/b2", "B2) MAX");
-
-        // C) Joins
-        queries.put("/c1", "C1) Non-Indexed Columns");
-        queries.put("/c2", "C2) Indexed Columns");
-        queries.put("/c3", "C3) Complex Join 1");
-        queries.put("/c4", "C4) Complex Join 2");
-        queries.put("/c5", "C5) Left Outer Join");
-
-        // D) Set operations
-        queries.put("/d1", "D1) UNION");
-        queries.put("/d2", "D2) INTERSECT");
-        queries.put("/d3", "D3) DIFFERENCE");
-
-        // E) Result Modification
-        queries.put("/e1", "E1) Non-Indexed Columns Sorting");
-        queries.put("/e2", "E2) Indexed Columns Sorting");
-        queries.put("/e3", "E3) Distinct");
-
-        response.put("available_queries", queries);
-        response.put("description", "This API allows you to execute, time, and measure memory usage of various SQL queries across different database access technologies.");
-        response.put("instructions", "Append any of the query endpoints to the base URL to execute that query and see timing and memory usage results.");
-
-        return ResponseEntity.ok(response);
     }
 
     @GetMapping(value = "/q1", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -105,21 +58,19 @@ public class OrchestratorController {
         Set<String> selected = parseServices(services);
         int rep = parseRepetitions(repetitions);
         Map<String, Object> results = createResultsMap(
-            "Q1) Pricing Summary Report Query",
-            "TPC-H Q1 query that reports pricing summary for all items shipped before a given date."
-        );
+                "Q1) Pricing Summary Report Query",
+                "TPC-H Q1 query that reports pricing summary for all items shipped before a given date.");
 
         executeQueriesAcrossAllServices(
-            results,
-            rep,
-            selected,
-            myBatisService::getPricingSummary,
-            springDataJpaService::getPricingSummary,
-            cayenneService::getPricingSummary,
-            ebeanService::getPricingSummary,
-            jdbcService::getPricingSummary,
-            jooqService::getPricingSummary
-        );
+                results,
+                rep,
+                selected,
+                myBatisService::getPricingSummary,
+                springDataJpaService::getPricingSummary,
+                cayenneService::getPricingSummary,
+                ebeanService::getPricingSummary,
+                jdbcService::getPricingSummary,
+                jooqService::getPricingSummary);
 
         return ResponseEntity.ok(results);
     }
@@ -131,21 +82,19 @@ public class OrchestratorController {
         Set<String> selected = parseServices(services);
         int rep = parseRepetitions(repetitions);
         Map<String, Object> results = createResultsMap(
-            "Q2) Minimum Cost Supplier Query",
-            "TPC-H Q2 query that finds suppliers who can supply parts of a given type and size at minimum cost."
-        );
+                "Q2) Minimum Cost Supplier Query",
+                "TPC-H Q2 query that finds suppliers who can supply parts of a given type and size at minimum cost.");
 
         executeQueriesAcrossAllServices(
-            results,
-            rep,
-            selected,
-            myBatisService::getMinimumCostSupplier,
-            springDataJpaService::getMinimumCostSupplier,
-            cayenneService::getMinimumCostSupplier,
-            ebeanService::getMinimumCostSupplier,
-            jdbcService::getMinimumCostSupplier,
-            jooqService::getMinimumCostSupplier
-        );
+                results,
+                rep,
+                selected,
+                myBatisService::getMinimumCostSupplier,
+                springDataJpaService::getMinimumCostSupplier,
+                cayenneService::getMinimumCostSupplier,
+                ebeanService::getMinimumCostSupplier,
+                jdbcService::getMinimumCostSupplier,
+                jooqService::getMinimumCostSupplier);
 
         return ResponseEntity.ok(results);
     }
@@ -157,21 +106,19 @@ public class OrchestratorController {
         Set<String> selected = parseServices(services);
         int rep = parseRepetitions(repetitions);
         Map<String, Object> results = createResultsMap(
-            "Q3) Shipping Priority Query",
-            "TPC-H Q3 query that retrieves the shipping priority and potential revenue of orders."
-        );
+                "Q3) Shipping Priority Query",
+                "TPC-H Q3 query that retrieves the shipping priority and potential revenue of orders.");
 
         executeQueriesAcrossAllServices(
-            results,
-            rep,
-            selected,
-            myBatisService::getShippingPriority,
-            springDataJpaService::getShippingPriority,
-            cayenneService::getShippingPriority,
-            ebeanService::getShippingPriority,
-            jdbcService::getShippingPriority,
-            jooqService::getShippingPriority
-        );
+                results,
+                rep,
+                selected,
+                myBatisService::getShippingPriority,
+                springDataJpaService::getShippingPriority,
+                cayenneService::getShippingPriority,
+                ebeanService::getShippingPriority,
+                jdbcService::getShippingPriority,
+                jooqService::getShippingPriority);
 
         return ResponseEntity.ok(results);
     }
@@ -183,21 +130,19 @@ public class OrchestratorController {
         Set<String> selected = parseServices(services);
         int rep = parseRepetitions(repetitions);
         Map<String, Object> results = createResultsMap(
-            "Q4) Order Priority Checking Query",
-            "TPC-H Q4 query that counts orders with at least one lineitem that was received later than committed."
-        );
+                "Q4) Order Priority Checking Query",
+                "TPC-H Q4 query that counts orders with at least one lineitem that was received later than committed.");
 
         executeQueriesAcrossAllServices(
-            results,
-            rep,
-            selected,
-            myBatisService::getOrderPriorityChecking,
-            springDataJpaService::getOrderPriorityChecking,
-            cayenneService::getOrderPriorityChecking,
-            ebeanService::getOrderPriorityChecking,
-            jdbcService::getOrderPriorityChecking,
-            jooqService::getOrderPriorityChecking
-        );
+                results,
+                rep,
+                selected,
+                myBatisService::getOrderPriorityChecking,
+                springDataJpaService::getOrderPriorityChecking,
+                cayenneService::getOrderPriorityChecking,
+                ebeanService::getOrderPriorityChecking,
+                jdbcService::getOrderPriorityChecking,
+                jooqService::getOrderPriorityChecking);
 
         return ResponseEntity.ok(results);
     }
@@ -209,21 +154,19 @@ public class OrchestratorController {
         Set<String> selected = parseServices(services);
         int rep = parseRepetitions(repetitions);
         Map<String, Object> results = createResultsMap(
-            "Q5) Local Supplier Volume Query",
-            "TPC-H Q5 query that lists the revenue volume for each nation in a region where suppliers and customers are from the same nation."
-        );
+                "Q5) Local Supplier Volume Query",
+                "TPC-H Q5 query that lists the revenue volume for each nation in a region where suppliers and customers are from the same nation.");
 
         executeQueriesAcrossAllServices(
-            results,
-            rep,
-            selected,
-            myBatisService::getLocalSupplierVolume,
-            springDataJpaService::getLocalSupplierVolume,
-            cayenneService::getLocalSupplierVolume,
-            ebeanService::getLocalSupplierVolume,
-            jdbcService::getLocalSupplierVolume,
-            jooqService::getLocalSupplierVolume
-        );
+                results,
+                rep,
+                selected,
+                myBatisService::getLocalSupplierVolume,
+                springDataJpaService::getLocalSupplierVolume,
+                cayenneService::getLocalSupplierVolume,
+                ebeanService::getLocalSupplierVolume,
+                jdbcService::getLocalSupplierVolume,
+                jooqService::getLocalSupplierVolume);
 
         return ResponseEntity.ok(results);
     }
@@ -237,21 +180,19 @@ public class OrchestratorController {
         Set<String> selected = parseServices(services);
         int rep = parseRepetitions(repetitions);
         Map<String, Object> results = createResultsMap(
-            "A1) Non-Indexed Columns",
-            "SELECT * FROM lineitem WHERE l_extendedprice < 1000.0;"
-        );
+                "A1) Non-Indexed Columns",
+                "SELECT * FROM lineitem WHERE l_extendedprice < 1000.0;");
 
         executeQueriesAcrossAllServices(
-            results,
-            rep,
-            selected,
-            myBatisService::executeQueryA1,
-            springDataJpaService::executeQueryA1,
-            cayenneService::executeQueryA1,
-            ebeanService::executeQueryA1,
-            jdbcService::executeQueryA1,
-            jooqService::executeQueryA1
-        );
+                results,
+                rep,
+                selected,
+                myBatisService::executeQueryA1,
+                springDataJpaService::executeQueryA1,
+                cayenneService::executeQueryA1,
+                ebeanService::executeQueryA1,
+                jdbcService::executeQueryA1,
+                jooqService::executeQueryA1);
 
         return ResponseEntity.ok(results);
     }
@@ -263,21 +204,19 @@ public class OrchestratorController {
         Set<String> selected = parseServices(services);
         int rep = parseRepetitions(repetitions);
         Map<String, Object> results = createResultsMap(
-            "A2) Non-Indexed Columns — Range Query",
-            "SELECT * FROM orders WHERE o_orderdate BETWEEN '1996-01-01' AND '1996-12-31';"
-        );
+                "A2) Non-Indexed Columns — Range Query",
+                "SELECT * FROM orders WHERE o_orderdate BETWEEN '1996-01-01' AND '1996-12-31';");
 
         executeQueriesAcrossAllServices(
-            results,
-            rep,
-            selected,
-            myBatisService::executeQueryA2,
-            springDataJpaService::executeQueryA2,
-            cayenneService::executeQueryA2,
-            ebeanService::executeQueryA2,
-            jdbcService::executeQueryA2,
-            jooqService::executeQueryA2
-        );
+                results,
+                rep,
+                selected,
+                myBatisService::executeQueryA2,
+                springDataJpaService::executeQueryA2,
+                cayenneService::executeQueryA2,
+                ebeanService::executeQueryA2,
+                jdbcService::executeQueryA2,
+                jooqService::executeQueryA2);
 
         return ResponseEntity.ok(results);
     }
@@ -289,21 +228,19 @@ public class OrchestratorController {
         Set<String> selected = parseServices(services);
         int rep = parseRepetitions(repetitions);
         Map<String, Object> results = createResultsMap(
-            "A3) Indexed Columns",
-            "SELECT * FROM customer WHERE c_custkey = 1000;"
-        );
+                "A3) Indexed Columns",
+                "SELECT * FROM customer WHERE c_custkey = 1000;");
 
         executeQueriesAcrossAllServices(
-            results,
-            rep,
-            selected,
-            myBatisService::executeQueryA3,
-            springDataJpaService::executeQueryA3,
-            cayenneService::executeQueryA3,
-            ebeanService::executeQueryA3,
-            jdbcService::executeQueryA3,
-            jooqService::executeQueryA3
-        );
+                results,
+                rep,
+                selected,
+                myBatisService::executeQueryA3,
+                springDataJpaService::executeQueryA3,
+                cayenneService::executeQueryA3,
+                ebeanService::executeQueryA3,
+                jdbcService::executeQueryA3,
+                jooqService::executeQueryA3);
 
         return ResponseEntity.ok(results);
     }
@@ -315,21 +252,19 @@ public class OrchestratorController {
         Set<String> selected = parseServices(services);
         int rep = parseRepetitions(repetitions);
         Map<String, Object> results = createResultsMap(
-            "A4) Indexed Columns — Range Query",
-            "SELECT * FROM orders WHERE o_orderkey BETWEEN 1000 AND 2000;"
-        );
+                "A4) Indexed Columns — Range Query",
+                "SELECT * FROM orders WHERE o_orderkey BETWEEN 1000 AND 2000;");
 
         executeQueriesAcrossAllServices(
-            results,
-            rep,
-            selected,
-            myBatisService::executeQueryA4,
-            springDataJpaService::executeQueryA4,
-            cayenneService::executeQueryA4,
-            ebeanService::executeQueryA4,
-            jdbcService::executeQueryA4,
-            jooqService::executeQueryA4
-        );
+                results,
+                rep,
+                selected,
+                myBatisService::executeQueryA4,
+                springDataJpaService::executeQueryA4,
+                cayenneService::executeQueryA4,
+                ebeanService::executeQueryA4,
+                jdbcService::executeQueryA4,
+                jooqService::executeQueryA4);
 
         return ResponseEntity.ok(results);
     }
@@ -343,21 +278,19 @@ public class OrchestratorController {
         Set<String> selected = parseServices(services);
         int rep = parseRepetitions(repetitions);
         Map<String, Object> results = createResultsMap(
-            "B1) COUNT",
-            "SELECT COUNT(*) AS order_count FROM orders WHERE o_orderdate BETWEEN '1996-01-01' AND '1996-12-31';"
-        );
+                "B1) COUNT",
+                "SELECT COUNT(*) AS order_count FROM orders WHERE o_orderdate BETWEEN '1996-01-01' AND '1996-12-31';");
 
         executeQueriesAcrossAllServices(
-            results,
-            rep,
-            selected,
-            myBatisService::executeQueryB1,
-            springDataJpaService::executeQueryB1,
-            cayenneService::executeQueryB1,
-            ebeanService::executeQueryB1,
-            jdbcService::executeQueryB1,
-            jooqService::executeQueryB1
-        );
+                results,
+                rep,
+                selected,
+                myBatisService::executeQueryB1,
+                springDataJpaService::executeQueryB1,
+                cayenneService::executeQueryB1,
+                ebeanService::executeQueryB1,
+                jdbcService::executeQueryB1,
+                jooqService::executeQueryB1);
 
         return ResponseEntity.ok(results);
     }
@@ -369,21 +302,19 @@ public class OrchestratorController {
         Set<String> selected = parseServices(services);
         int rep = parseRepetitions(repetitions);
         Map<String, Object> results = createResultsMap(
-            "B2) MAX",
-            "SELECT MAX(l_extendedprice) AS max_price FROM lineitem;"
-        );
+                "B2) MAX",
+                "SELECT MAX(l_extendedprice) AS max_price FROM lineitem;");
 
         executeQueriesAcrossAllServices(
-            results,
-            rep,
-            selected,
-            myBatisService::executeQueryB2,
-            springDataJpaService::executeQueryB2,
-            cayenneService::executeQueryB2,
-            ebeanService::executeQueryB2,
-            jdbcService::executeQueryB2,
-            jooqService::executeQueryB2
-        );
+                results,
+                rep,
+                selected,
+                myBatisService::executeQueryB2,
+                springDataJpaService::executeQueryB2,
+                cayenneService::executeQueryB2,
+                ebeanService::executeQueryB2,
+                jdbcService::executeQueryB2,
+                jooqService::executeQueryB2);
 
         return ResponseEntity.ok(results);
     }
@@ -397,21 +328,19 @@ public class OrchestratorController {
         Set<String> selected = parseServices(services);
         int rep = parseRepetitions(repetitions);
         Map<String, Object> results = createResultsMap(
-            "C1) Non-Indexed Columns",
-            "SELECT c.c_name, o.o_orderdate, o.o_totalprice FROM customer c, orders o WHERE c.c_mktsegment = 'BUILDING' AND c.c_custkey = o.o_custkey;"
-        );
+                "C1) Non-Indexed Columns",
+                "SELECT c.c_name, o.o_orderdate, o.o_totalprice FROM customer c, orders o WHERE c.c_mktsegment = 'BUILDING' AND c.c_custkey = o.o_custkey;");
 
         executeQueriesAcrossAllServices(
-            results,
-            rep,
-            selected,
-            myBatisService::executeQueryC1,
-            springDataJpaService::executeQueryC1,
-            cayenneService::executeQueryC1,
-            ebeanService::executeQueryC1,
-            jdbcService::executeQueryC1,
-            jooqService::executeQueryC1
-        );
+                results,
+                rep,
+                selected,
+                myBatisService::executeQueryC1,
+                springDataJpaService::executeQueryC1,
+                cayenneService::executeQueryC1,
+                ebeanService::executeQueryC1,
+                jdbcService::executeQueryC1,
+                jooqService::executeQueryC1);
 
         return ResponseEntity.ok(results);
     }
@@ -423,21 +352,19 @@ public class OrchestratorController {
         Set<String> selected = parseServices(services);
         int rep = parseRepetitions(repetitions);
         Map<String, Object> results = createResultsMap(
-            "C2) Indexed Columns",
-            "SELECT c.c_name, o.o_orderdate, o.o_totalprice FROM customer c JOIN orders o ON c.c_custkey = o.o_custkey WHERE o.o_orderkey BETWEEN 1000 AND 2000;"
-        );
+                "C2) Indexed Columns",
+                "SELECT c.c_name, o.o_orderdate, o.o_totalprice FROM customer c JOIN orders o ON c.c_custkey = o.o_custkey WHERE o.o_orderkey BETWEEN 1000 AND 2000;");
 
         executeQueriesAcrossAllServices(
-            results,
-            rep,
-            selected,
-            myBatisService::executeQueryC2,
-            springDataJpaService::executeQueryC2,
-            cayenneService::executeQueryC2,
-            ebeanService::executeQueryC2,
-            jdbcService::executeQueryC2,
-            jooqService::executeQueryC2
-        );
+                results,
+                rep,
+                selected,
+                myBatisService::executeQueryC2,
+                springDataJpaService::executeQueryC2,
+                cayenneService::executeQueryC2,
+                ebeanService::executeQueryC2,
+                jdbcService::executeQueryC2,
+                jooqService::executeQueryC2);
 
         return ResponseEntity.ok(results);
     }
@@ -449,21 +376,19 @@ public class OrchestratorController {
         Set<String> selected = parseServices(services);
         int rep = parseRepetitions(repetitions);
         Map<String, Object> results = createResultsMap(
-            "C3) Complex Join 1",
-            "SELECT c.c_name, n.n_name, o.o_orderdate, o.o_totalprice FROM customer c JOIN nation n ON c.c_nationkey = n.n_nationkey JOIN orders o ON c.c_custkey = o.o_custkey WHERE n.n_name = 'GERMANY' AND o.o_orderdate BETWEEN '1996-01-01' AND '1996-12-31';"
-        );
+                "C3) Complex Join 1",
+                "SELECT c.c_name, n.n_name, o.o_orderdate, o.o_totalprice FROM customer c JOIN nation n ON c.c_nationkey = n.n_nationkey JOIN orders o ON c.c_custkey = o.o_custkey WHERE n.n_name = 'GERMANY' AND o.o_orderdate BETWEEN '1996-01-01' AND '1996-12-31';");
 
         executeQueriesAcrossAllServices(
-            results,
-            rep,
-            selected,
-            myBatisService::executeQueryC3,
-            springDataJpaService::executeQueryC3,
-            cayenneService::executeQueryC3,
-            ebeanService::executeQueryC3,
-            jdbcService::executeQueryC3,
-            jooqService::executeQueryC3
-        );
+                results,
+                rep,
+                selected,
+                myBatisService::executeQueryC3,
+                springDataJpaService::executeQueryC3,
+                cayenneService::executeQueryC3,
+                ebeanService::executeQueryC3,
+                jdbcService::executeQueryC3,
+                jooqService::executeQueryC3);
 
         return ResponseEntity.ok(results);
     }
@@ -475,21 +400,19 @@ public class OrchestratorController {
         Set<String> selected = parseServices(services);
         int rep = parseRepetitions(repetitions);
         Map<String, Object> results = createResultsMap(
-            "C4) Complex Join 2",
-            "SELECT c.c_name, n.n_name, r.r_name, o.o_orderdate, o.o_totalprice FROM customer c JOIN nation n ON c.c_nationkey = n.n_nationkey JOIN region r ON n.n_regionkey = r.r_regionkey JOIN orders o ON c.c_custkey = o.o_custkey WHERE r.r_name = 'EUROPE' AND o.o_orderdate BETWEEN '1996-01-01' AND '1996-12-31';"
-        );
+                "C4) Complex Join 2",
+                "SELECT c.c_name, n.n_name, r.r_name, o.o_orderdate, o.o_totalprice FROM customer c JOIN nation n ON c.c_nationkey = n.n_nationkey JOIN region r ON n.n_regionkey = r.r_regionkey JOIN orders o ON c.c_custkey = o.o_custkey WHERE r.r_name = 'EUROPE' AND o.o_orderdate BETWEEN '1996-01-01' AND '1996-12-31';");
 
         executeQueriesAcrossAllServices(
-            results,
-            rep,
-            selected,
-            myBatisService::executeQueryC4,
-            springDataJpaService::executeQueryC4,
-            cayenneService::executeQueryC4,
-            ebeanService::executeQueryC4,
-            jdbcService::executeQueryC4,
-            jooqService::executeQueryC4
-        );
+                results,
+                rep,
+                selected,
+                myBatisService::executeQueryC4,
+                springDataJpaService::executeQueryC4,
+                cayenneService::executeQueryC4,
+                ebeanService::executeQueryC4,
+                jdbcService::executeQueryC4,
+                jooqService::executeQueryC4);
 
         return ResponseEntity.ok(results);
     }
@@ -501,21 +424,19 @@ public class OrchestratorController {
         Set<String> selected = parseServices(services);
         int rep = parseRepetitions(repetitions);
         Map<String, Object> results = createResultsMap(
-            "C5) Left Outer Join",
-            "SELECT c.c_custkey, c.c_name, o.o_orderkey, o.o_orderdate FROM customer c LEFT OUTER JOIN orders o ON c.c_custkey = o.o_custkey WHERE c.c_nationkey = 3;"
-        );
+                "C5) Left Outer Join",
+                "SELECT c.c_custkey, c.c_name, o.o_orderkey, o.o_orderdate FROM customer c LEFT OUTER JOIN orders o ON c.c_custkey = o.o_custkey WHERE c.c_nationkey = 3;");
 
         executeQueriesAcrossAllServices(
-            results,
-            rep,
-            selected,
-            myBatisService::executeQueryC5,
-            springDataJpaService::executeQueryC5,
-            cayenneService::executeQueryC5,
-            ebeanService::executeQueryC5,
-            jdbcService::executeQueryC5,
-            jooqService::executeQueryC5
-        );
+                results,
+                rep,
+                selected,
+                myBatisService::executeQueryC5,
+                springDataJpaService::executeQueryC5,
+                cayenneService::executeQueryC5,
+                ebeanService::executeQueryC5,
+                jdbcService::executeQueryC5,
+                jooqService::executeQueryC5);
 
         return ResponseEntity.ok(results);
     }
@@ -529,21 +450,19 @@ public class OrchestratorController {
         Set<String> selected = parseServices(services);
         int rep = parseRepetitions(repetitions);
         Map<String, Object> results = createResultsMap(
-            "D1) UNION",
-            "(SELECT c_nationkey FROM customer WHERE c_acctbal > 9000) UNION (SELECT s_nationkey FROM supplier WHERE s_acctbal > 9000);"
-        );
+                "D1) UNION",
+                "(SELECT c_nationkey FROM customer WHERE c_acctbal > 9000) UNION (SELECT s_nationkey FROM supplier WHERE s_acctbal > 9000);");
 
         executeQueriesAcrossAllServices(
-            results,
-            rep,
-            selected,
-            myBatisService::executeQueryD1,
-            springDataJpaService::executeQueryD1,
-            cayenneService::executeQueryD1,
-            ebeanService::executeQueryD1,
-            jdbcService::executeQueryD1,
-            jooqService::executeQueryD1
-        );
+                results,
+                rep,
+                selected,
+                myBatisService::executeQueryD1,
+                springDataJpaService::executeQueryD1,
+                cayenneService::executeQueryD1,
+                ebeanService::executeQueryD1,
+                jdbcService::executeQueryD1,
+                jooqService::executeQueryD1);
 
         return ResponseEntity.ok(results);
     }
@@ -555,21 +474,19 @@ public class OrchestratorController {
         Set<String> selected = parseServices(services);
         int rep = parseRepetitions(repetitions);
         Map<String, Object> results = createResultsMap(
-            "D2) INTERSECT",
-            "SELECT DISTINCT c_nationkey FROM customer WHERE c_acctbal > 9000 AND c_nationkey IN (SELECT s_nationkey FROM supplier WHERE s_acctbal > 9000);"
-        );
+                "D2) INTERSECT",
+                "SELECT DISTINCT c_nationkey FROM customer WHERE c_acctbal > 9000 AND c_nationkey IN (SELECT s_nationkey FROM supplier WHERE s_acctbal > 9000);");
 
         executeQueriesAcrossAllServices(
-            results,
-            rep,
-            selected,
-            myBatisService::executeQueryD2,
-            springDataJpaService::executeQueryD2,
-            cayenneService::executeQueryD2,
-            ebeanService::executeQueryD2,
-            jdbcService::executeQueryD2,
-            jooqService::executeQueryD2
-        );
+                results,
+                rep,
+                selected,
+                myBatisService::executeQueryD2,
+                springDataJpaService::executeQueryD2,
+                cayenneService::executeQueryD2,
+                ebeanService::executeQueryD2,
+                jdbcService::executeQueryD2,
+                jooqService::executeQueryD2);
 
         return ResponseEntity.ok(results);
     }
@@ -581,27 +498,24 @@ public class OrchestratorController {
         Set<String> selected = parseServices(services);
         int rep = parseRepetitions(repetitions);
         Map<String, Object> results = createResultsMap(
-            "D3) DIFFERENCE",
-            "SELECT DISTINCT c_nationkey FROM customer WHERE c_acctbal > 9000 AND c_nationkey NOT IN (SELECT s_nationkey FROM supplier WHERE s_acctbal > 9000);"
-        );
+                "D3) DIFFERENCE",
+                "SELECT DISTINCT c_nationkey FROM customer WHERE c_acctbal > 9000 AND c_nationkey NOT IN (SELECT s_nationkey FROM supplier WHERE s_acctbal > 9000);");
 
         executeQueriesAcrossAllServices(
-            results,
-            rep,
-            selected,
-            myBatisService::executeQueryD3,
-            springDataJpaService::executeQueryD3,
-            cayenneService::executeQueryD3,
-            ebeanService::executeQueryD3,
-            jdbcService::executeQueryD3,
-            jooqService::executeQueryD3
-        );
+                results,
+                rep,
+                selected,
+                myBatisService::executeQueryD3,
+                springDataJpaService::executeQueryD3,
+                cayenneService::executeQueryD3,
+                ebeanService::executeQueryD3,
+                jdbcService::executeQueryD3,
+                jooqService::executeQueryD3);
 
         return ResponseEntity.ok(results);
     }
 
     // E) Result Modification
-
     @GetMapping(value = "/e1", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Map<String, Object>> executeQueryE1(
             @RequestParam Optional<String> repetitions,
@@ -609,21 +523,19 @@ public class OrchestratorController {
         Set<String> selected = parseServices(services);
         int rep = parseRepetitions(repetitions);
         Map<String, Object> results = createResultsMap(
-            "E1) Non-Indexed Columns Sorting",
-            "SELECT c_name, c_address, c_acctbal FROM customer ORDER BY c_acctbal DESC LIMIT 10;"
-        );
+                "E1) Non-Indexed Columns Sorting",
+                "SELECT c_name, c_address, c_acctbal FROM customer ORDER BY c_acctbal DESC LIMIT 10;");
 
         executeQueriesAcrossAllServices(
-            results,
-            rep,
-            selected,
-            myBatisService::executeQueryE1,
-            springDataJpaService::executeQueryE1,
-            cayenneService::executeQueryE1,
-            ebeanService::executeQueryE1,
-            jdbcService::executeQueryE1,
-            jooqService::executeQueryE1
-        );
+                results,
+                rep,
+                selected,
+                myBatisService::executeQueryE1,
+                springDataJpaService::executeQueryE1,
+                cayenneService::executeQueryE1,
+                ebeanService::executeQueryE1,
+                jdbcService::executeQueryE1,
+                jooqService::executeQueryE1);
 
         return ResponseEntity.ok(results);
     }
@@ -635,21 +547,19 @@ public class OrchestratorController {
         Set<String> selected = parseServices(services);
         int rep = parseRepetitions(repetitions);
         Map<String, Object> results = createResultsMap(
-            "E2) Indexed Columns Sorting",
-            "SELECT o_orderkey, o_custkey, o_orderdate, o_totalprice FROM orders ORDER BY o_orderkey LIMIT 20;"
-        );
+                "E2) Indexed Columns Sorting",
+                "SELECT o_orderkey, o_custkey, o_orderdate, o_totalprice FROM orders ORDER BY o_orderkey LIMIT 20;");
 
         executeQueriesAcrossAllServices(
-            results,
-            rep,
-            selected,
-            myBatisService::executeQueryE2,
-            springDataJpaService::executeQueryE2,
-            cayenneService::executeQueryE2,
-            ebeanService::executeQueryE2,
-            jdbcService::executeQueryE2,
-            jooqService::executeQueryE2
-        );
+                results,
+                rep,
+                selected,
+                myBatisService::executeQueryE2,
+                springDataJpaService::executeQueryE2,
+                cayenneService::executeQueryE2,
+                ebeanService::executeQueryE2,
+                jdbcService::executeQueryE2,
+                jooqService::executeQueryE2);
 
         return ResponseEntity.ok(results);
     }
@@ -661,21 +571,19 @@ public class OrchestratorController {
         Set<String> selected = parseServices(services);
         int rep = parseRepetitions(repetitions);
         Map<String, Object> results = createResultsMap(
-            "E3) Distinct",
-            "SELECT DISTINCT c_nationkey, c_mktsegment FROM customer;"
-        );
+                "E3) Distinct",
+                "SELECT DISTINCT c_nationkey, c_mktsegment FROM customer;");
 
         executeQueriesAcrossAllServices(
-            results,
-            rep,
-            selected,
-            myBatisService::executeQueryE3,
-            springDataJpaService::executeQueryE3,
-            cayenneService::executeQueryE3,
-            ebeanService::executeQueryE3,
-            jdbcService::executeQueryE3,
-            jooqService::executeQueryE3
-        );
+                results,
+                rep,
+                selected,
+                myBatisService::executeQueryE3,
+                springDataJpaService::executeQueryE3,
+                cayenneService::executeQueryE3,
+                ebeanService::executeQueryE3,
+                jdbcService::executeQueryE3,
+                jooqService::executeQueryE3);
 
         return ResponseEntity.ok(results);
     }
@@ -684,7 +592,8 @@ public class OrchestratorController {
      * Helper method to parse the repetitions parameter
      *
      * @param repetitions Optional parameter for number of repetitions
-     * @return The parsed number of repetitions, defaulting to 1 if not provided or invalid
+     * @return The parsed number of repetitions, defaulting to 1 if not provided or
+     *         invalid
      */
     private int parseRepetitions(Optional<String> repetitions) {
         int rep = 1;
@@ -699,7 +608,7 @@ public class OrchestratorController {
     /**
      * Helper method to create a results map with query info
      *
-     * @param queryName The name of the query
+     * @param queryName   The name of the query
      * @param description The description of the query
      * @return A map containing the query info
      */
@@ -713,14 +622,14 @@ public class OrchestratorController {
     /**
      * Helper method to execute queries across all services
      *
-     * @param results The map to store the results
-     * @param repetitions The number of times to repeat the query execution
-     * @param myBatisQuery The MyBatis query executor
+     * @param results            The map to store the results
+     * @param repetitions        The number of times to repeat the query execution
+     * @param myBatisQuery       The MyBatis query executor
      * @param springDataJpaQuery The SpringDataJpa query executor
-     * @param cayenneQuery The Cayenne query executor
-     * @param ebeanQuery The Ebean query executor
-     * @param jdbcQuery The JDBC query executor
-     * @param jooqQuery The JOOQ query executor
+     * @param cayenneQuery       The Cayenne query executor
+     * @param ebeanQuery         The Ebean query executor
+     * @param jdbcQuery          The JDBC query executor
+     * @param jooqQuery          The JOOQ query executor
      */
     private void executeQueriesAcrossAllServices(
             Map<String, Object> results,
@@ -754,14 +663,16 @@ public class OrchestratorController {
     }
 
     /**
-     * Helper method to execute a query and extract its execution time and memory usage from the response
+     * Helper method to execute a query and extract its execution time and memory
+     * usage from the response
      *
-     * @param serviceName The name of the service executing the query
+     * @param serviceName   The name of the service executing the query
      * @param queryExecutor A lambda that executes the query
-     * @param results The map to store the results
-     * @param repetitions The number of times to repeat the query execution
+     * @param results       The map to store the results
+     * @param repetitions   The number of times to repeat the query execution
      */
-    private void executeQueryWithTiming(String serviceName, QueryExecutor queryExecutor, Map<String, Object> results, int repetitions) {
+    private void executeQueryWithTiming(String serviceName, QueryExecutor queryExecutor, Map<String, Object> results,
+            int repetitions) {
         Map<String, Object> serviceResults = new LinkedHashMap<>();
         double totalTime = 0.0;
         double totalMemory = 0.0;
@@ -770,14 +681,6 @@ public class OrchestratorController {
         double maxTime = 0.0;
         double minTime = 0.0;
         List<Map<String, Object>> iterationResultsList = new ArrayList<>();
-
-        // warm up the JVM
-//        try {
-//            queryExecutor.execute();
-//        } catch (Exception e) {
-//            // Ignore any exceptions during warm-up
-//            System.out.println("Warm-up failed for " + serviceName + ": " + e.getMessage());
-//        }
 
         for (int i = 0; i < repetitions; i++) {
             try {
@@ -826,14 +729,13 @@ public class OrchestratorController {
         serviceResults.put("repetition", repetitions);
 
         double averageTime = totalTime / repetitions;
-        double averageTimeInMs = averageTime / 1000000;
-        serviceResults.put("averageExecutionTime", averageTimeInMs);
+        serviceResults.put("averageExecutionTime", averageTime);
 
         double averageMemory = totalMemory / repetitions;
         serviceResults.put("averageMemoryUsage", averageMemory);
 
-        serviceResults.put("maxExecutionTime", maxTime / 1000000);
-        serviceResults.put("minExecutionTime", minTime / 1000000);
+        serviceResults.put("maxExecutionTime", maxTime);
+        serviceResults.put("minExecutionTime", minTime);
         serviceResults.put("maxMemoryUsage", maxMemory);
         serviceResults.put("minMemoryUsage", minMemory);
         serviceResults.put("iterationResults", iterationResultsList);
@@ -849,7 +751,3 @@ public class OrchestratorController {
         Map<String, Object> execute() throws Exception;
     }
 }
-
-
-
-

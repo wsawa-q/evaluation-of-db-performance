@@ -14,7 +14,7 @@
 
     <groupId>cz.cuni.mff.java.kurinna</groupId>
     <artifactId>microservice-mysql-cayenne</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>1.0.0</version>
     <name>microservice-mysql-cayenne</name>
     <packaging>jar</packaging>
 
@@ -107,35 +107,15 @@
                     <modelFile>${project.basedir}/src/main/resources/cayenne-project.xml</modelFile>
                 </configuration>
             </plugin>
-
-<!--            <plugin>-->
-<!--                <groupId>org.apache.cayenne.plugins</groupId>-->
-<!--                <artifactId>cayenne-maven-plugin</artifactId>-->
-<!--                <version>${cayenne.version}</version>-->
-
-<!--                <configuration>-->
-<!--                    <dataSource>-->
-<!--                        <driver>com.mysql.jdbc.Driver</driver>-->
-<!--                        <url>jdbc:mysql://localhost:3306/db</url>-->
-<!--                        <username>admin</username>-->
-<!--                        <password>password</password>-->
-<!--                    </dataSource>-->
-<!--                    <cayenneProject>${project.basedir}/src/main/resources/cayenne-project.xml</cayenneProject>-->
-<!--                    <map>${project.basedir}/src/main/resources/datamap.map.xml</map>-->
-<!--                    <dbImport>-->
-<!--                        <defaultPackage>cz.cuni.mff.java.kurinna.microservice.model</defaultPackage>-->
-<!--                        <catalog>db</catalog>-->
-
-<!--                    </dbImport>-->
-<!--                </configuration>-->
-<!--                <dependencies>-->
-<!--                    <dependency>-->
-<!--                        <groupId>com.mysql</groupId>-->
-<!--                        <artifactId>mysql-connector-j</artifactId>-->
-<!--                        <version>8.0.33</version>-->
-<!--                    </dependency>-->
-<!--                </dependencies>-->
-<!--            </plugin>-->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <version>3.10.1</version>
+                <configuration>
+                    <sourcepath>${project.basedir}/src/main/java;${project.basedir}/../common/src/main/java</sourcepath>
+                    <source>${java.version}</source>
+                </configuration>
+            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>

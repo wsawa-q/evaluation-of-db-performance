@@ -8,25 +8,60 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Repository interface for executing SQL queries using MyBatis.
+ * This interface defines methods for various types of database operations and queries,
+ * including simple selects, joins, aggregations, and TPC-H benchmark queries.
+ * Each method is annotated with @Select to specify the SQL query to execute.
+ */
 @Mapper
 public interface UniversalMapper {
-    // A1) Non-Indexed Columns
+    /**
+     * A1) Executes a query on non-indexed columns.
+     * Retrieves all records from the lineitem table.
+     *
+     * @return List of maps containing all lineitem records
+     */
     @Select("SELECT * FROM lineitem")
     List<Map<String, Object>> a1();
 
-    // A2) Non-Indexed Columns — Range Query
+    /**
+     * A2) Executes a range query on non-indexed columns.
+     * Retrieves orders within a specified date range.
+     *
+     * @param startDate The start date of the range (inclusive)
+     * @param endDate The end date of the range (inclusive)
+     * @return List of maps containing orders within the date range
+     */
     @Select("SELECT * FROM orders WHERE o_orderdate BETWEEN #{startDate} AND #{endDate}")
     List<Map<String, Object>> a2(@Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate);
 
-    // A3) Indexed Columns
+    /**
+     * A3) Executes a query on indexed columns.
+     * Retrieves all records from the customer table.
+     *
+     * @return List of maps containing all customer records
+     */
     @Select("SELECT * FROM customer")
     List<Map<String, Object>> a3();
 
-    // A4) Indexed Columns — Range Query
+    /**
+     * A4) Executes a range query on indexed columns.
+     * Retrieves orders within a specified order key range.
+     *
+     * @param minOrderKey The minimum order key (inclusive)
+     * @param maxOrderKey The maximum order key (inclusive)
+     * @return List of maps containing orders within the order key range
+     */
     @Select("SELECT * FROM orders WHERE o_orderkey BETWEEN #{minOrderKey} AND #{maxOrderKey}")
     List<Map<String, Object>> a4(@Param("minOrderKey") int minOrderKey, @Param("maxOrderKey") int maxOrderKey);
 
-    // B1) COUNT
+    /**
+     * B1) Executes a COUNT aggregation query.
+     * Counts orders grouped by month and returns the count for each month.
+     *
+     * @return List of maps containing order counts by month
+     */
     @Select("""
             SELECT COUNT(o.o_orderkey) AS order_count, 
                    DATE_FORMAT(o.o_orderdate, '%Y-%m') AS order_month
@@ -35,7 +70,12 @@ public interface UniversalMapper {
             """)
     List<Map<String, Object>> b1();
 
-    // B2) MAX
+    /**
+     * B2) Executes a MAX aggregation query.
+     * Finds the maximum extended price for line items grouped by ship month.
+     *
+     * @return List of maps containing maximum prices by ship month
+     */
     @Select("""
             SELECT DATE_FORMAT(l.l_shipdate, '%Y-%m') AS ship_month,
                    MAX(l.l_extendedprice) AS max_price
@@ -44,14 +84,24 @@ public interface UniversalMapper {
             """)
     List<Map<String, Object>> b2();
 
-    // C1) Non-Indexed Columns
+    /**
+     * C1) Executes a join query on non-indexed columns.
+     * Performs a Cartesian product between customer and orders tables.
+     *
+     * @return List of maps containing customer names and order details
+     */
     @Select("""
             SELECT c.c_name, o.o_orderdate, o.o_totalprice
             FROM customer c, orders o
             """)
     List<Map<String, Object>> c1();
 
-    // C2) Indexed Columns
+    /**
+     * C2) Executes a join query on indexed columns.
+     * Joins customer and orders tables on customer key.
+     *
+     * @return List of maps containing customer names and order details
+     */
     @Select("""
             SELECT c.c_name, o.o_orderdate, o.o_totalprice
             FROM customer c
@@ -59,7 +109,12 @@ public interface UniversalMapper {
             """)
     List<Map<String, Object>> c2();
 
-    // C3) Complex Join 1
+    /**
+     * C3) Executes a complex join query (first level).
+     * Joins customer, nation, and orders tables.
+     *
+     * @return List of maps containing customer names, nation names, and order details
+     */
     @Select("""
             SELECT c.c_name, n.n_name, o.o_orderdate, o.o_totalprice
             FROM customer c
@@ -68,7 +123,12 @@ public interface UniversalMapper {
             """)
     List<Map<String, Object>> c3();
 
-    // C4) Complex Join 2
+    /**
+     * C4) Executes a complex join query (second level).
+     * Joins customer, nation, region, and orders tables.
+     *
+     * @return List of maps containing customer names, nation names, region names, and order details
+     */
     @Select("""
             SELECT c.c_name, n.n_name, r.r_name, o.o_orderdate, o.o_totalprice
             FROM customer c
@@ -78,7 +138,12 @@ public interface UniversalMapper {
             """)
     List<Map<String, Object>> c4();
 
-    // C5) Left Outer Join
+    /**
+     * C5) Executes a left outer join query.
+     * Performs a left outer join between customer and orders tables.
+     *
+     * @return List of maps containing customer details and their orders (if any)
+     */
     @Select("""
             SELECT c.c_custkey, c.c_name, o.o_orderkey, o.o_orderdate
             FROM customer c
@@ -86,7 +151,12 @@ public interface UniversalMapper {
             """)
     List<Map<String, Object>> c5();
 
-    // D1) UNION
+    /**
+     * D1) Executes a UNION set operation query.
+     * Combines nation keys from both customer and supplier tables.
+     *
+     * @return List of maps containing unique nation keys from both tables
+     */
     @Select("""
             (SELECT c_nationkey AS nationkey FROM customer)
             UNION
@@ -94,7 +164,12 @@ public interface UniversalMapper {
             """)
     List<Map<String, Object>> d1();
 
-    // D2) INTERSECT
+    /**
+     * D2) Executes an INTERSECT-like set operation query.
+     * Finds customer keys that also exist as supplier keys.
+     *
+     * @return List of maps containing customer keys that are also supplier keys
+     */
     @Select("""
             SELECT DISTINCT c.c_custkey AS custkey
             FROM customer c
@@ -105,7 +180,12 @@ public interface UniversalMapper {
             """)
     List<Map<String, Object>> d2();
 
-    // D3) DIFFERENCE
+    /**
+     * D3) Executes a DIFFERENCE-like set operation query.
+     * Finds customer keys that do not exist as supplier keys.
+     *
+     * @return List of maps containing customer keys that are not supplier keys
+     */
     @Select("""
             SELECT DISTINCT c.c_custkey AS custkey
             FROM customer c
@@ -116,7 +196,12 @@ public interface UniversalMapper {
             """)
     List<Map<String, Object>> d3();
 
-    // E1) Non-Indexed Columns Sorting
+    /**
+     * E1) Executes a sorting query on non-indexed columns.
+     * Retrieves customer information sorted by account balance in descending order.
+     *
+     * @return List of maps containing customer data sorted by account balance
+     */
     @Select("""
             SELECT c_name, c_address, c_acctbal
             FROM customer
@@ -124,7 +209,12 @@ public interface UniversalMapper {
             """)
     List<Map<String, Object>> e1();
 
-    // E2) Indexed Columns Sorting
+    /**
+     * E2) Executes a sorting query on indexed columns.
+     * Retrieves order information sorted by order key.
+     *
+     * @return List of maps containing order data sorted by order key
+     */
     @Select("""
             SELECT o_orderkey, o_custkey, o_orderdate, o_totalprice
             FROM orders
@@ -132,13 +222,25 @@ public interface UniversalMapper {
             """)
     List<Map<String, Object>> e2();
 
-    // E3) Distinct
+    /**
+     * E3) Executes a query with DISTINCT operator.
+     * Retrieves unique combinations of nation key and market segment from customers.
+     *
+     * @return List of maps containing unique nation key and market segment combinations
+     */
     @Select("""
             SELECT DISTINCT c_nationkey, c_mktsegment
             FROM customer
             """)
     List<Map<String, Object>> e3();
 
+    /**
+     * Executes TPC-H Query 1: Pricing Summary Report.
+     * This query reports the amount of business that was billed, shipped, and returned.
+     *
+     * @param days Number of days to subtract from the cutoff date (1998-12-01)
+     * @return List of maps containing pricing summary information
+     */
     @Select("""
             SELECT
               l_returnflag,
@@ -159,6 +261,15 @@ public interface UniversalMapper {
             """)
     List<Map<String, Object>> q1(int days);
 
+    /**
+     * Executes TPC-H Query 2: Minimum Cost Supplier.
+     * This query finds which supplier should be selected to place an order for a given part in a given region.
+     *
+     * @param size The size of the part
+     * @param type The type of the part (used in LIKE pattern)
+     * @param region The name of the region
+     * @return List of maps containing supplier information
+     */
     @Select("""
             SELECT
               s.s_acctbal,
@@ -206,6 +317,15 @@ public interface UniversalMapper {
             """)
     List<Map<String, Object>> q2(@Param("size") int size, @Param("type") String type, @Param("region") String region);
 
+    /**
+     * Executes TPC-H Query 3: Shipping Priority.
+     * This query retrieves the 10 unshipped orders with the highest value.
+     *
+     * @param segment The market segment to consider
+     * @param orderDate The cutoff date for orders
+     * @param shipDate The cutoff date for shipments
+     * @return List of maps containing order information sorted by revenue
+     */
     @Select("""
             SELECT
               l.l_orderkey,
@@ -233,6 +353,13 @@ public interface UniversalMapper {
             """)
     List<Map<String, Object>> q3(@Param("segment") String segment, @Param("orderDate") LocalDate orderDate, @Param("shipDate") LocalDate shipDate);
 
+    /**
+     * Executes TPC-H Query 4: Order Priority Checking.
+     * This query determines how well the order priority system is working.
+     *
+     * @param orderDate The start date for the three-month period
+     * @return List of maps containing order counts by priority
+     */
     @Select("""
             SELECT
               o_orderpriority,
@@ -257,6 +384,14 @@ public interface UniversalMapper {
             """)
     List<Map<String, Object>> q4(@Param("orderDate") LocalDate orderDate);
 
+    /**
+     * Executes TPC-H Query 5: Local Supplier Volume.
+     * This query lists the revenue volume done through local suppliers.
+     *
+     * @param region The name of the region
+     * @param orderDate The start date for the one-year period
+     * @return List of maps containing revenue by nation
+     */
     @Select("""
             SELECT
               n.n_name,

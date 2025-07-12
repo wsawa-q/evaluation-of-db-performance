@@ -239,7 +239,6 @@ ORDER BY
   n.n_name,
   s.s_name,
   p.p_partkey
-LIMIT 100
 ```
 
 ### Q3) Shipping Priority Query
@@ -268,7 +267,6 @@ GROUP BY
 ORDER BY
   revenue DESC,
   o.o_orderdate
-LIMIT 10
 ```
 
 ### Q4) Order Priority Checking Query

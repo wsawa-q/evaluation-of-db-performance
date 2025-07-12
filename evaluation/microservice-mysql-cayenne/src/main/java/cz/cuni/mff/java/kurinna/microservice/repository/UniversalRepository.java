@@ -11,16 +11,36 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Repository class for executing SQL queries using Apache Cayenne framework.
+ * This class provides methods for various types of database operations and queries,
+ * including simple selects, joins, aggregations, and TPC-H benchmark queries.
+ * Each method requires an ObjectContext to execute the query.
+ */
 @Repository
 public class UniversalRepository {
-    // A1) Non-Indexed Columns
+    /**
+     * A1) Executes a query on non-indexed columns.
+     * Retrieves all records from the lineitem table.
+     *
+     * @param context The Cayenne ObjectContext to execute the query
+     * @return List of DataRow objects containing all lineitem records
+     */
     public List<DataRow> a1(ObjectContext context) {
         String sql = "SELECT * FROM lineitem";
         SQLSelect<DataRow> query = SQLSelect.dataRowQuery(sql);
         return query.select(context);
     }
 
-    // A2) Non-Indexed Columns — Range Query
+    /**
+     * A2) Executes a range query on non-indexed columns.
+     * Retrieves orders within a specified date range.
+     *
+     * @param context The Cayenne ObjectContext to execute the query
+     * @param startDate The start date of the range (inclusive)
+     * @param endDate The end date of the range (inclusive)
+     * @return List of DataRow objects containing orders within the date range
+     */
     public List<DataRow> a2(ObjectContext context, LocalDate startDate, LocalDate endDate) {
         String sql = "SELECT * FROM orders WHERE o_orderdate BETWEEN #bind($startDate) AND #bind($endDate)";
         SQLSelect<DataRow> query = SQLSelect.dataRowQuery(sql);
@@ -33,14 +53,28 @@ public class UniversalRepository {
         return query.select(context);
     }
 
-    // A3) Indexed Columns
+    /**
+     * A3) Executes a query on indexed columns.
+     * Retrieves all records from the customer table.
+     *
+     * @param context The Cayenne ObjectContext to execute the query
+     * @return List of DataRow objects containing all customer records
+     */
     public List<DataRow> a3(ObjectContext context) {
         String sql = "SELECT * FROM customer";
         SQLSelect<DataRow> query = SQLSelect.dataRowQuery(sql);
         return query.select(context);
     }
 
-    // A4) Indexed Columns — Range Query
+    /**
+     * A4) Executes a range query on indexed columns.
+     * Retrieves orders within a specified order key range.
+     *
+     * @param context The Cayenne ObjectContext to execute the query
+     * @param minOrderKey The minimum order key (inclusive)
+     * @param maxOrderKey The maximum order key (inclusive)
+     * @return List of DataRow objects containing orders within the order key range
+     */
     public List<DataRow> a4(ObjectContext context, int minOrderKey, int maxOrderKey) {
         String sql = "SELECT * FROM orders WHERE o_orderkey BETWEEN #bind($minOrderKey) AND #bind($maxOrderKey)";
         SQLSelect<DataRow> query = SQLSelect.dataRowQuery(sql);
@@ -53,7 +87,13 @@ public class UniversalRepository {
         return query.select(context);
     }
 
-    // B1) COUNT
+    /**
+     * B1) Executes a COUNT aggregation query.
+     * Counts orders grouped by month and returns the count for each month.
+     *
+     * @param context The Cayenne ObjectContext to execute the query
+     * @return List of DataRow objects containing order counts by month
+     */
     public List<DataRow> b1(ObjectContext context) {
         String sql = "SELECT COUNT(o.o_orderkey) AS order_count, " +
                 "DATE_FORMAT(o.o_orderdate, '%Y-%m') AS order_month " +
@@ -63,7 +103,13 @@ public class UniversalRepository {
         return query.select(context);
     }
 
-    // B2) MAX
+    /**
+     * B2) Executes a MAX aggregation query.
+     * Finds the maximum extended price for line items grouped by ship month.
+     *
+     * @param context The Cayenne ObjectContext to execute the query
+     * @return List of DataRow objects containing maximum prices by ship month
+     */
     public List<DataRow> b2(ObjectContext context) {
         String sql = "SELECT DATE_FORMAT(l.l_shipdate, '%Y-%m') AS ship_month, " +
                 "MAX(l.l_extendedprice) AS max_price " +
@@ -73,7 +119,13 @@ public class UniversalRepository {
         return query.select(context);
     }
 
-    // C1) Non-Indexed Columns
+    /**
+     * C1) Executes a join query on non-indexed columns.
+     * Performs a Cartesian product between customer and orders tables.
+     *
+     * @param context The Cayenne ObjectContext to execute the query
+     * @return List of DataRow objects containing customer names and order details
+     */
     public List<DataRow> c1(ObjectContext context) {
         String sql = "SELECT c.c_name, o.o_orderdate, o.o_totalprice " +
                 "FROM customer c, orders o";
@@ -81,7 +133,13 @@ public class UniversalRepository {
         return query.select(context);
     }
 
-    // C2) Indexed Columns
+    /**
+     * C2) Executes a join query on indexed columns.
+     * Joins customer and orders tables on customer key.
+     *
+     * @param context The Cayenne ObjectContext to execute the query
+     * @return List of DataRow objects containing customer names and order details
+     */
     public List<DataRow> c2(ObjectContext context) {
         String sql = "SELECT c.c_name, o.o_orderdate, o.o_totalprice " +
                 "FROM customer c " +
@@ -90,7 +148,13 @@ public class UniversalRepository {
         return query.select(context);
     }
 
-    // C3) Complex Join 1
+    /**
+     * C3) Executes a complex join query (first level).
+     * Joins customer, nation, and orders tables.
+     *
+     * @param context The Cayenne ObjectContext to execute the query
+     * @return List of DataRow objects containing customer names, nation names, and order details
+     */
     public List<DataRow> c3(ObjectContext context) {
         String sql = "SELECT c.c_name, n.n_name, o.o_orderdate, o.o_totalprice " +
                 "FROM customer c " +
@@ -100,7 +164,13 @@ public class UniversalRepository {
         return query.select(context);
     }
 
-    // C4) Complex Join 2
+    /**
+     * C4) Executes a complex join query (second level).
+     * Joins customer, nation, region, and orders tables.
+     *
+     * @param context The Cayenne ObjectContext to execute the query
+     * @return List of DataRow objects containing customer names, nation names, region names, and order details
+     */
     public List<DataRow> c4(ObjectContext context) {
         String sql = "SELECT c.c_name, n.n_name, r.r_name, o.o_orderdate, o.o_totalprice " +
                 "FROM customer c " +
@@ -111,7 +181,13 @@ public class UniversalRepository {
         return query.select(context);
     }
 
-    // C5) Left Outer Join
+    /**
+     * C5) Executes a left outer join query.
+     * Performs a left outer join between customer and orders tables.
+     *
+     * @param context The Cayenne ObjectContext to execute the query
+     * @return List of DataRow objects containing customer details and their orders (if any)
+     */
     public List<DataRow> c5(ObjectContext context) {
         String sql = "SELECT c.c_custkey, c.c_name, o.o_orderkey, o.o_orderdate " +
                 "FROM customer c " +
@@ -120,7 +196,13 @@ public class UniversalRepository {
         return query.select(context);
     }
 
-    // D1) UNION
+    /**
+     * D1) Executes a UNION set operation query.
+     * Combines nation keys from both customer and supplier tables.
+     *
+     * @param context The Cayenne ObjectContext to execute the query
+     * @return List of DataRow objects containing unique nation keys from both tables
+     */
     public List<DataRow> d1(ObjectContext context) {
         String sql = "(SELECT c_nationkey AS nationkey FROM customer) " +
                 "UNION " +
@@ -129,7 +211,13 @@ public class UniversalRepository {
         return query.select(context);
     }
 
-    // D2) INTERSECT
+    /**
+     * D2) Executes an INTERSECT-like set operation query.
+     * Finds customer keys that also exist as supplier keys.
+     *
+     * @param context The Cayenne ObjectContext to execute the query
+     * @return List of DataRow objects containing customer keys that are also supplier keys
+     */
     public List<DataRow> d2(ObjectContext context) {
         String sql = "SELECT DISTINCT c.c_custkey AS custkey " +
                 "FROM customer c " +
@@ -138,7 +226,13 @@ public class UniversalRepository {
         return query.select(context);
     }
 
-    // D3) DIFFERENCE
+    /**
+     * D3) Executes a DIFFERENCE-like set operation query.
+     * Finds customer keys that do not exist as supplier keys.
+     *
+     * @param context The Cayenne ObjectContext to execute the query
+     * @return List of DataRow objects containing customer keys that are not supplier keys
+     */
     public List<DataRow> d3(ObjectContext context) {
         String sql = "SELECT DISTINCT c.c_custkey AS custkey " +
                 "FROM customer c " +
@@ -147,7 +241,13 @@ public class UniversalRepository {
         return query.select(context);
     }
 
-    // E1) Non-Indexed Columns Sorting
+    /**
+     * E1) Executes a sorting query on non-indexed columns.
+     * Retrieves customer information sorted by account balance in descending order.
+     *
+     * @param context The Cayenne ObjectContext to execute the query
+     * @return List of DataRow objects containing customer data sorted by account balance
+     */
     public List<DataRow> e1(ObjectContext context) {
         String sql = "SELECT c_name, c_address, c_acctbal " +
                 "FROM customer " +
@@ -156,7 +256,13 @@ public class UniversalRepository {
         return query.select(context);
     }
 
-    // E2) Indexed Columns Sorting
+    /**
+     * E2) Executes a sorting query on indexed columns.
+     * Retrieves order information sorted by order key.
+     *
+     * @param context The Cayenne ObjectContext to execute the query
+     * @return List of DataRow objects containing order data sorted by order key
+     */
     public List<DataRow> e2(ObjectContext context) {
         String sql = "SELECT o_orderkey, o_custkey, o_orderdate, o_totalprice " +
                 "FROM orders " +
@@ -165,7 +271,13 @@ public class UniversalRepository {
         return query.select(context);
     }
 
-    // E3) Distinct
+    /**
+     * E3) Executes a query with DISTINCT operator.
+     * Retrieves unique combinations of nation key and market segment from customers.
+     *
+     * @param context The Cayenne ObjectContext to execute the query
+     * @return List of DataRow objects containing unique nation key and market segment combinations
+     */
     public List<DataRow> e3(ObjectContext context) {
         String sql = "SELECT DISTINCT c_nationkey, c_mktsegment " +
                 "FROM customer";
@@ -173,6 +285,14 @@ public class UniversalRepository {
         return query.select(context);
     }
 
+    /**
+     * Executes TPC-H Query 1: Pricing Summary Report.
+     * This query reports the amount of business that was billed, shipped, and returned.
+     *
+     * @param context The Cayenne ObjectContext to execute the query
+     * @param deltaDays Number of days to subtract from the cutoff date (1998-12-01)
+     * @return List of DataRow objects containing pricing summary information
+     */
     public List<DataRow> q1(ObjectContext context, int deltaDays) {
         LocalDate baseDate = LocalDate.of(1998, 12, 1);
         LocalDate shipDateThreshold = baseDate.minusDays(deltaDays);
@@ -208,6 +328,16 @@ public class UniversalRepository {
         return query.select(context);
     }
 
+    /**
+     * Executes TPC-H Query 2: Minimum Cost Supplier.
+     * This query finds which supplier should be selected to place an order for a given part in a given region.
+     *
+     * @param context The Cayenne ObjectContext to execute the query
+     * @param size The size of the part
+     * @param type The type of the part (used in LIKE pattern)
+     * @param region The name of the region
+     * @return List of DataRow objects containing supplier information
+     */
     public List<DataRow> q2(ObjectContext context, int size, String type, String region) {
         String sql = "SELECT " +
                 "    s.s_acctbal, " +
@@ -263,6 +393,16 @@ public class UniversalRepository {
         return query.select(context);
     }
 
+    /**
+     * Executes TPC-H Query 3: Shipping Priority.
+     * This query retrieves the 10 unshipped orders with the highest value.
+     *
+     * @param context The Cayenne ObjectContext to execute the query
+     * @param segment The market segment to consider
+     * @param orderDate The cutoff date for orders
+     * @param shipDate The cutoff date for shipments
+     * @return List of DataRow objects containing order information sorted by revenue
+     */
     public List<DataRow> q3(ObjectContext context, String segment, LocalDate orderDate, LocalDate shipDate) {
         String sql = "SELECT " +
                 "    l.l_orderkey, " +
@@ -298,6 +438,14 @@ public class UniversalRepository {
         return query.select(context);
     }
 
+    /**
+     * Executes TPC-H Query 4: Order Priority Checking.
+     * This query determines how well the order priority system is working.
+     *
+     * @param context The Cayenne ObjectContext to execute the query
+     * @param orderDate The start date for the three-month period
+     * @return List of DataRow objects containing order counts by priority
+     */
     public List<DataRow> q4(ObjectContext context, LocalDate orderDate) {
         LocalDate endDate = orderDate.plusMonths(3);
 
@@ -332,6 +480,15 @@ public class UniversalRepository {
         return query.select(context);
     }
 
+    /**
+     * Executes TPC-H Query 5: Local Supplier Volume.
+     * This query lists the revenue volume done through local suppliers.
+     *
+     * @param context The Cayenne ObjectContext to execute the query
+     * @param region The name of the region
+     * @param orderDate The start date for the one-year period
+     * @return List of DataRow objects containing revenue by nation
+     */
     public List<DataRow> q5(ObjectContext context, String region, LocalDate orderDate) {
         LocalDate endDate = orderDate.plusYears(1);
 

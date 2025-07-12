@@ -1,9 +1,7 @@
-import type {
-  MicroserviceQueryType,
-  MicroserviceType,
-  OrchestratorQueryType,
-  OrchestratorType,
-} from '../types'
+import type { OrchestratorQueryType, OrchestratorType } from '../types'
+
+const orchestratorUrl =
+  process.env.VITE_ORCHESTRATOR_API_URL || 'http://localhost:8100'
 
 export const fethchOrchestratorQuery = async ({
   query,
@@ -15,29 +13,7 @@ export const fethchOrchestratorQuery = async ({
     ...(services && { services }),
   }).toString()
   const response = await fetch(
-    `http://localhost:8100/orchestrator/${query}?${queryParam}`,
-    {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    },
-  )
-
-  if (!response.ok) {
-    throw new Error('Network response was not ok')
-  }
-
-  const data = await response.json()
-  return data
-}
-
-export const fetchMicroserviceQuery = async ({
-  microservice,
-  query,
-}: MicroserviceQueryType): Promise<MicroserviceType> => {
-  const response = await fetch(
-    `http://localhost:8100/${microservice}/${query}`,
+    `${orchestratorUrl}/orchestrator/${query}?${queryParam}`,
     {
       method: 'GET',
       headers: {
@@ -59,31 +35,12 @@ type QueryDescriptionType = {
 }
 
 export const fetchQueryEndpoints = async (): Promise<QueryDescriptionType> => {
-  const response = await fetch('http://localhost:8100/getQueryDescriptions', {
+  const response = await fetch(`${orchestratorUrl}/getQueryDescriptions`, {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',
     },
   })
-
-  if (!response.ok) {
-    throw new Error('Network response was not ok')
-  }
-
-  const data = await response.json()
-  return data
-}
-
-export const fetchMicroserviceEndpoints = async (): Promise<string[]> => {
-  const response = await fetch(
-    'http://localhost:8100/getMicroserviceEndpoints',
-    {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    },
-  )
 
   if (!response.ok) {
     throw new Error('Network response was not ok')

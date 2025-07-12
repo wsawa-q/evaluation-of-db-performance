@@ -25,14 +25,7 @@ export const OrchestratorPage: React.FC<{
 
   return (
     <div className={styles.app}>
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          gap: '16px',
-        }}
-      >
+      <div className={styles.header}>
         <Typography.Title>Orchestrator Query Results</Typography.Title>
         <Button
           className={styles.refreshButton}
@@ -41,6 +34,10 @@ export const OrchestratorPage: React.FC<{
           type="text"
         />
       </div>
+      <Typography.Text type="secondary">
+        {queryEndpoint} | {microservices.join(', ')} |{' '}
+        {repetitions ? `${repetitions} repetitions` : 'no repetitions'}
+      </Typography.Text>
       {(query.isLoading || query.isFetching) && <Spin size="large" />}
       {query.isError && !query.isFetching && (
         <Result

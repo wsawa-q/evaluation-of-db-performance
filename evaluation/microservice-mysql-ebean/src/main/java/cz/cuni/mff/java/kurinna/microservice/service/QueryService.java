@@ -1,14 +1,16 @@
 package cz.cuni.mff.java.kurinna.microservice.service;
 
+import cz.cuni.mff.java.kurinna.common.service.IQueryService;
 import cz.cuni.mff.java.kurinna.microservice.repository.UniversalRepository;
 import io.ebean.SqlRow;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 
 @Service
-public class QueryService {
+public class QueryService implements IQueryService<SqlRow> {
     private final UniversalRepository universalRepository;
 
     public QueryService(UniversalRepository universalRepository) {

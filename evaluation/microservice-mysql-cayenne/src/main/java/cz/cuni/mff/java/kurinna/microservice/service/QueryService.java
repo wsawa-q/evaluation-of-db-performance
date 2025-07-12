@@ -1,5 +1,6 @@
 package cz.cuni.mff.java.kurinna.microservice.service;
 
+import cz.cuni.mff.java.kurinna.common.service.IQueryService;
 import org.apache.cayenne.DataRow;
 import cz.cuni.mff.java.kurinna.microservice.repository.UniversalRepository;
 import org.apache.cayenne.ObjectContext;
@@ -10,7 +11,7 @@ import java.util.List;
 import java.time.LocalDate;
 
 @Service
-public class QueryService {
+public class QueryService implements IQueryService<DataRow> {
     private final UniversalRepository universalRepository;
     private final ObjectContext objectContext;
 

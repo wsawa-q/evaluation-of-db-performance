@@ -13,7 +13,7 @@
 
     <groupId>cz.cuni.mff.java.kurinna</groupId>
     <artifactId>microservice-mysql-jooq</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>1.0.0</version>
     <name>microservice-mysql-jooq</name>
     <url/>
 
@@ -108,6 +108,16 @@
                             <directory>${project.basedir}/src/main/java</directory>
                         </target>
                     </generator>
+                </configuration>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <version>3.10.1</version>
+                <configuration>
+                    <sourcepath>${project.basedir}/src/main/java;${project.basedir}/../common/src/main/java</sourcepath>
+                    <source>${java.version}</source>
                 </configuration>
             </plugin>
 

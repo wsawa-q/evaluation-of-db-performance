@@ -6,6 +6,7 @@ import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 
 import static cz.cuni.mff.java.kurinna.microservice.model.tables.Lineitem.LINEITEM;
 import static cz.cuni.mff.java.kurinna.microservice.model.tables.Part.PART;
@@ -16,50 +17,90 @@ import static cz.cuni.mff.java.kurinna.microservice.model.tables.Region.REGION;
 import static cz.cuni.mff.java.kurinna.microservice.model.tables.Customer.CUSTOMER;
 import static cz.cuni.mff.java.kurinna.microservice.model.tables.Orders.ORDERS;
 
+/**
+ * Repository class for executing SQL queries using jOOQ.
+ * This class provides methods for various types of database operations and queries,
+ * including simple selects, joins, aggregations, and TPC-H benchmark queries.
+ * jOOQ provides a type-safe SQL building API that allows for fluent query construction.
+ */
 @Repository
 public class UniversalRepository {
     private final DSLContext dslContext;
 
+    /**
+     * Constructs a new UniversalRepository with the specified DSLContext.
+     *
+     * @param dslContext The jOOQ DSLContext used for building and executing queries
+     */
     public UniversalRepository(DSLContext dslContext) {
         this.dslContext = dslContext;
     }
 
-    // A1) Non-Indexed Columns
-    public List<?> a1() {
+    /**
+     * A1) Executes a query on non-indexed columns.
+     * Retrieves all records from the lineitem table.
+     *
+     * @return List of maps containing all lineitem records
+     */
+    public List<Map<String, Object>> a1() {
         return dslContext
             .select()
             .from(LINEITEM)
-            .fetch();
+            .fetchMaps();
     }
 
-    // A2) Non-Indexed Columns — Range Query
-    public List<?> a2(LocalDate startDate, LocalDate endDate) {
+    /**
+     * A2) Executes a range query on non-indexed columns.
+     * Retrieves orders within a specified date range.
+     *
+     * @param startDate The start date of the range (inclusive)
+     * @param endDate The end date of the range (inclusive)
+     * @return List of maps containing orders within the date range
+     */
+    public List<Map<String, Object>> a2(LocalDate startDate, LocalDate endDate) {
         return dslContext
             .select()
             .from(ORDERS)
             .where(ORDERS.O_ORDERDATE.between(startDate, endDate))
-            .fetch();
+            .fetchMaps();
     }
 
-    // A3) Indexed Columns
-    public List<?> a3() {
+    /**
+     * A3) Executes a query on indexed columns.
+     * Retrieves all records from the customer table.
+     *
+     * @return List of maps containing all customer records
+     */
+    public List<Map<String, Object>> a3() {
         return dslContext
             .select()
             .from(CUSTOMER)
-            .fetch();
+            .fetchMaps();
     }
 
-    // A4) Indexed Columns — Range Query
-    public List<?> a4(int minOrderKey, int maxOrderKey) {
+    /**
+     * A4) Executes a range query on indexed columns.
+     * Retrieves orders within a specified order key range.
+     *
+     * @param minOrderKey The minimum order key (inclusive)
+     * @param maxOrderKey The maximum order key (inclusive)
+     * @return List of maps containing orders within the order key range
+     */
+    public List<Map<String, Object>> a4(int minOrderKey, int maxOrderKey) {
         return dslContext
             .select()
             .from(ORDERS)
             .where(ORDERS.O_ORDERKEY.between((long) minOrderKey, (long) maxOrderKey))
-            .fetch();
+            .fetchMaps();
     }
 
-    // B1) COUNT
-    public List<?> b1() {
+    /**
+     * B1) Executes a COUNT aggregation query.
+     * Counts orders grouped by month and returns the count for each month.
+     *
+     * @return List of maps containing order counts by month
+     */
+    public List<Map<String, Object>> b1() {
         return dslContext
             .select(
                 count(ORDERS.O_ORDERKEY).as("order_count"),
@@ -67,11 +108,16 @@ public class UniversalRepository {
             )
             .from(ORDERS)
             .groupBy(field("order_month"))
-            .fetch();
+            .fetchMaps();
     }
 
-    // B2) MAX
-    public List<?> b2() {
+    /**
+     * B2) Executes a MAX aggregation query.
+     * Finds the maximum extended price for line items grouped by ship month.
+     *
+     * @return List of maps containing maximum prices by ship month
+     */
+    public List<Map<String, Object>> b2() {
         return dslContext
             .select(
                 function("DATE_FORMAT", String.class, LINEITEM.L_SHIPDATE, inline("%Y-%m")).as("ship_month"),
@@ -79,11 +125,16 @@ public class UniversalRepository {
             )
             .from(LINEITEM)
             .groupBy(field("ship_month"))
-            .fetch();
+            .fetchMaps();
     }
 
-    // C1) Non-Indexed Columns
-    public List<?> c1() {
+    /**
+     * C1) Executes a join query on non-indexed columns.
+     * Performs a Cartesian product between customer and orders tables.
+     *
+     * @return List of maps containing customer names and order details
+     */
+    public List<Map<String, Object>> c1() {
         return dslContext
             .select(
                 CUSTOMER.C_NAME,
@@ -91,11 +142,16 @@ public class UniversalRepository {
                 ORDERS.O_TOTALPRICE
             )
             .from(CUSTOMER, ORDERS)
-            .fetch();
+            .fetchMaps();
     }
 
-    // C2) Indexed Columns
-    public List<?> c2() {
+    /**
+     * C2) Executes a join query on indexed columns.
+     * Joins customer and orders tables on customer key.
+     *
+     * @return List of maps containing customer names and order details
+     */
+    public List<Map<String, Object>> c2() {
         return dslContext
             .select(
                 CUSTOMER.C_NAME,
@@ -104,11 +160,16 @@ public class UniversalRepository {
             )
             .from(CUSTOMER)
             .join(ORDERS).on(CUSTOMER.C_CUSTKEY.eq(ORDERS.O_CUSTKEY))
-            .fetch();
+            .fetchMaps();
     }
 
-    // C3) Complex Join 1
-    public List<?> c3() {
+    /**
+     * C3) Executes a complex join query (first level).
+     * Joins customer, nation, and orders tables.
+     *
+     * @return List of maps containing customer names, nation names, and order details
+     */
+    public List<Map<String, Object>> c3() {
         return dslContext
             .select(
                 CUSTOMER.C_NAME,
@@ -119,11 +180,16 @@ public class UniversalRepository {
             .from(CUSTOMER)
             .join(NATION).on(CUSTOMER.C_NATIONKEY.eq(NATION.N_NATIONKEY))
             .join(ORDERS).on(CUSTOMER.C_CUSTKEY.eq(ORDERS.O_CUSTKEY))
-            .fetch();
+            .fetchMaps();
     }
 
-    // C4) Complex Join 2
-    public List<?> c4() {
+    /**
+     * C4) Executes a complex join query (second level).
+     * Joins customer, nation, region, and orders tables.
+     *
+     * @return List of maps containing customer names, nation names, region names, and order details
+     */
+    public List<Map<String, Object>> c4() {
         return dslContext
             .select(
                 CUSTOMER.C_NAME,
@@ -136,11 +202,16 @@ public class UniversalRepository {
             .join(NATION).on(CUSTOMER.C_NATIONKEY.eq(NATION.N_NATIONKEY))
             .join(REGION).on(NATION.N_REGIONKEY.eq(REGION.R_REGIONKEY))
             .join(ORDERS).on(CUSTOMER.C_CUSTKEY.eq(ORDERS.O_CUSTKEY))
-            .fetch();
+            .fetchMaps();
     }
 
-    // C5) Left Outer Join
-    public List<?> c5() {
+    /**
+     * C5) Executes a left outer join query.
+     * Performs a left outer join between customer and orders tables.
+     *
+     * @return List of maps containing customer details and their orders (if any)
+     */
+    public List<Map<String, Object>> c5() {
         return dslContext
             .select(
                 CUSTOMER.C_CUSTKEY,
@@ -150,11 +221,16 @@ public class UniversalRepository {
             )
             .from(CUSTOMER)
             .leftOuterJoin(ORDERS).on(CUSTOMER.C_CUSTKEY.eq(ORDERS.O_CUSTKEY))
-            .fetch();
+            .fetchMaps();
     }
 
-    // D1) UNION
-    public List<?> d1() {
+    /**
+     * D1) Executes a UNION set operation query.
+     * Combines nation keys from both customer and supplier tables.
+     *
+     * @return List of maps containing unique nation keys from both tables
+     */
+    public List<Map<String, Object>> d1() {
         return dslContext
             .select(CUSTOMER.C_NATIONKEY.as("nationkey"))
             .from(CUSTOMER)
@@ -162,11 +238,16 @@ public class UniversalRepository {
                 select(SUPPLIER.S_NATIONKEY.as("nationkey"))
                 .from(SUPPLIER)
             )
-            .fetch();
+            .fetchMaps();
     }
 
-    // D2) INTERSECT
-    public List<?> d2() {
+    /**
+     * D2) Executes an INTERSECT-like set operation query.
+     * Finds customer keys that also exist as supplier keys.
+     *
+     * @return List of maps containing customer keys that are also supplier keys
+     */
+    public List<Map<String, Object>> d2() {
         return dslContext
             .selectDistinct(CUSTOMER.C_CUSTKEY.as("custkey"))
             .from(CUSTOMER)
@@ -174,11 +255,16 @@ public class UniversalRepository {
                 select(SUPPLIER.S_SUPPKEY)
                 .from(SUPPLIER)
             ))
-            .fetch();
+            .fetchMaps();
     }
 
-    // D3) DIFFERENCE
-    public List<?> d3() {
+    /**
+     * D3) Executes a DIFFERENCE-like set operation query.
+     * Finds customer keys that do not exist as supplier keys.
+     *
+     * @return List of maps containing customer keys that are not supplier keys
+     */
+    public List<Map<String, Object>> d3() {
         return dslContext
             .selectDistinct(CUSTOMER.C_CUSTKEY.as("custkey"))
             .from(CUSTOMER)
@@ -186,11 +272,16 @@ public class UniversalRepository {
                 selectDistinct(SUPPLIER.S_SUPPKEY)
                 .from(SUPPLIER)
             ))
-            .fetch();
+            .fetchMaps();
     }
 
-    // E1) Non-Indexed Columns Sorting
-    public List<?> e1() {
+    /**
+     * E1) Executes a sorting query on non-indexed columns.
+     * Retrieves customer information sorted by account balance in descending order.
+     *
+     * @return List of maps containing customer data sorted by account balance
+     */
+    public List<Map<String, Object>> e1() {
         return dslContext
             .select(
                 CUSTOMER.C_NAME,
@@ -199,11 +290,16 @@ public class UniversalRepository {
             )
             .from(CUSTOMER)
             .orderBy(CUSTOMER.C_ACCTBAL.desc())
-            .fetch();
+            .fetchMaps();
     }
 
-    // E2) Indexed Columns Sorting
-    public List<?> e2() {
+    /**
+     * E2) Executes a sorting query on indexed columns.
+     * Retrieves order information sorted by order key.
+     *
+     * @return List of maps containing order data sorted by order key
+     */
+    public List<Map<String, Object>> e2() {
         return dslContext
             .select(
                 ORDERS.O_ORDERKEY,
@@ -213,21 +309,34 @@ public class UniversalRepository {
             )
             .from(ORDERS)
             .orderBy(ORDERS.O_ORDERKEY.asc())
-            .fetch();
+            .fetchMaps();
     }
 
-    // E3) Distinct
-    public List<?> e3() {
+    /**
+     * E3) Executes a query with DISTINCT operator.
+     * Retrieves unique combinations of nation key and market segment from customers.
+     *
+     * @return List of maps containing unique nation key and market segment combinations
+     */
+    public List<Map<String, Object>> e3() {
         return dslContext
             .selectDistinct(
                 CUSTOMER.C_NATIONKEY,
                 CUSTOMER.C_MKTSEGMENT
             )
             .from(CUSTOMER)
-            .fetch();
+            .fetchMaps();
     }
 
-    public List<?> q1(int days) {
+    /**
+     * Executes TPC-H Query 1: Pricing Summary Report.
+     * This query reports the amount of business that was billed, shipped, and returned.
+     * Note: This implementation uses a static value of 90 days instead of the parameterized days.
+     *
+     * @param days Number of days to subtract from the cutoff date (1998-12-01)
+     * @return List of maps containing pricing summary information
+     */
+    public List<Map<String, Object>> q1(int days) {
     // Using static value 90 instead of parameterized days
     LocalDate cutoff = LocalDate.of(1998, 12, 1)
             .minusDays(90);
@@ -249,10 +358,19 @@ public class UniversalRepository {
         .where(LINEITEM.L_SHIPDATE.le(val(cutoff)))
         .groupBy(LINEITEM.L_RETURNFLAG, LINEITEM.L_LINESTATUS)
         .orderBy(LINEITEM.L_RETURNFLAG, LINEITEM.L_LINESTATUS)
-        .fetch();
+        .fetchMaps();
     }
 
-    public List<?> q2(int size, String type, String region) {
+    /**
+     * Executes TPC-H Query 2: Minimum Cost Supplier.
+     * This query finds which supplier should be selected to place an order for a given part in a given region.
+     *
+     * @param size The size of the part
+     * @param type The type of the part (used in LIKE pattern)
+     * @param region The name of the region
+     * @return List of maps containing supplier information
+     */
+    public List<Map<String, Object>> q2(int size, String type, String region) {
         return dslContext
             .select(
                 SUPPLIER.S_ACCTBAL.as("acctbal"),
@@ -288,10 +406,19 @@ public class UniversalRepository {
                 PART.P_PARTKEY.asc()
             )
             .limit(100)
-            .fetch();
+            .fetchMaps();
     }
 
-    public List<?> q3(String segment, LocalDate orderDate, LocalDate shipDate) {
+    /**
+     * Executes TPC-H Query 3: Shipping Priority.
+     * This query retrieves the 10 unshipped orders with the highest value.
+     *
+     * @param segment The market segment to consider
+     * @param orderDate The cutoff date for orders
+     * @param shipDate The cutoff date for shipments
+     * @return List of maps containing order information sorted by revenue
+     */
+    public List<Map<String, Object>> q3(String segment, LocalDate orderDate, LocalDate shipDate) {
         return dslContext
             .select(
                 LINEITEM.L_ORDERKEY.as("orderKey"),
@@ -308,10 +435,17 @@ public class UniversalRepository {
             .groupBy(LINEITEM.L_ORDERKEY, ORDERS.O_ORDERDATE, ORDERS.O_SHIPPRIORITY)
             .orderBy(field("revenue").desc(), ORDERS.O_ORDERDATE.asc())
             .limit(10)
-            .fetch();
+            .fetchMaps();
     }
 
-    public List<?> q4(LocalDate orderDate) {
+    /**
+     * Executes TPC-H Query 4: Order Priority Checking.
+     * This query determines how well the order priority system is working.
+     *
+     * @param orderDate The start date for the three-month period
+     * @return List of maps containing order counts by priority
+     */
+    public List<Map<String, Object>> q4(LocalDate orderDate) {
         LocalDate endDate = orderDate.plusMonths(3);
 
         return dslContext
@@ -330,10 +464,18 @@ public class UniversalRepository {
             ))
             .groupBy(ORDERS.O_ORDERPRIORITY)
             .orderBy(ORDERS.O_ORDERPRIORITY.asc())
-            .fetch();
+            .fetchMaps();
     }
 
-    public List<?> q5(String region, LocalDate orderDate) {
+    /**
+     * Executes TPC-H Query 5: Local Supplier Volume.
+     * This query lists the revenue volume done through local suppliers.
+     *
+     * @param region The name of the region
+     * @param orderDate The start date for the one-year period
+     * @return List of maps containing revenue by nation
+     */
+    public List<Map<String, Object>> q5(String region, LocalDate orderDate) {
         LocalDate endDate = orderDate.plusYears(1);
 
         return dslContext
@@ -353,6 +495,6 @@ public class UniversalRepository {
             .and(CUSTOMER.C_NATIONKEY.eq(SUPPLIER.S_NATIONKEY))
             .groupBy(NATION.N_NAME)
             .orderBy(field("revenue").desc())
-            .fetch();
+            .fetchMaps();
     }
 }

@@ -1,5 +1,6 @@
 package cz.cuni.mff.java.kurinna.microservice.controller;
 
+import cz.cuni.mff.java.kurinna.common.controller.IQueryController;
 import cz.cuni.mff.java.kurinna.microservice.service.QueryService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -12,7 +13,7 @@ import java.util.Map;
 import static cz.cuni.mff.java.kurinna.common.utils.QueryExecutor.executeWithMeasurement;
 
 @RestController
-public class QueryController {
+public class QueryController implements IQueryController {
     private final QueryService queryService;
 
     public QueryController(QueryService queryService) {

@@ -142,14 +142,7 @@ export const OrchestratorResultTable: React.FC<{
   }
 
   return (
-    <div
-      style={{
-        display: 'flex',
-        justifyContent: 'space-between',
-        flexDirection: 'column',
-        alignItems: 'center',
-      }}
-    >
+    <div className={styles.container}>
       <Table
         dataSource={rows}
         columns={columns}
@@ -181,7 +174,6 @@ export const OrchestratorResultTable: React.FC<{
       <div>
         <Carousel
           style={{
-            // width: '100%',
             maxWidth: 700,
           }}
           arrows

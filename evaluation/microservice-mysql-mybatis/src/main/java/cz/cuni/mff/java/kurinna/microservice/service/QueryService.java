@@ -1,5 +1,6 @@
 package cz.cuni.mff.java.kurinna.microservice.service;
 
+import cz.cuni.mff.java.kurinna.common.service.IQueryService;
 import cz.cuni.mff.java.kurinna.microservice.repository.UniversalMapper;
 import org.springframework.stereotype.Service;
 
@@ -8,7 +9,7 @@ import java.util.List;
 import java.util.Map;
 
 @Service
-public class QueryService {
+public class QueryService implements IQueryService<Map<String, Object>> {
     private final UniversalMapper universalMapper;
 
     public QueryService(UniversalMapper universalMapper) {

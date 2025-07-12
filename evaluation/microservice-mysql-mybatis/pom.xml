@@ -13,7 +13,7 @@
 
     <groupId>cz.cuni.mff.java.kurinna</groupId>
     <artifactId>microservice-mysql-mybatis</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>1.0.0</version>
     <name>microservice-mysql-mybatis</name>
     <packaging>jar</packaging>
     <url/>
@@ -109,6 +109,16 @@
                             <artifactId>lombok</artifactId>
                         </path>
                     </annotationProcessorPaths>
+                </configuration>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <version>3.10.1</version>
+                <configuration>
+                    <sourcepath>${project.basedir}/src/main/java;${project.basedir}/../common/src/main/java</sourcepath>
+                    <source>${java.version}</source>
                 </configuration>
             </plugin>
 

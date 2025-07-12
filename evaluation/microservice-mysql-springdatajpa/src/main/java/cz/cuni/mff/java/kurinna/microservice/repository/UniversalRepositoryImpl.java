@@ -10,7 +10,7 @@ import java.util.List;
 
 @Repository
 public class UniversalRepositoryImpl implements UniversalRepository {
-
+    
     @PersistenceContext
     private EntityManager entityManager;
 
