@@ -43,10 +43,8 @@ public class UniversalRepository {
      * @return List of maps containing all lineitem records
      */
     public List<Map<String, Object>> a1() {
-        return dslContext
-            .select()
-            .from(LINEITEM)
-            .fetchMaps();
+        String sql = "SELECT * FROM lineitem";
+        return dslContext.fetch(sql).intoMaps();
     }
 
     /**
@@ -58,11 +56,8 @@ public class UniversalRepository {
      * @return List of maps containing orders within the date range
      */
     public List<Map<String, Object>> a2(LocalDate startDate, LocalDate endDate) {
-        return dslContext
-            .select()
-            .from(ORDERS)
-            .where(ORDERS.O_ORDERDATE.between(startDate, endDate))
-            .fetchMaps();
+        String sql = "SELECT * FROM orders WHERE o_orderdate BETWEEN ? AND ?";
+        return dslContext.fetch(sql, startDate, endDate).intoMaps();
     }
 
     /**
@@ -72,10 +67,8 @@ public class UniversalRepository {
      * @return List of maps containing all customer records
      */
     public List<Map<String, Object>> a3() {
-        return dslContext
-            .select()
-            .from(CUSTOMER)
-            .fetchMaps();
+        String sql = "SELECT * FROM customer";
+        return dslContext.fetch(sql).intoMaps();
     }
 
     /**
@@ -87,11 +80,8 @@ public class UniversalRepository {
      * @return List of maps containing orders within the order key range
      */
     public List<Map<String, Object>> a4(int minOrderKey, int maxOrderKey) {
-        return dslContext
-            .select()
-            .from(ORDERS)
-            .where(ORDERS.O_ORDERKEY.between((long) minOrderKey, (long) maxOrderKey))
-            .fetchMaps();
+        String sql = "SELECT * FROM orders WHERE o_orderkey BETWEEN ? AND ?";
+        return dslContext.fetch(sql, (long) minOrderKey, (long) maxOrderKey).intoMaps();
     }
 
     /**
@@ -101,14 +91,13 @@ public class UniversalRepository {
      * @return List of maps containing order counts by month
      */
     public List<Map<String, Object>> b1() {
-        return dslContext
-            .select(
-                count(ORDERS.O_ORDERKEY).as("order_count"),
-                function("DATE_FORMAT", String.class, ORDERS.O_ORDERDATE, inline("%Y-%m")).as("order_month")
-            )
-            .from(ORDERS)
-            .groupBy(field("order_month"))
-            .fetchMaps();
+        String sql = """
+            SELECT COUNT(o_orderkey) AS order_count,
+                   DATE_FORMAT(o_orderdate, '%Y-%m') AS order_month
+            FROM orders
+            GROUP BY order_month
+            """;
+        return dslContext.fetch(sql).intoMaps();
     }
 
     /**
@@ -118,14 +107,13 @@ public class UniversalRepository {
      * @return List of maps containing maximum prices by ship month
      */
     public List<Map<String, Object>> b2() {
-        return dslContext
-            .select(
-                function("DATE_FORMAT", String.class, LINEITEM.L_SHIPDATE, inline("%Y-%m")).as("ship_month"),
-                max(LINEITEM.L_EXTENDEDPRICE).as("max_price")
-            )
-            .from(LINEITEM)
-            .groupBy(field("ship_month"))
-            .fetchMaps();
+        String sql = """
+            SELECT DATE_FORMAT(l_shipdate, '%Y-%m') AS ship_month,
+                   MAX(l_extendedprice) AS max_price
+            FROM lineitem
+            GROUP BY ship_month
+            """;
+        return dslContext.fetch(sql).intoMaps();
     }
 
     /**
@@ -135,14 +123,11 @@ public class UniversalRepository {
      * @return List of maps containing customer names and order details
      */
     public List<Map<String, Object>> c1() {
-        return dslContext
-            .select(
-                CUSTOMER.C_NAME,
-                ORDERS.O_ORDERDATE,
-                ORDERS.O_TOTALPRICE
-            )
-            .from(CUSTOMER, ORDERS)
-            .fetchMaps();
+        String sql = """
+            SELECT c_name, o_orderdate, o_totalprice
+            FROM customer, orders
+            """;
+        return dslContext.fetch(sql).intoMaps();
     }
 
     /**
@@ -152,15 +137,12 @@ public class UniversalRepository {
      * @return List of maps containing customer names and order details
      */
     public List<Map<String, Object>> c2() {
-        return dslContext
-            .select(
-                CUSTOMER.C_NAME,
-                ORDERS.O_ORDERDATE,
-                ORDERS.O_TOTALPRICE
-            )
-            .from(CUSTOMER)
-            .join(ORDERS).on(CUSTOMER.C_CUSTKEY.eq(ORDERS.O_CUSTKEY))
-            .fetchMaps();
+        String sql = """
+            SELECT c_name, o_orderdate, o_totalprice
+            FROM customer
+            JOIN orders ON c_custkey = o_custkey
+            """;
+        return dslContext.fetch(sql).intoMaps();
     }
 
     /**
@@ -170,17 +152,13 @@ public class UniversalRepository {
      * @return List of maps containing customer names, nation names, and order details
      */
     public List<Map<String, Object>> c3() {
-        return dslContext
-            .select(
-                CUSTOMER.C_NAME,
-                NATION.N_NAME,
-                ORDERS.O_ORDERDATE,
-                ORDERS.O_TOTALPRICE
-            )
-            .from(CUSTOMER)
-            .join(NATION).on(CUSTOMER.C_NATIONKEY.eq(NATION.N_NATIONKEY))
-            .join(ORDERS).on(CUSTOMER.C_CUSTKEY.eq(ORDERS.O_CUSTKEY))
-            .fetchMaps();
+        String sql = """
+            SELECT c_name, n_name, o_orderdate, o_totalprice
+            FROM customer
+            JOIN nation ON c_nationkey = n_nationkey
+            JOIN orders ON c_custkey = o_custkey
+            """;
+        return dslContext.fetch(sql).intoMaps();
     }
 
     /**
@@ -190,19 +168,14 @@ public class UniversalRepository {
      * @return List of maps containing customer names, nation names, region names, and order details
      */
     public List<Map<String, Object>> c4() {
-        return dslContext
-            .select(
-                CUSTOMER.C_NAME,
-                NATION.N_NAME,
-                REGION.R_NAME,
-                ORDERS.O_ORDERDATE,
-                ORDERS.O_TOTALPRICE
-            )
-            .from(CUSTOMER)
-            .join(NATION).on(CUSTOMER.C_NATIONKEY.eq(NATION.N_NATIONKEY))
-            .join(REGION).on(NATION.N_REGIONKEY.eq(REGION.R_REGIONKEY))
-            .join(ORDERS).on(CUSTOMER.C_CUSTKEY.eq(ORDERS.O_CUSTKEY))
-            .fetchMaps();
+        String sql = """
+            SELECT c_name, n_name, r_name, o_orderdate, o_totalprice
+            FROM customer
+            JOIN nation ON c_nationkey = n_nationkey
+            JOIN region ON n_regionkey = r_regionkey
+            JOIN orders ON c_custkey = o_custkey
+            """;
+        return dslContext.fetch(sql).intoMaps();
     }
 
     /**
@@ -212,16 +185,12 @@ public class UniversalRepository {
      * @return List of maps containing customer details and their orders (if any)
      */
     public List<Map<String, Object>> c5() {
-        return dslContext
-            .select(
-                CUSTOMER.C_CUSTKEY,
-                CUSTOMER.C_NAME,
-                ORDERS.O_ORDERKEY,
-                ORDERS.O_ORDERDATE
-            )
-            .from(CUSTOMER)
-            .leftOuterJoin(ORDERS).on(CUSTOMER.C_CUSTKEY.eq(ORDERS.O_CUSTKEY))
-            .fetchMaps();
+        String sql = """
+            SELECT c_custkey, c_name, o_orderkey, o_orderdate
+            FROM customer
+            LEFT OUTER JOIN orders ON c_custkey = o_custkey
+            """;
+        return dslContext.fetch(sql).intoMaps();
     }
 
     /**
@@ -231,14 +200,12 @@ public class UniversalRepository {
      * @return List of maps containing unique nation keys from both tables
      */
     public List<Map<String, Object>> d1() {
-        return dslContext
-            .select(CUSTOMER.C_NATIONKEY.as("nationkey"))
-            .from(CUSTOMER)
-            .union(
-                select(SUPPLIER.S_NATIONKEY.as("nationkey"))
-                .from(SUPPLIER)
-            )
-            .fetchMaps();
+        String sql = """
+            (SELECT c_nationkey AS nationkey FROM customer)
+            UNION
+            (SELECT s_nationkey AS nationkey FROM supplier)
+            """;
+        return dslContext.fetch(sql).intoMaps();
     }
 
     /**
@@ -248,14 +215,15 @@ public class UniversalRepository {
      * @return List of maps containing customer keys that are also supplier keys
      */
     public List<Map<String, Object>> d2() {
-        return dslContext
-            .selectDistinct(CUSTOMER.C_CUSTKEY.as("custkey"))
-            .from(CUSTOMER)
-            .where(CUSTOMER.C_CUSTKEY.in(
-                select(SUPPLIER.S_SUPPKEY)
-                .from(SUPPLIER)
-            ))
-            .fetchMaps();
+        String sql = """
+            SELECT DISTINCT c_custkey AS custkey
+            FROM customer
+            WHERE c_custkey IN (
+                SELECT s_suppkey
+                FROM supplier
+            )
+            """;
+        return dslContext.fetch(sql).intoMaps();
     }
 
     /**
@@ -265,14 +233,15 @@ public class UniversalRepository {
      * @return List of maps containing customer keys that are not supplier keys
      */
     public List<Map<String, Object>> d3() {
-        return dslContext
-            .selectDistinct(CUSTOMER.C_CUSTKEY.as("custkey"))
-            .from(CUSTOMER)
-            .where(CUSTOMER.C_CUSTKEY.notIn(
-                selectDistinct(SUPPLIER.S_SUPPKEY)
-                .from(SUPPLIER)
-            ))
-            .fetchMaps();
+        String sql = """
+            SELECT DISTINCT c_custkey AS custkey
+            FROM customer
+            WHERE c_custkey NOT IN (
+                SELECT DISTINCT s_suppkey
+                FROM supplier
+            )
+            """;
+        return dslContext.fetch(sql).intoMaps();
     }
 
     /**
@@ -282,15 +251,12 @@ public class UniversalRepository {
      * @return List of maps containing customer data sorted by account balance
      */
     public List<Map<String, Object>> e1() {
-        return dslContext
-            .select(
-                CUSTOMER.C_NAME,
-                CUSTOMER.C_ADDRESS,
-                CUSTOMER.C_ACCTBAL
-            )
-            .from(CUSTOMER)
-            .orderBy(CUSTOMER.C_ACCTBAL.desc())
-            .fetchMaps();
+        String sql = """
+            SELECT c_name, c_address, c_acctbal
+            FROM customer
+            ORDER BY c_acctbal DESC
+            """;
+        return dslContext.fetch(sql).intoMaps();
     }
 
     /**
@@ -300,16 +266,12 @@ public class UniversalRepository {
      * @return List of maps containing order data sorted by order key
      */
     public List<Map<String, Object>> e2() {
-        return dslContext
-            .select(
-                ORDERS.O_ORDERKEY,
-                ORDERS.O_CUSTKEY,
-                ORDERS.O_ORDERDATE,
-                ORDERS.O_TOTALPRICE
-            )
-            .from(ORDERS)
-            .orderBy(ORDERS.O_ORDERKEY.asc())
-            .fetchMaps();
+        String sql = """
+            SELECT o_orderkey, o_custkey, o_orderdate, o_totalprice
+            FROM orders
+            ORDER BY o_orderkey ASC
+            """;
+        return dslContext.fetch(sql).intoMaps();
     }
 
     /**
@@ -319,13 +281,11 @@ public class UniversalRepository {
      * @return List of maps containing unique nation key and market segment combinations
      */
     public List<Map<String, Object>> e3() {
-        return dslContext
-            .selectDistinct(
-                CUSTOMER.C_NATIONKEY,
-                CUSTOMER.C_MKTSEGMENT
-            )
-            .from(CUSTOMER)
-            .fetchMaps();
+        String sql = """
+            SELECT DISTINCT c_nationkey, c_mktsegment
+            FROM customer
+            """;
+        return dslContext.fetch(sql).intoMaps();
     }
 
     /**
@@ -337,28 +297,28 @@ public class UniversalRepository {
      * @return List of maps containing pricing summary information
      */
     public List<Map<String, Object>> q1(int days) {
-    // Using static value 90 instead of parameterized days
-    LocalDate cutoff = LocalDate.of(1998, 12, 1)
-            .minusDays(90);
+        // Using static value 90 instead of parameterized days
+        LocalDate cutoff = LocalDate.of(1998, 12, 1).minusDays(90);
 
-    return dslContext
-        .select(
-            LINEITEM.L_RETURNFLAG,
-            LINEITEM.L_LINESTATUS,
-            sum(LINEITEM.L_QUANTITY).as("sum_qty"),
-            sum(LINEITEM.L_EXTENDEDPRICE).as("sum_base_price"),
-            sum(LINEITEM.L_EXTENDEDPRICE.mul(one().minus(LINEITEM.L_DISCOUNT))).as("sum_disc_price"),
-            sum(LINEITEM.L_EXTENDEDPRICE.mul(one().minus(LINEITEM.L_DISCOUNT)).mul(one().plus(LINEITEM.L_TAX))).as("sum_charge"),
-            avg(LINEITEM.L_QUANTITY).as("avg_qty"),
-            avg(LINEITEM.L_EXTENDEDPRICE).as("avg_price"),
-            avg(LINEITEM.L_DISCOUNT).as("avg_disc"),
-            count().as("count_order")
-        )
-        .from(LINEITEM)
-        .where(LINEITEM.L_SHIPDATE.le(val(cutoff)))
-        .groupBy(LINEITEM.L_RETURNFLAG, LINEITEM.L_LINESTATUS)
-        .orderBy(LINEITEM.L_RETURNFLAG, LINEITEM.L_LINESTATUS)
-        .fetchMaps();
+        String sql = """
+            SELECT
+              l_returnflag,
+              l_linestatus,
+              SUM(l_quantity) AS sum_qty,
+              SUM(l_extendedprice) AS sum_base_price,
+              SUM(l_extendedprice * (1 - l_discount)) AS sum_disc_price,
+              SUM(l_extendedprice * (1 - l_discount) * (1 + l_tax)) AS sum_charge,
+              AVG(l_quantity) AS avg_qty,
+              AVG(l_extendedprice) AS avg_price,
+              AVG(l_discount) AS avg_disc,
+              COUNT(*) AS count_order
+            FROM lineitem
+            WHERE l_shipdate <= ?
+            GROUP BY l_returnflag, l_linestatus
+            ORDER BY l_returnflag, l_linestatus
+            """;
+
+        return dslContext.fetch(sql, cutoff).intoMaps();
     }
 
     /**
@@ -371,42 +331,46 @@ public class UniversalRepository {
      * @return List of maps containing supplier information
      */
     public List<Map<String, Object>> q2(int size, String type, String region) {
-        return dslContext
-            .select(
-                SUPPLIER.S_ACCTBAL.as("acctbal"),
-                SUPPLIER.S_NAME.as("name"),
-                NATION.N_NAME.as("nationName"),
-                PART.P_PARTKEY.as("partKey"),
-                PART.P_MFGR.as("mfgr"),
-                SUPPLIER.S_ADDRESS.as("address"),
-                SUPPLIER.S_PHONE.as("phone"),
-                SUPPLIER.S_COMMENT.as("comment")
-            )
-            .from(PART)
-            .join(PARTSUPP).on(PART.P_PARTKEY.eq(PARTSUPP.PS_PARTKEY))
-            .join(SUPPLIER).on(SUPPLIER.S_SUPPKEY.eq(PARTSUPP.PS_SUPPKEY))
-            .join(NATION).on(SUPPLIER.S_NATIONKEY.eq(NATION.N_NATIONKEY))
-            .join(REGION).on(NATION.N_REGIONKEY.eq(REGION.R_REGIONKEY))
-            .where(PART.P_SIZE.eq(size))
-            .and(PART.P_TYPE.like(type))
-            .and(REGION.R_NAME.eq(region))
-            .and(PARTSUPP.PS_SUPPLYCOST.eq(
-                select(min(PARTSUPP.PS_SUPPLYCOST))
-                .from(PARTSUPP)
-                .join(SUPPLIER).on(SUPPLIER.S_SUPPKEY.eq(PARTSUPP.PS_SUPPKEY))
-                .join(NATION).on(SUPPLIER.S_NATIONKEY.eq(NATION.N_NATIONKEY))
-                .join(REGION).on(NATION.N_REGIONKEY.eq(REGION.R_REGIONKEY))
-                .where(PART.P_PARTKEY.eq(PARTSUPP.PS_PARTKEY))
-                .and(REGION.R_NAME.eq(region))
-            ))
-            .orderBy(
-                SUPPLIER.S_ACCTBAL.desc(),
-                NATION.N_NAME.asc(),
-                SUPPLIER.S_NAME.asc(),
-                PART.P_PARTKEY.asc()
-            )
-            .limit(100)
-            .fetchMaps();
+        String sql = """
+            SELECT
+              s.s_acctbal AS acctbal,
+              s.s_name AS name,
+              n.n_name AS nationName,
+              p.p_partkey AS partKey,
+              p.p_mfgr AS mfgr,
+              s.s_address AS address,
+              s.s_phone AS phone,
+              s.s_comment AS comment
+            FROM
+              part p
+              JOIN partsupp ps ON p.p_partkey = ps.ps_partkey
+              JOIN supplier s ON s.s_suppkey = ps.ps_suppkey
+              JOIN nation n ON s.s_nationkey = n.n_nationkey
+              JOIN region r ON n.n_regionkey = r.r_regionkey
+            WHERE
+              p.p_size = ?
+              AND p.p_type LIKE ?
+              AND r.r_name = ?
+              AND ps.ps_supplycost = (
+                SELECT MIN(ps.ps_supplycost)
+                FROM
+                  partsupp ps
+                  JOIN supplier s ON s.s_suppkey = ps.ps_suppkey
+                  JOIN nation n ON s.s_nationkey = n.n_nationkey
+                  JOIN region r ON n.n_regionkey = r.r_regionkey
+                WHERE
+                  p.p_partkey = ps.ps_partkey
+                  AND r.r_name = ?
+              )
+            ORDER BY
+              s.s_acctbal DESC,
+              n.n_name ASC,
+              s.s_name ASC,
+              p.p_partkey ASC
+            LIMIT 100
+            """;
+
+        return dslContext.fetch(sql, size, type, region, region).intoMaps();
     }
 
     /**
@@ -419,23 +383,29 @@ public class UniversalRepository {
      * @return List of maps containing order information sorted by revenue
      */
     public List<Map<String, Object>> q3(String segment, LocalDate orderDate, LocalDate shipDate) {
-        return dslContext
-            .select(
-                LINEITEM.L_ORDERKEY.as("orderKey"),
-                sum(LINEITEM.L_EXTENDEDPRICE.mul(one().minus(LINEITEM.L_DISCOUNT))).as("revenue"),
-                ORDERS.O_ORDERDATE.as("orderDate"),
-                ORDERS.O_SHIPPRIORITY.as("shipPriority")
-            )
-            .from(CUSTOMER)
-            .join(ORDERS).on(CUSTOMER.C_CUSTKEY.eq(ORDERS.O_CUSTKEY))
-            .join(LINEITEM).on(LINEITEM.L_ORDERKEY.eq(ORDERS.O_ORDERKEY))
-            .where(CUSTOMER.C_MKTSEGMENT.eq(segment))
-            .and(ORDERS.O_ORDERDATE.lt(orderDate))
-            .and(LINEITEM.L_SHIPDATE.gt(shipDate))
-            .groupBy(LINEITEM.L_ORDERKEY, ORDERS.O_ORDERDATE, ORDERS.O_SHIPPRIORITY)
-            .orderBy(field("revenue").desc(), ORDERS.O_ORDERDATE.asc())
-            .limit(10)
-            .fetchMaps();
+        String sql = """
+            SELECT
+              l.l_orderkey AS orderKey,
+              SUM(l.l_extendedprice * (1 - l.l_discount)) AS revenue,
+              o.o_orderdate AS orderDate,
+              o.o_shippriority AS shipPriority
+            FROM
+              customer c
+              JOIN orders o ON c.c_custkey = o.o_custkey
+              JOIN lineitem l ON l.l_orderkey = o.o_orderkey
+            WHERE
+              c.c_mktsegment = ?
+              AND o.o_orderdate < ?
+              AND l.l_shipdate > ?
+            GROUP BY
+              l.l_orderkey, o.o_orderdate, o.o_shippriority
+            ORDER BY
+              revenue DESC,
+              o.o_orderdate ASC
+            LIMIT 10
+            """;
+
+        return dslContext.fetch(sql, segment, orderDate, shipDate).intoMaps();
     }
 
     /**
@@ -448,23 +418,30 @@ public class UniversalRepository {
     public List<Map<String, Object>> q4(LocalDate orderDate) {
         LocalDate endDate = orderDate.plusMonths(3);
 
-        return dslContext
-            .select(
-                ORDERS.O_ORDERPRIORITY.as("orderPriority"),
-                count().as("orderCount")
-            )
-            .from(ORDERS)
-            .where(ORDERS.O_ORDERDATE.ge(orderDate))
-            .and(ORDERS.O_ORDERDATE.lt(endDate))
-            .and(exists(
-                select(val(1))
-                .from(LINEITEM)
-                .where(LINEITEM.L_ORDERKEY.eq(ORDERS.O_ORDERKEY))
-                .and(LINEITEM.L_COMMITDATE.lt(LINEITEM.L_RECEIPTDATE))
-            ))
-            .groupBy(ORDERS.O_ORDERPRIORITY)
-            .orderBy(ORDERS.O_ORDERPRIORITY.asc())
-            .fetchMaps();
+        String sql = """
+            SELECT
+              o.o_orderpriority AS orderPriority,
+              COUNT(*) AS orderCount
+            FROM
+              orders o
+            WHERE
+              o.o_orderdate >= ?
+              AND o.o_orderdate < ?
+              AND EXISTS (
+                SELECT 1
+                FROM
+                  lineitem l
+                WHERE
+                  l.l_orderkey = o.o_orderkey
+                  AND l.l_commitdate < l.l_receiptdate
+              )
+            GROUP BY
+              o.o_orderpriority
+            ORDER BY
+              o.o_orderpriority ASC
+            """;
+
+        return dslContext.fetch(sql, orderDate, endDate).intoMaps();
     }
 
     /**
@@ -478,23 +455,28 @@ public class UniversalRepository {
     public List<Map<String, Object>> q5(String region, LocalDate orderDate) {
         LocalDate endDate = orderDate.plusYears(1);
 
-        return dslContext
-            .select(
-                NATION.N_NAME.as("nationName"),
-                sum(LINEITEM.L_EXTENDEDPRICE.mul(one().minus(LINEITEM.L_DISCOUNT))).as("revenue")
-            )
-            .from(CUSTOMER)
-            .join(ORDERS).on(CUSTOMER.C_CUSTKEY.eq(ORDERS.O_CUSTKEY))
-            .join(LINEITEM).on(LINEITEM.L_ORDERKEY.eq(ORDERS.O_ORDERKEY))
-            .join(SUPPLIER).on(LINEITEM.L_SUPPKEY.eq(SUPPLIER.S_SUPPKEY))
-            .join(NATION).on(SUPPLIER.S_NATIONKEY.eq(NATION.N_NATIONKEY))
-            .join(REGION).on(NATION.N_REGIONKEY.eq(REGION.R_REGIONKEY))
-            .where(REGION.R_NAME.eq(region))
-            .and(ORDERS.O_ORDERDATE.ge(orderDate))
-            .and(ORDERS.O_ORDERDATE.lt(endDate))
-            .and(CUSTOMER.C_NATIONKEY.eq(SUPPLIER.S_NATIONKEY))
-            .groupBy(NATION.N_NAME)
-            .orderBy(field("revenue").desc())
-            .fetchMaps();
+        String sql = """
+            SELECT
+              n.n_name AS nationName,
+              SUM(l.l_extendedprice * (1 - l.l_discount)) AS revenue
+            FROM
+              customer c
+              JOIN orders o ON c.c_custkey = o.o_custkey
+              JOIN lineitem l ON l.l_orderkey = o.o_orderkey
+              JOIN supplier s ON l.l_suppkey = s.s_suppkey
+              JOIN nation n ON s.s_nationkey = n.n_nationkey
+              JOIN region r ON n.n_regionkey = r.r_regionkey
+            WHERE
+              r.r_name = ?
+              AND o.o_orderdate >= ?
+              AND o.o_orderdate < ?
+              AND c.c_nationkey = s.s_nationkey
+            GROUP BY
+              n.n_name
+            ORDER BY
+              revenue DESC
+            """;
+
+        return dslContext.fetch(sql, region, orderDate, endDate).intoMaps();
     }
 }
