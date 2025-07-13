@@ -47,8 +47,8 @@ public class OrchestratorController {
     }
 
     @GetMapping("/health")
-    public String healthCheck() {
-        return "OK";
+    public ResponseEntity<String> healthCheck() {
+        return ResponseEntity.ok("OK");
     }
 
     @GetMapping(value = "/q1", produces = MediaType.APPLICATION_JSON_VALUE)

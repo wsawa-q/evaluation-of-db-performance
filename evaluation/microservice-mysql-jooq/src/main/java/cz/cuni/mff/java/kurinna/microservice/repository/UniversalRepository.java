@@ -1,21 +1,11 @@
 package cz.cuni.mff.java.kurinna.microservice.repository;
 
 import org.jooq.DSLContext;
-import static org.jooq.impl.DSL.*;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
-
-import static cz.cuni.mff.java.kurinna.microservice.model.tables.Lineitem.LINEITEM;
-import static cz.cuni.mff.java.kurinna.microservice.model.tables.Part.PART;
-import static cz.cuni.mff.java.kurinna.microservice.model.tables.Supplier.SUPPLIER;
-import static cz.cuni.mff.java.kurinna.microservice.model.tables.Partsupp.PARTSUPP;
-import static cz.cuni.mff.java.kurinna.microservice.model.tables.Nation.NATION;
-import static cz.cuni.mff.java.kurinna.microservice.model.tables.Region.REGION;
-import static cz.cuni.mff.java.kurinna.microservice.model.tables.Customer.CUSTOMER;
-import static cz.cuni.mff.java.kurinna.microservice.model.tables.Orders.ORDERS;
 
 /**
  * Repository class for executing SQL queries using jOOQ.
