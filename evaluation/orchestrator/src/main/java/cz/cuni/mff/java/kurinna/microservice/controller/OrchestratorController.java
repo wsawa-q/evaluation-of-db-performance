@@ -181,7 +181,7 @@ public class OrchestratorController {
         int rep = parseRepetitions(repetitions);
         Map<String, Object> results = createResultsMap(
                 "A1) Non-Indexed Columns",
-                "SELECT * FROM lineitem WHERE l_extendedprice < 1000.0;");
+                "SELECT * FROM lineitem");
 
         executeQueriesAcrossAllServices(
                 results,
@@ -229,7 +229,7 @@ public class OrchestratorController {
         int rep = parseRepetitions(repetitions);
         Map<String, Object> results = createResultsMap(
                 "A3) Indexed Columns",
-                "SELECT * FROM customer WHERE c_custkey = 1000;");
+                "SELECT * FROM customer");
 
         executeQueriesAcrossAllServices(
                 results,
@@ -451,7 +451,7 @@ public class OrchestratorController {
         int rep = parseRepetitions(repetitions);
         Map<String, Object> results = createResultsMap(
                 "D1) UNION",
-                "(SELECT c_nationkey FROM customer WHERE c_acctbal > 9000) UNION (SELECT s_nationkey FROM supplier WHERE s_acctbal > 9000);");
+                "(SELECT c_nationkey FROM customer WHERE c_acctbal > 9000) UNION (SELECT s_nationkey FROM supplier;");
 
         executeQueriesAcrossAllServices(
                 results,
@@ -475,7 +475,7 @@ public class OrchestratorController {
         int rep = parseRepetitions(repetitions);
         Map<String, Object> results = createResultsMap(
                 "D2) INTERSECT",
-                "SELECT DISTINCT c_nationkey FROM customer WHERE c_acctbal > 9000 AND c_nationkey IN (SELECT s_nationkey FROM supplier WHERE s_acctbal > 9000);");
+                "SELECT DISTINCT c_nationkey FROM customer WHERE c_acctbal > 9000 AND c_nationkey IN (SELECT s_nationkey FROM supplier;");
 
         executeQueriesAcrossAllServices(
                 results,
@@ -499,7 +499,7 @@ public class OrchestratorController {
         int rep = parseRepetitions(repetitions);
         Map<String, Object> results = createResultsMap(
                 "D3) DIFFERENCE",
-                "SELECT DISTINCT c_nationkey FROM customer WHERE c_acctbal > 9000 AND c_nationkey NOT IN (SELECT s_nationkey FROM supplier WHERE s_acctbal > 9000);");
+                "SELECT DISTINCT c_nationkey FROM customer WHERE c_acctbal > 9000 AND c_nationkey NOT IN (SELECT s_nationkey FROM supplier;");
 
         executeQueriesAcrossAllServices(
                 results,
@@ -524,7 +524,7 @@ public class OrchestratorController {
         int rep = parseRepetitions(repetitions);
         Map<String, Object> results = createResultsMap(
                 "E1) Non-Indexed Columns Sorting",
-                "SELECT c_name, c_address, c_acctbal FROM customer ORDER BY c_acctbal DESC LIMIT 10;");
+                "SELECT c_name, c_address, c_acctbal FROM customer ORDER BY c_acctbal DESC;");
 
         executeQueriesAcrossAllServices(
                 results,
@@ -548,7 +548,7 @@ public class OrchestratorController {
         int rep = parseRepetitions(repetitions);
         Map<String, Object> results = createResultsMap(
                 "E2) Indexed Columns Sorting",
-                "SELECT o_orderkey, o_custkey, o_orderdate, o_totalprice FROM orders ORDER BY o_orderkey LIMIT 20;");
+                "SELECT o_orderkey, o_custkey, o_orderdate, o_totalprice FROM orders ORDER BY o_orderkey;");
 
         executeQueriesAcrossAllServices(
                 results,
